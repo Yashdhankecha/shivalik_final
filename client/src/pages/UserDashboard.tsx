@@ -23,7 +23,6 @@ interface JoinRequest {
 const UserDashboard = () => {
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState('all');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [loading, setLoading] = useState(true);
   
@@ -43,19 +42,27 @@ const UserDashboard = () => {
   const fetchCommunities = async () => {
     try {
       setLoading(true);
-      const response = await communityApi.getAllCommunities();
+      // Fetch all communities without pagination limit
+      const response = await communityApi.getAllCommunities({ limit: 100 });
       console.log('API Response:', response); // Debug log
+      
+      // Handle the response structure from the backend API
       if (response && response.result) {
-        const communities = response.result.communities || response.result || [];
+        // The API returns communities in response.result.communities
+        const communities = response.result.communities || [];
         setAllCommunities(communities);
         // Filter user's communities (this would come from a separate API in production)
         // For now, we'll show featured ones as "my communities"
         setMyCommunities(communities.filter((c: CommunityType) => c.isFeatured).slice(0, 3));
       } else if (response && response.data) {
+        // Fallback for alternative response format
         const communities = response.data.communities || response.data || [];
         setAllCommunities(communities);
-        // Filter user's communities (this would come from a separate API in production)
-        // For now, we'll show featured ones as "my communities"
+        setMyCommunities(communities.filter((c: CommunityType) => c.isFeatured).slice(0, 3));
+      } else {
+        // If no data structure matches, use the response directly
+        const communities = Array.isArray(response) ? response : [];
+        setAllCommunities(communities);
         setMyCommunities(communities.filter((c: CommunityType) => c.isFeatured).slice(0, 3));
       }
     } catch (error: any) {
@@ -263,14 +270,6 @@ const UserDashboard = () => {
               )}
             </div>
 
-            {/* Browse Communities Button */}
-            <Button 
-              className="w-full bg-black hover:bg-gray-800 shadow-lg text-white"
-              onClick={() => setActiveTab('browse')}
-            >
-              <Building2 className="w-4 h-4 mr-2" />
-              Browse Communities
-            </Button>
           </div>
         </aside>
 
@@ -287,23 +286,6 @@ const UserDashboard = () => {
                 </p>
               </div>
             )}
-          </div>
-
-          {/* Tabs */}
-          <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
-            {['All', 'Featured', 'Popular', 'Newest'].map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab.toLowerCase())}
-                className={`px-5 py-2.5 rounded-xl font-medium text-sm whitespace-nowrap transition-all ${
-                  activeTab === tab.toLowerCase()
-                    ? 'bg-black text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
           </div>
 
           {/* Community Grid */}

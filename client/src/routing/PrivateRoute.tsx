@@ -9,8 +9,14 @@ interface PrivateRouteProps {
 export const PrivateRoute = ({ children, requiredRole }: PrivateRouteProps) => {
   const { isAuthenticated, user } = useAuth();
   const location = useLocation();
+  
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Allow admin users to access admin routes
+  if (requiredRole && requiredRole === 'admin' && (user?.role === 'Admin' || user?.role === 'SuperAdmin')) {
+    return <>{children}</>;
   }
 
   if (requiredRole && user?.role !== requiredRole) {

@@ -1,22 +1,55 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Card, CardContent, CardHeader } from '../../components/ui/card';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Badge } from '../../components/ui/badge';
-import { Users, Search, Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Users, Search, Plus, Edit, Trash2, Eye, UserPlus, X } from 'lucide-react';
+import { adminApi } from '../../apis/admin';
+import { useToast } from '../../hooks/use-toast';
 
 const UsersManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0
+  });
+  const [showRoleChangeModal, setShowRoleChangeModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [requestedRole, setRequestedRole] = useState('Manager');
+  const [reason, setReason] = useState('');
+  const { toast } = useToast();
 
-  // Mock user data
-  const users = [
-    { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Resident', status: 'Active', joinDate: '2023-05-15', community: 'Green Valley' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'Manager', status: 'Active', joinDate: '2023-04-22', community: 'Sunset Hills' },
-    { id: 3, name: 'Mike Johnson', email: 'mike@example.com', role: 'Resident', status: 'Pending', joinDate: '2023-06-10', community: 'Oakwood Park' },
-    { id: 4, name: 'Sarah Williams', email: 'sarah@example.com', role: 'Admin', status: 'Active', joinDate: '2023-03-18', community: 'All Communities' },
-    { id: 5, name: 'David Brown', email: 'david@example.com', role: 'Resident', status: 'Inactive', joinDate: '2023-01-30', community: 'Pine Grove' },
-  ];
+  useEffect(() => {
+    fetchUsers();
+  }, [pagination.page, searchTerm]);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await adminApi.getAllUsers({
+        page: pagination.page,
+        limit: pagination.limit,
+        search: searchTerm
+      });
+      
+      setUsers(response.data.users || []);
+      setPagination(response.data.pagination || pagination);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch users",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -43,6 +76,67 @@ const UsersManagement = () => {
         return <Badge className="bg-gray-300 text-gray-800">{role}</Badge>;
     }
   };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages) {
+      setPagination({ ...pagination, page: newPage });
+    }
+  };
+
+  const openRoleChangeModal = (user: any) => {
+    setSelectedUser(user);
+    setRequestedRole('Manager');
+    setReason('');
+    setShowRoleChangeModal(true);
+  };
+
+  const handleRoleChangeRequest = async () => {
+    if (!selectedUser || !reason.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please provide a reason for the role change request",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await adminApi.createRoleChangeRequest({
+        userId: selectedUser._id,
+        requestedRole,
+        communityId: selectedUser.communityId,
+        reason
+      });
+
+      toast({
+        title: "Success",
+        description: "Role change request submitted successfully"
+      });
+
+      setShowRoleChangeModal(false);
+      setSelectedUser(null);
+      setRequestedRole('Manager');
+      setReason('');
+      
+      // Refresh users list
+      fetchUsers();
+    } catch (error) {
+      console.error('Error submitting role change request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit role change request",
+        variant: "destructive"
+      });
+    }
+  };
+
+  if (loading && users.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p>Loading users...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -103,8 +197,8 @@ const UsersManagement = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                {users.map((user: any) => (
+                  <tr key={user._id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <Avatar className="w-10 h-10">
@@ -122,18 +216,26 @@ const UsersManagement = () => {
                       {getRoleBadge(user.role)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {user.community}
+                      {user.communityId ? `Community ID: ${user.communityId}` : 'Not assigned'}
                     </td>
                     <td className="px-6 py-4">
                       {getStatusBadge(user.status)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {user.joinDate}
+                      {new Date(user.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
                           <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-blue-600 hover:bg-blue-50"
+                          onClick={() => openRoleChangeModal(user)}
+                        >
+                          <UserPlus className="w-4 h-4" />
                         </Button>
                         <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
                           <Edit className="w-4 h-4" />
@@ -151,6 +253,94 @@ const UsersManagement = () => {
         </CardContent>
       </Card>
 
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <div className="flex justify-between items-center mt-6">
+          <Button
+            onClick={() => handlePageChange(pagination.page - 1)}
+            disabled={pagination.page === 1}
+            variant="outline"
+            className="border border-gray-400 text-black hover:bg-gray-100"
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-gray-600">
+            Page {pagination.page} of {pagination.totalPages}
+          </span>
+          <Button
+            onClick={() => handlePageChange(pagination.page + 1)}
+            disabled={pagination.page === pagination.totalPages}
+            variant="outline"
+            className="border border-gray-400 text-black hover:bg-gray-100"
+          >
+            Next
+          </Button>
+        </div>
+      )}
+
+      {/* Role Change Modal */}
+      {showRoleChangeModal && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">Request Role Change</h3>
+                <Button variant="ghost" onClick={() => setShowRoleChangeModal(false)}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+              
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  User: <span className="font-semibold">{selectedUser.name}</span>
+                </p>
+                <p className="text-sm text-gray-600 mb-4">
+                  Current Role: <span className="font-semibold">{selectedUser.role}</span>
+                </p>
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Requested Role
+                  </label>
+                  <select
+                    value={requestedRole}
+                    onChange={(e) => setRequestedRole(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md p-2"
+                  >
+                    <option value="Manager">Manager</option>
+                    <option value="Admin">Admin</option>
+                    <option value="User">Resident</option>
+                  </select>
+                </div>
+                
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Reason for change *
+                </label>
+                <textarea
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md p-2"
+                  rows={4}
+                  placeholder="Enter reason for role change..."
+                />
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowRoleChangeModal(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  className="bg-black text-white hover:bg-gray-800"
+                  onClick={handleRoleChangeRequest}
+                >
+                  Submit Request
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
         <Card className="bg-white border border-gray-300">
@@ -158,7 +348,7 @@ const UsersManagement = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold text-black">1,234</p>
+                <p className="text-2xl font-bold text-black">{pagination.total || 0}</p>
               </div>
               <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center">
                 <Users className="w-6 h-6 text-white" />
@@ -172,7 +362,9 @@ const UsersManagement = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Active Users</p>
-                <p className="text-2xl font-bold text-black">1,102</p>
+                <p className="text-2xl font-bold text-black">
+                  {users.filter(u => u.status === 'Active').length}
+                </p>
               </div>
               <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center">
                 <Users className="w-6 h-6 text-white" />
@@ -186,7 +378,9 @@ const UsersManagement = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Pending Users</p>
-                <p className="text-2xl font-bold text-black">89</p>
+                <p className="text-2xl font-bold text-black">
+                  {users.filter(u => u.status === 'Pending').length}
+                </p>
               </div>
               <div className="w-12 h-12 bg-gray-500 rounded-lg flex items-center justify-center">
                 <Users className="w-6 h-6 text-white" />
@@ -200,7 +394,9 @@ const UsersManagement = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Inactive Users</p>
-                <p className="text-2xl font-bold text-black">43</p>
+                <p className="text-2xl font-bold text-black">
+                  {users.filter(u => u.status === 'Inactive').length}
+                </p>
               </div>
               <div className="w-12 h-12 bg-gray-300 rounded-lg flex items-center justify-center">
                 <Users className="w-6 h-6 text-gray-800" />

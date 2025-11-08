@@ -1,47 +1,77 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
 import { Card, CardContent, CardHeader } from '../../components/ui/card';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Badge } from '../../components/ui/badge';
 import {
-  LayoutDashboard, Users, Building2, Calendar, FileText, Settings,
-  Bell, Search, LogOut, ChevronRight, TrendingUp, UserPlus,
-  ShieldCheck, Activity, BarChart3, Home, MessageSquare
+  Users, Building2, Calendar, FileText, UserPlus,
+  Activity, TrendingUp, BarChart3, MessageSquare
 } from 'lucide-react';
+import { adminApi } from '../../apis/admin';
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalCommunities: 0,
+    activeEvents: 0,
+    totalReports: 0
+  });
+  const [recentUsers, setRecentUsers] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const stats = [
-    { title: 'Total Users', value: '1,234', change: '+12%', icon: Users },
-    { title: 'Communities', value: '45', change: '+5%', icon: Building2 },
-    { title: 'Active Events', value: '23', change: '+8%', icon: Calendar },
-    { title: 'Reports', value: '12', change: '-3%', icon: FileText }
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch dashboard stats
+        const statsResponse = await adminApi.getDashboardStats();
+        setStats(statsResponse.data || {
+          totalUsers: 0,
+          totalCommunities: 0,
+          activeEvents: 0,
+          totalReports: 0
+        });
+
+        // For now, we'll use mock data for recent users and activities
+        // In a real implementation, these would come from API calls
+        setRecentUsers([
+          { name: 'John Doe', email: 'john@example.com', role: 'Resident', status: 'Active', joinDate: '2 days ago' },
+          { name: 'Jane Smith', email: 'jane@example.com', role: 'Manager', status: 'Active', joinDate: '3 days ago' },
+          { name: 'Mike Johnson', email: 'mike@example.com', role: 'Resident', status: 'Pending', joinDate: '5 days ago' },
+          { name: 'Sarah Williams', email: 'sarah@example.com', role: 'Resident', status: 'Active', joinDate: '1 week ago' }
+        ]);
+
+        setRecentActivities([
+          { action: 'New user registration', user: 'Alice Brown', time: '5 minutes ago', type: 'user' },
+          { action: 'Community created', user: 'Admin', time: '1 hour ago', type: 'community' },
+          { action: 'Event published', user: 'Mike Chen', time: '2 hours ago', type: 'event' },
+          { action: 'Report submitted', user: 'Emily Rodriguez', time: '3 hours ago', type: 'report' }
+        ]);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Format stats for display
+  const formattedStats = [
+    { title: 'Total Users', value: stats.totalUsers.toLocaleString(), change: '+12', icon: Users },
+    { title: 'Communities', value: stats.totalCommunities.toLocaleString(), change: '+5', icon: Building2 },
+    { title: 'Active Events', value: stats.activeEvents.toLocaleString(), change: '+8', icon: Calendar },
+    { title: 'Reports', value: stats.totalReports.toLocaleString(), change: '-3', icon: FileText }
   ];
 
-  const recentUsers = [
-    { name: 'John Doe', email: 'john@example.com', role: 'Resident', status: 'Active', joinDate: '2 days ago' },
-    { name: 'Jane Smith', email: 'jane@example.com', role: 'Manager', status: 'Active', joinDate: '3 days ago' },
-    { name: 'Mike Johnson', email: 'mike@example.com', role: 'Resident', status: 'Pending', joinDate: '5 days ago' },
-    { name: 'Sarah Williams', email: 'sarah@example.com', role: 'Resident', status: 'Active', joinDate: '1 week ago' }
-  ];
-
-  const recentActivities = [
-    { action: 'New user registration', user: 'Alice Brown', time: '5 minutes ago', type: 'user' },
-    { action: 'Community created', user: 'Admin', time: '1 hour ago', type: 'community' },
-    { action: 'Event published', user: 'Mike Chen', time: '2 hours ago', type: 'event' },
-    { action: 'Report submitted', user: 'Emily Rodriguez', time: '3 hours ago', type: 'report' }
-  ];
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p>Loading dashboard...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -53,7 +83,7 @@ const AdminDashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        {stats.map((stat, index) => {
+        {formattedStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <Card key={index} className="hover:shadow-lg transition-shadow border border-gray-300 bg-white">
@@ -63,7 +93,7 @@ const AdminDashboard = () => {
                     <Icon className="w-6 h-6 text-white" />
                   </div>
                   <Badge className={`${stat.change.startsWith('+') ? 'bg-gray-800 text-white' : 'bg-gray-300 text-gray-800'}`}>
-                    {stat.change}
+                    {stat.change}%
                   </Badge>
                 </div>
                 <h3 className="text-2xl font-bold text-black mb-1">{stat.value}</h3>
@@ -83,10 +113,6 @@ const AdminDashboard = () => {
                 <Users className="w-5 h-5" />
                 Recent Users
               </h3>
-              <Button variant="outline" size="sm" className="gap-2 border-gray-400 text-black hover:bg-gray-100">
-                <UserPlus className="w-4 h-4" />
-                Add User
-              </Button>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -167,41 +193,7 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-        <Card className="bg-white text-black border border-gray-300">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <BarChart3 className="w-8 h-8" />
-              <TrendingUp className="w-6 h-6" />
-            </div>
-            <h3 className="text-3xl font-bold mb-1">78%</h3>
-            <p className="text-gray-600 text-sm">Platform Engagement</p>
-          </CardContent>
-        </Card>
 
-        <Card className="bg-white text-black border border-gray-300">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <MessageSquare className="w-8 h-8" />
-              <TrendingUp className="w-6 h-6" />
-            </div>
-            <h3 className="text-3xl font-bold mb-1">342</h3>
-            <p className="text-gray-600 text-sm">Active Discussions</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white text-black border border-gray-300">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <Calendar className="w-8 h-8" />
-              <TrendingUp className="w-6 h-6" />
-            </div>
-            <h3 className="text-3xl font-bold mb-1">23</h3>
-            <p className="text-gray-600 text-sm">Upcoming Events</p>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 };

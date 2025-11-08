@@ -1,21 +1,50 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Card, CardContent, CardHeader } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { FileText, Search, Download, Eye, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { adminApi } from '../../apis/admin';
+import { useToast } from '../../hooks/use-toast';
 
 const Reports = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0
+  });
+  const { toast } = useToast();
 
-  // Mock report data
-  const reports = [
-    { id: 1, title: 'Monthly Financial Report', type: 'Financial', date: '2023-11-30', author: 'John Doe', status: 'Approved', priority: 'High' },
-    { id: 2, title: 'Community Maintenance Report', type: 'Maintenance', date: '2023-11-28', author: 'Jane Smith', status: 'Pending', priority: 'Medium' },
-    { id: 3, title: 'Security Audit Report', type: 'Security', date: '2023-11-25', author: 'Mike Johnson', status: 'Rejected', priority: 'High' },
-    { id: 4, title: 'Resident Satisfaction Survey', type: 'Survey', date: '2023-11-20', author: 'Sarah Williams', status: 'Approved', priority: 'Low' },
-    { id: 5, title: 'Facility Usage Report', type: 'Facility', date: '2023-11-15', author: 'David Brown', status: 'Pending', priority: 'Medium' },
-  ];
+  useEffect(() => {
+    fetchReports();
+  }, [pagination.page, searchTerm]);
+
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      const response = await adminApi.getReports({
+        page: pagination.page,
+        limit: pagination.limit,
+        search: searchTerm
+      });
+      
+      setReports(response.data.reports || []);
+      setPagination(response.data.pagination || pagination);
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch reports",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -42,6 +71,20 @@ const Reports = () => {
         return <Badge className="bg-gray-200 text-gray-800">{priority}</Badge>;
     }
   };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages) {
+      setPagination({ ...pagination, page: newPage });
+    }
+  };
+
+  if (loading && reports.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p>Loading reports...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -104,8 +147,8 @@ const Reports = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {reports.map((report) => (
-                  <tr key={report.id} className="hover:bg-gray-50 transition-colors">
+                {reports.map((report: any) => (
+                  <tr key={report._id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div>
                         <p className="font-semibold text-sm text-black">{report.title}</p>
@@ -115,10 +158,10 @@ const Reports = () => {
                       {report.type}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {report.date}
+                      {new Date(report.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {report.author}
+                      {report.createdBy?.name || 'Unknown'}
                     </td>
                     <td className="px-6 py-4">
                       {getPriorityBadge(report.priority)}
@@ -144,6 +187,31 @@ const Reports = () => {
         </CardContent>
       </Card>
 
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <div className="flex justify-between items-center mt-6">
+          <Button
+            onClick={() => handlePageChange(pagination.page - 1)}
+            disabled={pagination.page === 1}
+            variant="outline"
+            className="border border-gray-400 text-black hover:bg-gray-100"
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-gray-600">
+            Page {pagination.page} of {pagination.totalPages}
+          </span>
+          <Button
+            onClick={() => handlePageChange(pagination.page + 1)}
+            disabled={pagination.page === pagination.totalPages}
+            variant="outline"
+            className="border border-gray-400 text-black hover:bg-gray-100"
+          >
+            Next
+          </Button>
+        </div>
+      )}
+
       {/* Report Categories */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
         <Card className="bg-white border border-gray-300">
@@ -157,15 +225,21 @@ const Reports = () => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Total</span>
-                <span className="font-semibold text-black">12</span>
+                <span className="font-semibold text-black">
+                  {reports.filter(r => r.type === 'Financial').length}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Approved</span>
-                <span className="font-semibold text-black">10</span>
+                <span className="font-semibold text-black">
+                  {reports.filter(r => r.type === 'Financial' && r.status === 'Approved').length}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Pending</span>
-                <span className="font-semibold text-gray-600">2</span>
+                <span className="font-semibold text-gray-600">
+                  {reports.filter(r => r.type === 'Financial' && r.status === 'Pending').length}
+                </span>
               </div>
             </div>
             <Button variant="outline" className="w-full mt-4 border border-gray-400 text-black hover:bg-gray-100">View All</Button>
@@ -183,15 +257,21 @@ const Reports = () => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Total</span>
-                <span className="font-semibold text-black">8</span>
+                <span className="font-semibold text-black">
+                  {reports.filter(r => r.type === 'Maintenance').length}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Approved</span>
-                <span className="font-semibold text-black">6</span>
+                <span className="font-semibold text-black">
+                  {reports.filter(r => r.type === 'Maintenance' && r.status === 'Approved').length}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Pending</span>
-                <span className="font-semibold text-gray-600">2</span>
+                <span className="font-semibold text-gray-600">
+                  {reports.filter(r => r.type === 'Maintenance' && r.status === 'Pending').length}
+                </span>
               </div>
             </div>
             <Button variant="outline" className="w-full mt-4 border border-gray-400 text-black hover:bg-gray-100">View All</Button>
@@ -209,15 +289,21 @@ const Reports = () => {
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Total</span>
-                <span className="font-semibold text-black">5</span>
+                <span className="font-semibold text-black">
+                  {reports.filter(r => r.type === 'Security').length}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Approved</span>
-                <span className="font-semibold text-black">4</span>
+                <span className="font-semibold text-black">
+                  {reports.filter(r => r.type === 'Security' && r.status === 'Approved').length}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Rejected</span>
-                <span className="font-semibold text-gray-400">1</span>
+                <span className="font-semibold text-gray-400">
+                  {reports.filter(r => r.type === 'Security' && r.status === 'Rejected').length}
+                </span>
               </div>
             </div>
             <Button variant="outline" className="w-full mt-4 border border-gray-400 text-black hover:bg-gray-100">View All</Button>
@@ -232,7 +318,7 @@ const Reports = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Reports</p>
-                <p className="text-2xl font-bold text-black">45</p>
+                <p className="text-2xl font-bold text-black">{pagination.total || 0}</p>
               </div>
               <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center">
                 <FileText className="w-6 h-6 text-white" />
@@ -246,7 +332,9 @@ const Reports = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Approved Reports</p>
-                <p className="text-2xl font-bold text-black">38</p>
+                <p className="text-2xl font-bold text-black">
+                  {reports.filter(r => r.status === 'Approved').length}
+                </p>
               </div>
               <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center">
                 <CheckCircle className="w-6 h-6 text-white" />
@@ -260,7 +348,9 @@ const Reports = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Pending Reports</p>
-                <p className="text-2xl font-bold text-black">5</p>
+                <p className="text-2xl font-bold text-black">
+                  {reports.filter(r => r.status === 'Pending').length}
+                </p>
               </div>
               <div className="w-12 h-12 bg-gray-500 rounded-lg flex items-center justify-center">
                 <Clock className="w-6 h-6 text-white" />
@@ -274,7 +364,9 @@ const Reports = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Rejected Reports</p>
-                <p className="text-2xl font-bold text-black">2</p>
+                <p className="text-2xl font-bold text-black">
+                  {reports.filter(r => r.status === 'Rejected').length}
+                </p>
               </div>
               <div className="w-12 h-12 bg-gray-300 rounded-lg flex items-center justify-center">
                 <XCircle className="w-6 h-6 text-gray-800" />

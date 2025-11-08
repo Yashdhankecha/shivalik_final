@@ -8,6 +8,7 @@ const commonRoutes = require('./commonRoute');
 const authRoutes = require('./authRoutes');
 const userRoutes = require('./userRoutes');
 const communityRoutes = require('./communityRoutes');
+const adminRoutes = require('./adminRoutes');
 
 // Mount routes under their respective paths
 router.use('/test-users', testUserRoutes);
@@ -15,5 +16,6 @@ router.use('/common', commonRoutes);
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/community', communityRoutes);
+router.use('/admin', adminRoutes);
 
 module.exports = router;

@@ -22,14 +22,21 @@ import UsersManagement from '../pages/admin/UsersManagement';
 import CommunitiesManagement from '../pages/admin/Communities';
 import EventsManagement from '../pages/admin/Events';
 import ReportsPage from '../pages/admin/Reports';
-import AdminSettings from '../pages/admin/Settings';
-import AdminProfile from '../pages/admin/Profile';
+
+import RoleChangeRequests from '../pages/admin/RoleChangeRequests';
 
 /* current user roles */
 const getUserRoles = (): string[] => {
   try {
     const info = JSON.parse(localStorage.getItem('userInfo') ?? '{}');
-    return Array.isArray(info.userRoles) ? info.userRoles : ['Guest'];
+    // Handle both array and string role formats
+    if (Array.isArray(info.userRoles)) {
+      return info.userRoles;
+    }
+    if (info.role) {
+      return [info.role];
+    }
+    return ['Guest'];
   } catch {
     return ['Guest'];
   }
@@ -37,7 +44,8 @@ const getUserRoles = (): string[] => {
 
 /* Role default route mapping */
 const ROLE_DEFAULTS: Record<string, string> = {
-  SuperAdmin: '/users',
+  SuperAdmin: '/admin/users',
+  Admin: '/admin/dashboard',
 };
 
 /* Component that decides where to redirect  */
@@ -48,33 +56,36 @@ const RedirectByRole = () => {
   // Check if user is authenticated
   const authToken = localStorage.getItem('auth_token');
   
-  // Always redirect to dashboard (whether authenticated or not)
+  // If we're at the root path, determine where to redirect based on user role
   if (location.pathname === '/' || location.pathname === '') {
+    // Special handling for admin token
+    if (authToken && authToken.startsWith('admin-token')) {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
+    
+    // Find the first matching default route
+    for (const role of roles) {
+      if (ROLE_DEFAULTS[role]) {
+        return <Navigate to={ROLE_DEFAULTS[role]} replace />;
+      }
+    }
+    
+    // Fallback for all users
     return <Navigate to="/dashboard" replace />;
   }
 
   // If we are already on a page that belongs to the user – stay there
-  if (location.pathname !== '/' && location.pathname !== '') {
-    return null; // let the child route render
-  }
-
-  // Find the first matching default route
-  for (const role of roles) {
-    if (ROLE_DEFAULTS[role]) {
-      return <Navigate to={ROLE_DEFAULTS[role]} replace />;
-    }
-  }
-
-  // Fallback for all users
-  return <Navigate to="/dashboard" replace />;
+  return null; // let the child route render
 };
 
 /* ────── Main router ────── */
+export { RedirectByRole };
+
 export const AppRoutes = () => {
   return (
     <Routes>
       {/* ROOT - Show Landing Page with Hero Section */}
-      <Route path="/" element={<GuestRoute><LandingPage /></GuestRoute>} />
+      <Route path="/" element={<RedirectByRole />} />
       
       {/* USER DASHBOARD - Default page for authenticated users */}
       <Route path="/dashboard" element={<UserDashboard />} />
@@ -87,15 +98,14 @@ export const AppRoutes = () => {
       <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
       
       {/* ADMIN PANEL - For admin users with child routes */}
-      <Route path="/admin" element={<AdminPanel />}>
+      <Route path="/admin" element={<PrivateRoute><AdminPanel /></PrivateRoute>}>
         <Route index element={<AdminDashboard />} />
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="users" element={<UsersManagement />} />
         <Route path="communities" element={<CommunitiesManagement />} />
         <Route path="events" element={<EventsManagement />} />
         <Route path="reports" element={<ReportsPage />} />
-        <Route path="settings" element={<AdminSettings />} />
-        <Route path="profile" element={<AdminProfile />} />
+        <Route path="role-requests" element={<RoleChangeRequests />} />
       </Route>
       
       {/* PUBLIC COMMUNITY EVENTS PAGE */}

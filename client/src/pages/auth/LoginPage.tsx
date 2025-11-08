@@ -1,3 +1,110 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Building2, Mail, Phone, ArrowRight, Shield, Eye, EyeOff } from 'lucide-react';
@@ -5,9 +112,11 @@ import { Button } from '@/components/ui/button';
 import { showMessage } from '@/utils/Constant';
 import apiClient from '@/apis/apiService';
 import { setToLocalStorage } from '@/utils/localstorage';
+import { useAuth } from '@/hooks/useAuth';
 
 export const LoginPage = () => {
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const [loginMethod, setLoginMethod] = useState<'phone' | 'email'>('email');
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -28,16 +137,30 @@ export const LoginPage = () => {
         try {
             // Check for admin credentials (works offline)
             if (loginMethod === 'email' && email === 'admin@gmail.com' && password === '321ewq') {
-                showMessage('Admin login successful!');
-                // Set admin user data
-                await setToLocalStorage('auth_token', 'admin-token-' + Date.now());
-                await setToLocalStorage('userInfo', {
-                    email: 'admin@gmail.com',
+                console.log('Admin credentials detected');
+                // Create user object
+                const adminUser = {
+                    id: 'admin-user-id',
                     name: 'Admin User',
-                    role: 'admin'
-                });
-                navigate('/admin');
+                    email: 'admin@gmail.com',
+                    phone: '',
+                    role: 'Admin',
+                    userRoles: ['Admin'],
+                    avatar: ''
+                };
+                
+                // Use the login function from useAuth to ensure state is updated
+                login(adminUser, 'admin-token');
+                
+                console.log('Admin data stored in localStorage and state updated');
                 setLoading(false);
+                showMessage('Admin login successful!');
+                console.log('About to navigate to admin dashboard');
+                // Use setTimeout to ensure state updates are processed before navigation
+                setTimeout(() => {
+                    console.log('Navigating to /admin/dashboard');
+                    navigate('/admin/dashboard');
+                }, 100);
                 return;
             }
 
@@ -61,11 +184,18 @@ export const LoginPage = () => {
                 });
 
                 if (response.data.result) {
-                    showMessage('Login successful!');
+                    // Use the login function from useAuth to ensure state is updated
+                    login(response.data.result.user, response.data.result.accessToken);
+                    
                     await setToLocalStorage('auth_token', response.data.result.accessToken);
                     await setToLocalStorage('refresh_token', response.data.result.refreshToken);
                     await setToLocalStorage('userInfo', response.data.result.user);
-                    navigate('/dashboard');
+                    setLoading(false);
+                    showMessage('Login successful!');
+                    // Use setTimeout to ensure state updates are processed before navigation
+                    setTimeout(() => {
+                        navigate('/dashboard');
+                    }, 100);
                 }
             } else {
                 if (!email) {
@@ -94,11 +224,18 @@ export const LoginPage = () => {
                 });
 
                 if (response.data.result) {
-                    showMessage('Login successful!');
+                    // Use the login function from useAuth to ensure state is updated
+                    login(response.data.result.user, response.data.result.accessToken);
+                    
                     await setToLocalStorage('auth_token', response.data.result.accessToken);
                     await setToLocalStorage('refresh_token', response.data.result.refreshToken);
                     await setToLocalStorage('userInfo', response.data.result.user);
-                    navigate('/dashboard');
+                    setLoading(false);
+                    showMessage('Login successful!');
+                    // Use setTimeout to ensure state updates are processed before navigation
+                    setTimeout(() => {
+                        navigate('/dashboard');
+                    }, 100);
                 }
             }
         } catch (error: any) {

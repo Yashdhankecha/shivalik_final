@@ -25,31 +25,54 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    const userData = localStorage.getItem('userInfo');
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem('auth_token');
+      const userData = localStorage.getItem('userInfo');
 
-    if (token && userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
-        // Handle both new and existing user data formats
-        const transformedUser: User = {
-          id: parsedUser.id || parsedUser._id || '',
-          name: parsedUser.name || (parsedUser.firstName && parsedUser.lastName ? parsedUser.firstName + ' ' + parsedUser.lastName : 'User'),
-          email: parsedUser.email || '',
-          phone: parsedUser.phone || parsedUser.mobileNumber || '',
-          role: parsedUser.role || (parsedUser.userRoles ? parsedUser.userRoles.join(',') : 'user'),
-          avatar: parsedUser.avatar || ''
-        };
-        setUser(transformedUser);
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('userInfo');
+      if (token && userData) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          // Handle both new and existing user data formats
+          const transformedUser: User = {
+            id: parsedUser.id || parsedUser._id || '',
+            name: parsedUser.name || (parsedUser.firstName && parsedUser.lastName ? parsedUser.firstName + ' ' + parsedUser.lastName : 'User'),
+            email: parsedUser.email || '',
+            phone: parsedUser.phone || parsedUser.mobileNumber || '',
+            role: parsedUser.role || (parsedUser.userRoles ? parsedUser.userRoles.join(',') : 'user'),
+            userRoles: parsedUser.userRoles || (parsedUser.role ? [parsedUser.role] : []),
+            avatar: parsedUser.avatar || ''
+          };
+          setUser(transformedUser);
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.error('Error parsing user data:', error);
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('userInfo');
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+      } else {
         setIsAuthenticated(false);
         setUser(null);
       }
-    }
+    };
+
+    // Check auth status on mount
+    checkAuthStatus();
+
+    // Listen for localStorage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'auth_token' || e.key === 'userInfo') {
+        checkAuthStatus();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Cleanup listener
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const login = (userData: User, token: string) => {
