@@ -1,6 +1,7 @@
 const messages = require("../message");
 const response = require("../config/response.js");
 const { validationResult } = require('express-validator');
+const mongoose = require('mongoose');
 const CommunitiesModel = require('../models/Communities.js');
 const AmenitiesModel = require('../models/Amenities.js');
 const EventsModel = require('../models/Events.js');
@@ -232,11 +233,33 @@ const createJoinRequest = async (req, res) => {
 
     try {
         const { communityId, message } = req.body;
-        const userId = req.user.id;
+        
+        // Get userId from req.user - auth middleware sets req.user._id
+        if (!req.user || !req.user._id) {
+            return res.status(401).send(response.toJson('User not authenticated'));
+        }
+        
+        // Ensure userId is a valid ObjectId
+        let userId = req.user._id;
+        if (typeof userId === 'string' && mongoose.Types.ObjectId.isValid(userId)) {
+            userId = new mongoose.Types.ObjectId(userId);
+        } else if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).send(response.toJson('Invalid user ID'));
+        }
+
+        // Ensure communityId is a valid ObjectId
+        let validCommunityId = communityId;
+        if (typeof communityId === 'string' && mongoose.Types.ObjectId.isValid(communityId)) {
+            validCommunityId = new mongoose.Types.ObjectId(communityId);
+        } else if (!mongoose.Types.ObjectId.isValid(communityId)) {
+            return res.status(400).send(response.toJson('Invalid community ID'));
+        }
+
+        console.log('Creating join request for user:', userId, 'community:', validCommunityId);
 
         // Check if community exists
         const community = await CommunitiesModel.findOne({
-            _id: communityId,
+            _id: validCommunityId,
             isDeleted: false
         });
 
@@ -247,7 +270,7 @@ const createJoinRequest = async (req, res) => {
         // Check for existing request
         const existingRequest = await CommunityJoinRequestsModel.findOne({
             userId,
-            communityId,
+            communityId: validCommunityId,
             isDeleted: false
         });
 
@@ -260,12 +283,14 @@ const createJoinRequest = async (req, res) => {
         // Create join request
         const joinRequest = new CommunityJoinRequestsModel({
             userId,
-            communityId,
+            communityId: validCommunityId,
             message: message || '',
             status: 'Pending'
         });
 
         await joinRequest.save();
+
+        console.log('Join request created successfully:', joinRequest._id);
 
         return res.status(201).send(response.toJson(
             'Join request submitted successfully',
@@ -273,6 +298,7 @@ const createJoinRequest = async (req, res) => {
         ));
 
     } catch (err) {
+        console.error('Error creating join request:', err);
         const statusCode = err.statusCode || 500;
         const errMess = err.message || err;
         return res.status(statusCode).send(response.toJson(errMess));
@@ -282,7 +308,18 @@ const createJoinRequest = async (req, res) => {
 // Get User's Join Requests (Requires Authentication)
 const getUserJoinRequests = async (req, res) => {
     try {
-        const userId = req.user.id;
+        // Get userId from req.user - auth middleware sets req.user._id
+        if (!req.user || !req.user._id) {
+            return res.status(401).send(response.toJson('User not authenticated'));
+        }
+        
+        // Ensure userId is a valid ObjectId
+        let userId = req.user._id;
+        if (typeof userId === 'string' && mongoose.Types.ObjectId.isValid(userId)) {
+            userId = new mongoose.Types.ObjectId(userId);
+        } else if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).send(response.toJson('Invalid user ID'));
+        }
 
         const requests = await CommunityJoinRequestsModel.find({
             userId,
@@ -299,6 +336,7 @@ const getUserJoinRequests = async (req, res) => {
         ));
 
     } catch (err) {
+        console.error('Error getting user join requests:', err);
         const statusCode = err.statusCode || 500;
         const errMess = err.message || err;
         return res.status(statusCode).send(response.toJson(errMess));

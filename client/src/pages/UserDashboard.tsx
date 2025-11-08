@@ -34,10 +34,13 @@ const UserDashboard = () => {
 
   useEffect(() => {
     fetchCommunities();
-    if (isAuthenticated) {
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && allCommunities.length > 0) {
       fetchJoinRequests();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, allCommunities]);
 
   const fetchCommunities = async () => {
     try {
@@ -47,24 +50,18 @@ const UserDashboard = () => {
       console.log('API Response:', response); // Debug log
       
       // Handle the response structure from the backend API
+      let communities = [];
       if (response && response.result) {
         // The API returns communities in response.result.communities
-        const communities = response.result.communities || [];
-        setAllCommunities(communities);
-        // Filter user's communities (this would come from a separate API in production)
-        // For now, we'll show featured ones as "my communities"
-        setMyCommunities(communities.filter((c: CommunityType) => c.isFeatured).slice(0, 3));
+        communities = response.result.communities || [];
       } else if (response && response.data) {
         // Fallback for alternative response format
-        const communities = response.data.communities || response.data || [];
-        setAllCommunities(communities);
-        setMyCommunities(communities.filter((c: CommunityType) => c.isFeatured).slice(0, 3));
-      } else {
-        // If no data structure matches, use the response directly
-        const communities = Array.isArray(response) ? response : [];
-        setAllCommunities(communities);
-        setMyCommunities(communities.filter((c: CommunityType) => c.isFeatured).slice(0, 3));
+        communities = response.data.communities || response.data || [];
+      } else if (Array.isArray(response)) {
+        communities = response;
       }
+      
+      setAllCommunities(communities);
     } catch (error: any) {
       console.error('Error fetching communities:', error);
       showMessage(error.message || 'Failed to load communities', 'error');
@@ -76,15 +73,35 @@ const UserDashboard = () => {
   const fetchJoinRequests = async () => {
     try {
       const response = await communityApi.getUserJoinRequests();
-      if (response && response.data) {
-        setJoinRequests(response.data.map((req: any) => ({
-          communityId: req.communityId?._id || req.communityId,
-          status: req.status.toLowerCase()
-        })));
-      }
+      // Handle response structure
+      const requestsData = response.result || response.data || response;
+      const requests = Array.isArray(requestsData) ? requestsData : (requestsData.requests || []);
+      
+      setJoinRequests(requests.map((req: any) => ({
+        communityId: req.communityId?._id || req.communityId,
+        status: req.status.toLowerCase()
+      })));
+      
+      // Get approved communities (user's joined communities)
+      const approvedRequests = requests.filter((req: any) => 
+        req.status === 'Approved' || req.status === 'approved'
+      );
+      
+      // Get community details for approved requests
+      const joinedCommunityIds = approvedRequests.map((req: any) => 
+        req.communityId?._id || req.communityId
+      );
+      
+      // Filter communities that user has joined
+      const joinedCommunities = allCommunities.filter((c: CommunityType) =>
+        joinedCommunityIds.includes(c._id)
+      );
+      
+      setMyCommunities(joinedCommunities);
     } catch (error) {
       // User might not be authenticated, that's okay
-      console.log('Could not fetch join requests');
+      console.log('Could not fetch join requests:', error);
+      setMyCommunities([]);
     }
   };
 
@@ -99,8 +116,10 @@ const UserDashboard = () => {
     try {
       await communityApi.createJoinRequest({ communityId });
       showMessage('Join request sent successfully!', 'success');
-      // Update join requests state
-      setJoinRequests([...joinRequests, { communityId, status: 'pending' }]);
+      // Refresh join requests to get updated status
+      if (allCommunities.length > 0) {
+        await fetchJoinRequests();
+      }
     } catch (error: any) {
       showMessage(error.message || 'Failed to send join request', 'error');
     }

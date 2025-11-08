@@ -172,15 +172,24 @@ const CommunityDashboard = () => {
 
     try {
       const response = await communityApi.getUserJoinRequests();
-      const request = response.data.find((r: any) => 
-        r.communityId?._id === communityId || r.communityId === communityId
-      );
+      // Handle response structure
+      const requestsData = response.result || response.data || response;
+      const requests = Array.isArray(requestsData) ? requestsData : (requestsData.requests || []);
+      
+      const request = requests.find((r: any) => {
+        const reqCommunityId = r.communityId?._id || r.communityId;
+        return reqCommunityId === communityId;
+      });
 
       if (request) {
-        setJoinStatus(request.status === 'Approved' ? 'joined' : 'requested');
+        const status = request.status?.toLowerCase() || request.status;
+        setJoinStatus(status === 'approved' ? 'joined' : 'requested');
+      } else {
+        setJoinStatus('not-joined');
       }
     } catch (error) {
-      console.log('Could not check join status');
+      console.log('Could not check join status:', error);
+      setJoinStatus('not-joined');
     }
   };
 

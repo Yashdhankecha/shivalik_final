@@ -19,6 +19,21 @@ const Events = () => {
     total: 0,
     totalPages: 0
   });
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    description: '',
+    eventDate: '',
+    startTime: '',
+    endTime: '',
+    location: '',
+    maxParticipants: '',
+    eventType: 'Other',
+    image: null as File | null
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -38,11 +53,14 @@ const Events = () => {
         limit: 100 // Get all communities for the dropdown
       });
       
-      setCommunities(response.data.communities || []);
+      // Handle response structure
+      const data = response.result || response.data || response;
+      const communitiesList = data.communities || data || [];
+      setCommunities(Array.isArray(communitiesList) ? communitiesList : []);
       
       // Auto-select the first community if none selected
-      if (response.data.communities.length > 0 && !selectedCommunity) {
-        setSelectedCommunity(response.data.communities[0]._id);
+      if (communitiesList.length > 0 && !selectedCommunity) {
+        setSelectedCommunity(communitiesList[0]._id);
       }
     } catch (error) {
       console.error('Error fetching communities:', error);
@@ -65,8 +83,10 @@ const Events = () => {
         search: searchTerm
       });
       
-      setEvents(response.data.events || []);
-      setPagination(response.data.pagination || pagination);
+      // Handle response structure
+      const data = response.result || response.data || response;
+      setEvents(data.events || data || []);
+      setPagination(data.pagination || pagination);
     } catch (error) {
       console.error('Error fetching events:', error);
       toast({
@@ -105,6 +125,125 @@ const Events = () => {
     setPagination({ ...pagination, page: 1 }); // Reset to first page
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setNewEvent(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setNewEvent(prev => ({
+        ...prev,
+        image: e.target.files[0]
+      }));
+    }
+  };
+
+  const handleViewEvent = (event: any) => {
+    setSelectedEvent(event);
+    setShowViewModal(true);
+  };
+
+  const handleEditEvent = (event: any) => {
+    setSelectedEvent(event);
+    setNewEvent({
+      title: event.title,
+      description: event.description,
+      eventDate: event.eventDate ? new Date(event.eventDate).toISOString().split('T')[0] : '',
+      startTime: event.startTime || '',
+      endTime: event.endTime || '',
+      location: event.location || '',
+      maxParticipants: event.maxParticipants || '',
+      eventType: event.eventType || 'Other',
+      image: null
+    });
+    setShowEditForm(true);
+  };
+
+  const handleCreateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedCommunity) {
+      toast({
+        title: "Error",
+        description: "Please select a community",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('title', newEvent.title);
+      formData.append('description', newEvent.description);
+      formData.append('eventDate', newEvent.eventDate);
+      formData.append('startTime', newEvent.startTime);
+      formData.append('endTime', newEvent.endTime);
+      formData.append('location', newEvent.location);
+      formData.append('maxParticipants', newEvent.maxParticipants);
+      formData.append('eventType', newEvent.eventType);
+      
+      if (newEvent.image) {
+        formData.append('images', newEvent.image);
+      }
+
+      await adminApi.createCommunityEvent(selectedCommunity, formData);
+      
+      toast({
+        title: "Success",
+        description: "Event created successfully"
+      });
+      
+      setShowCreateForm(false);
+      setNewEvent({
+        title: '',
+        description: '',
+        eventDate: '',
+        startTime: '',
+        endTime: '',
+        location: '',
+        maxParticipants: '',
+        eventType: 'Other',
+        image: null
+      });
+      
+      // Refresh events list
+      fetchEvents();
+    } catch (error) {
+      console.error('Error creating event:', error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to create event",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUpdateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedEvent) {
+      toast({
+        title: "Error",
+        description: "No event selected",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: "Info",
+      description: "Event update functionality would be implemented here",
+      variant: "default"
+    });
+    
+    setShowEditForm(false);
+    setSelectedEvent(null);
+  };
+
   if (loading && events.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -122,7 +261,10 @@ const Events = () => {
             <h1 className="text-3xl font-bold text-black mb-2">Events Management</h1>
             <p className="text-gray-600">Manage all community events and activities</p>
           </div>
-          <Button className="bg-black text-white hover:bg-gray-800">
+          <Button 
+            className="bg-black text-white hover:bg-gray-800"
+            onClick={() => setShowCreateForm(true)}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Create New Event
           </Button>
@@ -153,10 +295,493 @@ const Events = () => {
                 </option>
               ))}
             </select>
-            <Button variant="outline" className="border border-gray-400 text-black hover:bg-gray-100">All Status</Button>
           </div>
         </div>
       </div>
+
+      {/* View Event Modal */}
+      {showViewModal && selectedEvent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-black">Event Details</h2>
+                <button 
+                  onClick={() => setShowViewModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  &times;
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-xl font-bold text-black">{selectedEvent.title}</h3>
+                  <div className="mt-2 flex items-center gap-2">
+                    {getStatusBadge(selectedEvent.status)}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Community</p>
+                    <p className="font-medium">
+                      {communities.find((c: any) => c._id === selectedEvent.communityId)?.name || 'Unknown Community'}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm text-gray-600">Event Type</p>
+                    <p className="font-medium">{selectedEvent.eventType || 'Other'}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-gray-600">Description</p>
+                  <p className="font-medium">{selectedEvent.description}</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Date</p>
+                    <p className="font-medium">
+                      {selectedEvent.eventDate ? new Date(selectedEvent.eventDate).toLocaleDateString() : 'Not specified'}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm text-gray-600">Start Time</p>
+                    <p className="font-medium">{selectedEvent.startTime || 'Not specified'}</p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm text-gray-600">End Time</p>
+                    <p className="font-medium">{selectedEvent.endTime || 'Not specified'}</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Location</p>
+                    <p className="font-medium">{selectedEvent.location || 'Not specified'}</p>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm text-gray-600">Max Participants</p>
+                    <p className="font-medium">
+                      {selectedEvent.maxParticipants ? selectedEvent.maxParticipants : 'No limit'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-gray-600">Attendees</p>
+                  <p className="font-medium">
+                    {selectedEvent.registeredParticipants?.length || 0} registered
+                  </p>
+                </div>
+                
+                {selectedEvent.images && selectedEvent.images.length > 0 && (
+                  <div>
+                    <p className="text-sm text-gray-600">Event Banner</p>
+                    <img 
+                      src={selectedEvent.images[0]} 
+                      alt="Event Banner" 
+                      className="mt-2 max-w-full h-auto rounded-md"
+                    />
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-end gap-3 pt-4">
+                <Button
+                  onClick={() => setShowViewModal(false)}
+                  className="bg-black text-white hover:bg-gray-800"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Event Form Modal */}
+      {showEditForm && selectedEvent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-black">Edit Event</h2>
+                <button 
+                  onClick={() => setShowEditForm(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  &times;
+                </button>
+              </div>
+              
+              <form onSubmit={handleUpdateEvent} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Event Title</label>
+                  <Input
+                    type="text"
+                    name="title"
+                    value={newEvent.title}
+                    onChange={handleInputChange}
+                    required
+                    className="border border-gray-400 text-black"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    name="description"
+                    value={newEvent.description}
+                    onChange={handleInputChange}
+                    required
+                    rows={3}
+                    className="w-full border border-gray-400 rounded-md px-3 py-2 text-black"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Community</label>
+                    <select
+                      name="community"
+                      value={selectedCommunity}
+                      onChange={(e) => setSelectedCommunity(e.target.value)}
+                      required
+                      className="w-full border border-gray-400 rounded-md px-3 py-2 text-black"
+                      disabled
+                    >
+                      <option value="">Select Community</option>
+                      {communities.map((community: any) => (
+                        <option key={community._id} value={community._id}>
+                          {community.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Territory</label>
+                    <Input
+                      type="text"
+                      name="location"
+                      value={newEvent.location}
+                      onChange={handleInputChange}
+                      className="border border-gray-400 text-black"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Venue Location (Google Place API)</label>
+                  <Input
+                    type="text"
+                    name="location"
+                    value={newEvent.location}
+                    onChange={handleInputChange}
+                    className="border border-gray-400 text-black"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Event Creative Attachment (Image)</label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="border border-gray-400 text-black"
+                  />
+                  {selectedEvent.images && selectedEvent.images.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600">Current Image:</p>
+                      <img 
+                        src={selectedEvent.images[0]} 
+                        alt="Current Event Banner" 
+                        className="mt-1 max-w-full h-24 object-cover rounded-md"
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Event Start Date</label>
+                    <Input
+                      type="date"
+                      name="eventDate"
+                      value={newEvent.eventDate}
+                      onChange={handleInputChange}
+                      required
+                      className="border border-gray-400 text-black"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                    <Input
+                      type="time"
+                      name="startTime"
+                      value={newEvent.startTime}
+                      onChange={handleInputChange}
+                      required
+                      className="border border-gray-400 text-black"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                    <Input
+                      type="time"
+                      name="endTime"
+                      value={newEvent.endTime}
+                      onChange={handleInputChange}
+                      className="border border-gray-400 text-black"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Registration Limit Up to</label>
+                    <Input
+                      type="number"
+                      name="maxParticipants"
+                      value={newEvent.maxParticipants}
+                      onChange={handleInputChange}
+                      min="1"
+                      className="border border-gray-400 text-black"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
+                    <select
+                      name="eventType"
+                      value={newEvent.eventType}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-400 rounded-md px-3 py-2 text-black"
+                    >
+                      <option value="Cultural">Cultural</option>
+                      <option value="Sports">Sports</option>
+                      <option value="Educational">Educational</option>
+                      <option value="Social">Social</option>
+                      <option value="Festival">Festival</option>
+                      <option value="Meeting">Meeting</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowEditForm(false)}
+                    className="border border-gray-400 text-black hover:bg-gray-100"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="bg-black text-white hover:bg-gray-800"
+                  >
+                    Update Event
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Event Form Modal */}
+      {showCreateForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-black">Create New Event</h2>
+                <button 
+                  onClick={() => setShowCreateForm(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  &times;
+                </button>
+              </div>
+              
+              <form onSubmit={handleCreateEvent} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Event Title</label>
+                  <Input
+                    type="text"
+                    name="title"
+                    value={newEvent.title}
+                    onChange={handleInputChange}
+                    required
+                    className="border border-gray-400 text-black"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    name="description"
+                    value={newEvent.description}
+                    onChange={handleInputChange}
+                    required
+                    rows={3}
+                    className="w-full border border-gray-400 rounded-md px-3 py-2 text-black"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Community</label>
+                    <select
+                      name="community"
+                      value={selectedCommunity}
+                      onChange={(e) => setSelectedCommunity(e.target.value)}
+                      required
+                      className="w-full border border-gray-400 rounded-md px-3 py-2 text-black"
+                    >
+                      <option value="">Select Community</option>
+                      {communities.map((community: any) => (
+                        <option key={community._id} value={community._id}>
+                          {community.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Territory</label>
+                    <Input
+                      type="text"
+                      name="location"
+                      value={newEvent.location}
+                      onChange={handleInputChange}
+                      className="border border-gray-400 text-black"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Venue Location (Google Place API)</label>
+                  <Input
+                    type="text"
+                    name="location"
+                    value={newEvent.location}
+                    onChange={handleInputChange}
+                    className="border border-gray-400 text-black"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Event Creative Attachment (Image)</label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="border border-gray-400 text-black"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Event Start Date</label>
+                    <Input
+                      type="date"
+                      name="eventDate"
+                      value={newEvent.eventDate}
+                      onChange={handleInputChange}
+                      required
+                      className="border border-gray-400 text-black"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                    <Input
+                      type="time"
+                      name="startTime"
+                      value={newEvent.startTime}
+                      onChange={handleInputChange}
+                      required
+                      className="border border-gray-400 text-black"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                    <Input
+                      type="time"
+                      name="endTime"
+                      value={newEvent.endTime}
+                      onChange={handleInputChange}
+                      className="border border-gray-400 text-black"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Registration Limit Up to</label>
+                    <Input
+                      type="number"
+                      name="maxParticipants"
+                      value={newEvent.maxParticipants}
+                      onChange={handleInputChange}
+                      min="1"
+                      className="border border-gray-400 text-black"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
+                    <select
+                      name="eventType"
+                      value={newEvent.eventType}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-400 rounded-md px-3 py-2 text-black"
+                    >
+                      <option value="Cultural">Cultural</option>
+                      <option value="Sports">Sports</option>
+                      <option value="Educational">Educational</option>
+                      <option value="Social">Social</option>
+                      <option value="Festival">Festival</option>
+                      <option value="Meeting">Meeting</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowCreateForm(false)}
+                    className="border border-gray-400 text-black hover:bg-gray-100"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="bg-black text-white hover:bg-gray-800"
+                  >
+                    Create Event
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Events List */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -189,12 +814,22 @@ const Events = () => {
               </div>
               
               <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between">
-                <Button variant="outline" size="sm" className="border border-gray-400 text-black hover:bg-gray-100">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border border-gray-400 text-black hover:bg-gray-100"
+                  onClick={() => handleViewEvent(event)}
+                >
                   <Eye className="w-4 h-4 mr-1" />
                   View
                 </Button>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="border border-gray-400 text-black hover:bg-gray-100">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="border border-gray-400 text-black hover:bg-gray-100"
+                    onClick={() => handleEditEvent(event)}
+                  >
                     <Edit className="w-4 h-4" />
                   </Button>
                   <Button variant="outline" size="sm" className="border border-gray-400 text-black hover:bg-gray-100">
@@ -264,10 +899,20 @@ const Events = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-black hover:bg-gray-100"
+                          onClick={() => handleViewEvent(event)}
+                        >
                           <Eye className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-black hover:bg-gray-100"
+                          onClick={() => handleEditEvent(event)}
+                        >
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">

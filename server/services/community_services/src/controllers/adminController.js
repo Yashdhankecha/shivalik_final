@@ -845,6 +845,87 @@ const rejectRoleChangeRequest = async (req, res) => {
     }
 };
 
+/**
+ * Create a new event for a community
+ */
+const createCommunityEvent = async (req, res) => {
+    try {
+        const { communityId } = req.params;
+        const {
+            title,
+            description,
+            eventDate,
+            startTime,
+            endTime,
+            location,
+            maxParticipants,
+            registrationEndDate,
+            eventType
+        } = req.body;
+
+        // Verify community exists and was created by current admin
+        const community = await CommunitiesModel.findOne({
+            _id: communityId,
+            createdBy: req.user._id,
+            isDeleted: false
+        });
+
+        if (!community) {
+            return res.status(404).send(response.toJson(messages['en'].common.not_exists));
+        }
+
+        // Handle file upload using fileUpload middleware pattern
+        let images = [];
+        if (req.files && req.files.images) {
+            const files = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
+            
+            for (const file of files) {
+                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+                const filename = 'event-' + uniqueSuffix + '.' + file.name.split('.').pop();
+                const uploadPath = path.join(__dirname, '../uploads/', filename);
+                
+                // Save file
+                await file.mv(uploadPath);
+                images.push(`/uploads/${filename}`);
+            }
+        }
+
+        // Create new event
+        const newEvent = new EventsModel({
+            title,
+            description,
+            communityId: communityId,
+            eventDate: new Date(eventDate),
+            startTime,
+            endTime,
+            location: location || '',
+            images: images.length > 0 ? [images[0]] : [], // Only allow one image as per requirements
+            maxParticipants: maxParticipants ? parseInt(maxParticipants) : null,
+            createdBy: req.user._id,
+            eventType: eventType || 'Other',
+            status: 'Upcoming'
+        });
+
+        await newEvent.save();
+
+        // Populate community and creator details
+        await newEvent.populate('communityId', 'name');
+        await newEvent.populate('createdBy', 'name');
+
+        return res.status(201).send(response.toJson(
+            'Event created successfully',
+            newEvent
+        ));
+
+    } catch (err) {
+        console.error('Error creating event:', err.message);
+        console.error('Error stack:', err.stack);
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
 module.exports = {
     getDashboardStats,
     getAdminCommunities,
@@ -858,5 +939,6 @@ module.exports = {
     createRoleChangeRequest,
     getRoleChangeRequests,
     approveRoleChangeRequest,
-    rejectRoleChangeRequest
+    rejectRoleChangeRequest,
+    createCommunityEvent
 };

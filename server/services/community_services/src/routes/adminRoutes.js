@@ -39,6 +39,7 @@ router.get('/users', auth.verifyToken, auth.verifyAdmin, adminController.getAllU
 
 // Community events
 router.get('/communities/:communityId/events', auth.verifyToken, auth.verifyAdmin, adminController.getCommunityEvents);
+router.post('/communities/:communityId/events', auth.verifyToken, auth.verifyAdmin, adminController.createCommunityEvent);
 
 // Reports
 router.get('/reports', auth.verifyToken, auth.verifyAdmin, adminController.getReports);

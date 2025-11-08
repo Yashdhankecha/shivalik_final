@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from '../../components/ui/card';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Badge } from '../../components/ui/badge';
 import {
-  Users, Building2, Calendar, FileText, UserPlus,
+  Users, Building2, Calendar, UserPlus,
   Activity, TrendingUp, BarChart3, MessageSquare
 } from 'lucide-react';
 import { adminApi } from '../../apis/admin';
@@ -13,8 +13,7 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalCommunities: 0,
-    activeEvents: 0,
-    totalReports: 0
+    activeEvents: 0
   });
   const [recentUsers, setRecentUsers] = useState([]);
   const [recentActivities, setRecentActivities] = useState([]);
@@ -25,28 +24,48 @@ const AdminDashboard = () => {
       try {
         // Fetch dashboard stats
         const statsResponse = await adminApi.getDashboardStats();
-        setStats(statsResponse.data || {
+        // Backend returns {message, result: {stats}}
+        const statsData = statsResponse.result || statsResponse.data || statsResponse;
+        setStats(statsData || {
           totalUsers: 0,
           totalCommunities: 0,
-          activeEvents: 0,
-          totalReports: 0
+          activeEvents: 0
         });
 
-        // For now, we'll use mock data for recent users and activities
-        // In a real implementation, these would come from API calls
-        setRecentUsers([
-          { name: 'John Doe', email: 'john@example.com', role: 'Resident', status: 'Active', joinDate: '2 days ago' },
-          { name: 'Jane Smith', email: 'jane@example.com', role: 'Manager', status: 'Active', joinDate: '3 days ago' },
-          { name: 'Mike Johnson', email: 'mike@example.com', role: 'Resident', status: 'Pending', joinDate: '5 days ago' },
-          { name: 'Sarah Williams', email: 'sarah@example.com', role: 'Resident', status: 'Active', joinDate: '1 week ago' }
-        ]);
+        // Fetch recent users
+        try {
+          const usersResponse = await adminApi.getAllUsers({ limit: 5, page: 1 });
+          const usersData = usersResponse.result || usersResponse.data || usersResponse;
+          // Handle both array and object with users property
+          const users = Array.isArray(usersData) ? usersData : (usersData.users || usersData.data || []);
+          
+          // Format users for display
+          const formattedUsers = users.slice(0, 5).map((user: any) => ({
+            name: user.name || 'Unknown',
+            email: user.email || '',
+            role: user.role || 'User',
+            status: user.status || 'Pending',
+            joinDate: user.createdAt 
+              ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              : 'N/A',
+            _id: user._id
+          }));
+          setRecentUsers(formattedUsers);
+        } catch (error) {
+          console.error('Error fetching recent users:', error);
+          setRecentUsers([]);
+        }
 
-        setRecentActivities([
-          { action: 'New user registration', user: 'Alice Brown', time: '5 minutes ago', type: 'user' },
-          { action: 'Community created', user: 'Admin', time: '1 hour ago', type: 'community' },
-          { action: 'Event published', user: 'Mike Chen', time: '2 hours ago', type: 'event' },
-          { action: 'Report submitted', user: 'Emily Rodriguez', time: '3 hours ago', type: 'report' }
-        ]);
+        // Fetch recent activities (we'll create this endpoint)
+        try {
+          const activitiesResponse = await adminApi.getRecentActivities();
+          const activitiesData = activitiesResponse.result || activitiesResponse.data || activitiesResponse;
+          const activities = activitiesData.activities || activitiesData || [];
+          setRecentActivities(activities);
+        } catch (error) {
+          console.error('Error fetching recent activities:', error);
+          setRecentActivities([]);
+        }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -57,12 +76,26 @@ const AdminDashboard = () => {
     fetchData();
   }, []);
 
-  // Format stats for display
+  // Format stats for display with real change percentages
   const formattedStats = [
-    { title: 'Total Users', value: stats.totalUsers.toLocaleString(), change: '+12', icon: Users },
-    { title: 'Communities', value: stats.totalCommunities.toLocaleString(), change: '+5', icon: Building2 },
-    { title: 'Active Events', value: stats.activeEvents.toLocaleString(), change: '+8', icon: Calendar },
-    { title: 'Reports', value: stats.totalReports.toLocaleString(), change: '-3', icon: FileText }
+    { 
+      title: 'Total Users', 
+      value: stats.totalUsers.toLocaleString(), 
+      change: stats.changes?.users !== undefined ? (stats.changes.users >= 0 ? `+${stats.changes.users}` : `${stats.changes.users}`) : '0', 
+      icon: Users 
+    },
+    { 
+      title: 'Communities', 
+      value: stats.totalCommunities.toLocaleString(), 
+      change: stats.changes?.communities !== undefined ? (stats.changes.communities >= 0 ? `+${stats.changes.communities}` : `${stats.changes.communities}`) : '0', 
+      icon: Building2 
+    },
+    { 
+      title: 'Active Events', 
+      value: stats.activeEvents.toLocaleString(), 
+      change: stats.changes?.events !== undefined ? (stats.changes.events >= 0 ? `+${stats.changes.events}` : `${stats.changes.events}`) : '0', 
+      icon: Calendar 
+    }
   ];
 
   if (loading) {
@@ -82,7 +115,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         {formattedStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -92,7 +125,7 @@ const AdminDashboard = () => {
                   <div className="w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center shadow-md">
                     <Icon className="w-6 h-6 text-white" />
                   </div>
-                  <Badge className={`${stat.change.startsWith('+') ? 'bg-gray-800 text-white' : 'bg-gray-300 text-gray-800'}`}>
+                  <Badge className={`${stat.change.startsWith('+') || (stat.change !== '0' && !stat.change.startsWith('-')) ? 'bg-gray-800 text-white' : stat.change.startsWith('-') ? 'bg-red-100 text-red-800' : 'bg-gray-300 text-gray-800'}`}>
                     {stat.change}%
                   </Badge>
                 </div>
@@ -128,8 +161,15 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {recentUsers.map((user, index) => (
-                    <tr key={index} className="hover:bg-gray-50 transition-colors">
+                  {recentUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                        No recent users found
+                      </td>
+                    </tr>
+                  ) : (
+                    recentUsers.map((user, index) => (
+                    <tr key={user._id || index} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <Avatar className="w-10 h-10">
@@ -156,7 +196,8 @@ const AdminDashboard = () => {
                         <Button variant="ghost" size="sm" className="text-black hover:text-black hover:bg-gray-100">View</Button>
                       </td>
                     </tr>
-                  ))}
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -173,13 +214,17 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent className="p-4">
             <div className="space-y-4">
-              {recentActivities.map((activity, index) => (
+              {recentActivities.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No recent activities found
+                </div>
+              ) : (
+                recentActivities.map((activity, index) => (
                 <div key={index} className="flex gap-3 pb-4 border-b border-gray-200 last:border-0 last:pb-0">
                   <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center bg-gray-800">
                     {activity.type === 'user' && <Users className="w-5 h-5 text-white" />}
                     {activity.type === 'community' && <Building2 className="w-5 h-5 text-white" />}
                     {activity.type === 'event' && <Calendar className="w-5 h-5 text-white" />}
-                    {activity.type === 'report' && <FileText className="w-5 h-5 text-white" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-black">{activity.action}</p>
@@ -187,7 +232,8 @@ const AdminDashboard = () => {
                     <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
                   </div>
                 </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>

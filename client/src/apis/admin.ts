@@ -148,6 +148,17 @@ export const adminApi = {
   rejectRoleChangeRequest: async (requestId: string, rejectionReason: string) => {
     const response = await apiClient.put(`/api/v1/admin/role-change-requests/${requestId}/reject`, { rejectionReason });
     return response.data;
+  },
+
+  // Create community event
+  createCommunityEvent: async (communityId: string, data: FormData) => {
+    try {
+      const response = await apiClient.post(`/api/v1/admin/communities/${communityId}/events`, data);
+      return response.data;
+    } catch (error) {
+      // Re-throw the error so it can be handled by the calling function
+      throw error;
+    }
   }
 };
 
