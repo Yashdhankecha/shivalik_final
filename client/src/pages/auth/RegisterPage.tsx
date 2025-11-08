@@ -174,37 +174,37 @@ export const RegisterPage = () => {
     };
 
     return (
-        <div className="min-h-screen w-full relative overflow-hidden bg-gradient-to-br from-gray-900 via-green-950 to-black">
+        <div className="min-h-screen w-full relative overflow-hidden bg-white">
             {/* Real Estate Background */}
             <div 
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-5"
                 style={{
                     backgroundImage: "url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070')"
                 }}
             />
             
             {/* Overlay Pattern */}
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/20 via-transparent to-green-900/20" />
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-100/20 via-transparent to-gray-200/20" />
             
             {/* Content */}
             <div className="relative z-10 min-h-screen flex items-center justify-center p-4 py-12">
                 <div className="w-full max-w-md">
                     {/* Logo & Branding */}
                     <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-green-800 shadow-xl mb-4">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-900 to-black shadow-xl mb-4 border border-gray-300">
                             <Building2 className="w-8 h-8 text-white" />
                         </div>
-                        <h1 className="text-4xl font-bold text-white mb-2">Shivalik Group</h1>
-                        <p className="text-emerald-200 text-sm">Real Estate Operating System</p>
+                        <h1 className="text-4xl font-bold text-black mb-2">Shivalik Group</h1>
+                        <p className="text-gray-600 text-sm">Real Estate Operating System</p>
                     </div>
 
                     {/* Register Card */}
-                    <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 p-8">
+                    <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
                         {/* Progress Indicator */}
                         <div className="flex items-center justify-center mb-6">
                             <div className="flex items-center gap-2">
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                                    step === 'details' ? 'bg-blue-600 text-white' : 'bg-green-500 text-white'
+                                    step === 'details' ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'
                                 }`}>
                                     {step !== 'details' ? <Check className="w-4 h-4" /> : '1'}
                                 </div>
@@ -213,7 +213,7 @@ export const RegisterPage = () => {
                             <div className="flex-1 h-px bg-gray-300 mx-2" />
                             <div className="flex items-center gap-2">
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                                    step === 'verify-email' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
+                                    step === 'verify-email' ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'
                                 }`}>
                                     2
                                 </div>
@@ -225,7 +225,7 @@ export const RegisterPage = () => {
                         {step === 'details' && (
                             <>
                                 <div className="mb-6">
-                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Create Account</h2>
+                                    <h2 className="text-2xl font-bold text-black mb-2">Create Account</h2>
                                     <p className="text-gray-600 text-sm">Enter your details to get started</p>
                                 </div>
 
@@ -244,7 +244,7 @@ export const RegisterPage = () => {
                                                 value={formData.name}
                                                 onChange={handleChange}
                                                 placeholder="Enter your full name"
-                                                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                                                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent outline-none transition-all text-sm"
                                                 required
                                             />
                                         </div>
@@ -264,7 +264,7 @@ export const RegisterPage = () => {
                                                 value={formData.email}
                                                 onChange={handleChange}
                                                 placeholder="Enter your email"
-                                                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                                                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent outline-none transition-all text-sm"
                                                 required
                                             />
                                         </div>
@@ -287,7 +287,7 @@ export const RegisterPage = () => {
                                                 onChange={handlePhoneChange}
                                                 placeholder="Enter 10-digit mobile number"
                                                 maxLength={10}
-                                                className="w-full pl-24 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                                                className="w-full pl-24 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent outline-none transition-all text-sm"
                                                 required
                                             />
                                         </div>
@@ -307,13 +307,13 @@ export const RegisterPage = () => {
                                                 value={formData.password}
                                                 onChange={handleChange}
                                                 placeholder="Create a strong password"
-                                                className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                                                className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent outline-none transition-all text-sm"
                                                 required
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
                                             >
                                                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                             </button>
@@ -337,13 +337,13 @@ export const RegisterPage = () => {
                                                 value={formData.confirmPassword}
                                                 onChange={handleChange}
                                                 placeholder="Confirm your password"
-                                                className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                                                className="w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent outline-none transition-all text-sm"
                                                 required
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
                                             >
                                                 {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                             </button>
@@ -353,7 +353,7 @@ export const RegisterPage = () => {
                                     <Button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="w-full h-12 bg-black hover:bg-gray-800 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {loading ? (
                                             <>
@@ -375,9 +375,9 @@ export const RegisterPage = () => {
                         {step === 'verify-email' && (
                             <>
                                 <div className="mb-6">
-                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify Email</h2>
+                                    <h2 className="text-2xl font-bold text-black mb-2">Verify Email</h2>
                                     <p className="text-gray-600 text-sm">
-                                        Enter the OTP sent to <span className="font-medium text-gray-900">{formData.email}</span>
+                                        Enter the OTP sent to <span className="font-medium text-black">{formData.email}</span>
                                     </p>
                                 </div>
 
@@ -397,7 +397,7 @@ export const RegisterPage = () => {
                                                     <NewInputOTPSlot
                                                         key={index}
                                                         index={index}
-                                                        className="w-12 h-12 text-lg font-semibold border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                        className="w-12 h-12 text-lg font-semibold border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                                                     />
                                                 ))}
                                             </InputOTPGroup>
@@ -407,7 +407,7 @@ export const RegisterPage = () => {
                                     <Button
                                         type="submit"
                                         disabled={loading || emailOTP.join('').length !== 6}
-                                        className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="w-full h-12 bg-black hover:bg-gray-800 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {loading ? (
                                             <>
@@ -426,7 +426,7 @@ export const RegisterPage = () => {
                                         type="button"
                                         onClick={resendEmailOTP}
                                         disabled={loading}
-                                        className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium"
+                                        className="w-full text-sm text-gray-700 hover:text-black font-medium"
                                     >
                                         Resend OTP
                                     </button>
@@ -439,9 +439,18 @@ export const RegisterPage = () => {
                             <div className="mt-6 text-center">
                                 <p className="text-sm text-gray-600">
                                     Already have an account?{' '}
-                                    <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
+                                    <Link to="/login" className="text-black hover:text-gray-800 font-medium">
                                         Sign in here
                                     </Link>
+                                </p>
+                                <p className="text-sm text-gray-500 mt-2">
+                                    Continue as{' '}
+                                    <button 
+                                        onClick={() => navigate('/dashboard')}
+                                        className="text-black hover:text-gray-800 font-medium underline"
+                                    >
+                                        Guest
+                                    </button>
                                 </p>
                             </div>
                         )}
@@ -449,7 +458,7 @@ export const RegisterPage = () => {
 
                     {/* Footer */}
                     <div className="mt-6 text-center">
-                        <p className="text-sm text-white/80">
+                        <p className="text-sm text-gray-500">
                             © 2025 Shivalik Group. All rights reserved.
                         </p>
                     </div>

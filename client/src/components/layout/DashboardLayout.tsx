@@ -336,22 +336,22 @@ export const DashboardLayout = () => {
           padding: rem(12),
           borderRadius: rem(8),
           textDecoration: 'none',
-          color: isActive ? '#ffffff' : '#9ca3af',
-          backgroundColor: isActive ? '#2a4365' : 'transparent',
+          color: isActive ? '#1f2937' : '#6b7280',
+          backgroundColor: isActive ? '#f3f4f6' : 'transparent',
           fontWeight: isActive ? 600 : 500,
           fontSize: rem(14),
           transition: 'all 0.3s ease-in-out',
           listStyle: 'none',
           position: 'relative',
           boxShadow: hasSubItems && tabOpenStates[item.href] ? '0 4px 6px rgba(0, 0, 0, 0.1)' : 'none',
-          borderLeft: isActive ? '4px solid #60a5fa' : 'none',
+          borderLeft: isActive ? '4px solid #3b82f6' : 'none',
           marginBottom: hasSubItems ? rem(4) : 0,
           minHeight: hasSubItems ? rem(48) : 'auto',
           cursor: 'pointer',
         }}
         onMouseEnter={(e) => {
           if (!isActive && !hasSubItems) {
-            (e.target as HTMLElement).style.backgroundColor = 'transparent';
+            (e.target as HTMLElement).style.backgroundColor = '#f9fafb';
           }
         }}
         onMouseLeave={(e) => {
@@ -362,8 +362,8 @@ export const DashboardLayout = () => {
         onClick={() => handleTabClick(item)}
       >
         <Group gap="sm" style={{ position: 'relative', zIndex: 1 }}>
-          <item.icon size={20} />
-          <Text size="sm">{item.name}</Text>
+          <item.icon size={20} color={isActive ? '#1f2937' : '#9ca3af'} />
+          <Text size="sm" c={isActive ? '#1f2937' : '#6b7280'}>{item.name}</Text>
           {hasSubItems && (
             <Box
               style={{
@@ -372,7 +372,7 @@ export const DashboardLayout = () => {
                 marginLeft: 'auto',
               }}
             >
-              <IconCaretDown size={16} />
+              <IconCaretDown size={16} color={isActive ? '#1f2937' : '#9ca3af'} />
             </Box>
           )}
         </Group>
@@ -383,11 +383,12 @@ export const DashboardLayout = () => {
               padding: 'rem(12) 0 0 rem(28)',
               margin: 'rem(8) 0 0 0',
               listStyle: 'none',
-              background: 'linear-gradient(135deg, #2a4365, #3b82f6)',
+              background: '#f9fafb',
               borderRadius: rem(6),
               overflow: 'hidden',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
               animation: 'slideDown 0.3s ease-out',
+              border: '1px solid #e5e7eb',
             }}
             onAnimationEnd={(e) => (e.target as HTMLElement).style.animation = 'none'}
           >
@@ -396,8 +397,8 @@ export const DashboardLayout = () => {
                 key={subItem.name}
                 style={{
                   padding: rem(10),
-                  color: activePath === subItem.href ? '#ffffff' : '#e0e7ff',
-                  backgroundColor: activePath === subItem.href ? '#1e40af' : 'transparent',
+                  color: activePath === subItem.href ? '#1f2937' : '#6b7280',
+                  backgroundColor: activePath === subItem.href ? '#e5e7eb' : 'transparent',
                   fontSize: rem(13),
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
@@ -412,14 +413,14 @@ export const DashboardLayout = () => {
                 }}
                 onMouseEnter={(e) => {
                   if (activePath !== subItem.href) {
-                    (e.target as HTMLElement).style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                    (e.target as HTMLElement).style.color = '#ffffff';
+                    (e.target as HTMLElement).style.backgroundColor = '#f3f4f6';
+                    (e.target as HTMLElement).style.color = '#1f2937';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (activePath !== subItem.href) {
                     (e.target as HTMLElement).style.backgroundColor = 'transparent';
-                    (e.target as HTMLElement).style.color = '#e0e7ff';
+                    (e.target as HTMLElement).style.color = '#6b7280';
                   }
                 }}
               >
@@ -427,7 +428,7 @@ export const DashboardLayout = () => {
                   style={{
                     width: rem(4),
                     height: rem(4),
-                    backgroundColor: activePath === subItem.href ? '#60a5fa' : 'transparent',
+                    backgroundColor: activePath === subItem.href ? '#3b82f6' : 'transparent',
                     borderRadius: '50%',
                     marginRight: rem(10),
                   }}
@@ -551,8 +552,9 @@ export const DashboardLayout = () => {
       <AppShell.Navbar
         p="md"
         style={{
-          backgroundColor: '#1f2937',
+          backgroundColor: '#ffffff',
           border: 'none',
+          borderRight: '1px solid #e5e7eb',
         }}
       >
         <AppShell.Section>
@@ -603,7 +605,7 @@ export const DashboardLayout = () => {
         </AppShell.Section>
 
         <AppShell.Section>
-          <Divider my="md" color="#374151" />
+          <Divider my="md" color="#e5e7eb" />
           <Box px="xs">
             <Text size="xs" c="#6b7280" mb={4}>
               Version

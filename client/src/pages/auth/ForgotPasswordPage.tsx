@@ -43,34 +43,34 @@ export const ForgotPasswordPage = () => {
     };
 
     return (
-        <div className="min-h-screen w-full relative overflow-hidden">
+        <div className="min-h-screen w-full relative overflow-hidden bg-white">
             {/* Real Estate Background */}
             <div 
-                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-5"
                 style={{
-                    backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070')"
+                    backgroundImage: "url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070')"
                 }}
             />
             
             {/* Overlay Pattern */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-amber-900/20" />
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-100/20 via-transparent to-gray-200/20" />
             
             {/* Content */}
             <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
                 <div className="w-full max-w-md">
                     {/* Logo & Branding */}
                     <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 shadow-xl mb-4">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-gray-900 to-black shadow-xl mb-4 border border-gray-300">
                             <Building2 className="w-8 h-8 text-white" />
                         </div>
-                        <h1 className="text-4xl font-bold text-white mb-2">Shivalik Group</h1>
-                        <p className="text-blue-200 text-sm">Real Estate Operating System</p>
+                        <h1 className="text-4xl font-bold text-black mb-2">Shivalik Group</h1>
+                        <p className="text-gray-600 text-sm">Real Estate Operating System</p>
                     </div>
 
                     {/* Forgot Password Card */}
-                    <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 p-8">
+                    <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
                         <div className="mb-6">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Forgot Password?</h2>
+                            <h2 className="text-2xl font-bold text-black mb-2">Forgot Password?</h2>
                             <p className="text-gray-600 text-sm">
                                 Enter your email address and we'll send you an OTP to reset your password.
                             </p>
@@ -91,7 +91,7 @@ export const ForgotPasswordPage = () => {
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder="Enter your registered email"
-                                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent outline-none transition-all text-sm"
                                         required
                                     />
                                 </div>
@@ -101,7 +101,7 @@ export const ForgotPasswordPage = () => {
                             <Button
                                 type="submit"
                                 disabled={loading || !email}
-                                className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full h-12 bg-black hover:bg-gray-800 text-white rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {loading ? (
                                     <>
@@ -119,17 +119,29 @@ export const ForgotPasswordPage = () => {
                             {/* Back to Login */}
                             <Link
                                 to="/login"
-                                className="flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                                className="flex items-center justify-center gap-2 text-sm text-gray-700 hover:text-black font-medium transition-colors"
                             >
                                 <ArrowLeft className="w-4 h-4" />
                                 Back to Login
                             </Link>
                         </form>
+                        
+                        <div className="mt-4 text-center">
+                            <p className="text-sm text-gray-500">
+                                Continue as{' '}
+                                <button 
+                                    onClick={() => navigate('/dashboard')}
+                                    className="text-black hover:text-gray-800 font-medium underline"
+                                >
+                                    Guest
+                                </button>
+                            </p>
+                        </div>
                     </div>
 
                     {/* Footer */}
                     <div className="mt-6 text-center">
-                        <p className="text-sm text-white/80">
+                        <p className="text-sm text-gray-500">
                             © 2025 Shivalik Group. All rights reserved.
                         </p>
                     </div>

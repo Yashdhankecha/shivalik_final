@@ -340,28 +340,28 @@ const CommunityDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="bg-white shadow-sm">
+      <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+              <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-gray-700 hover:text-black hover:bg-gray-100">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>
-              <h1 className="text-xl font-bold text-gray-900">Community</h1>
+              <h1 className="text-xl font-bold text-black">Community</h1>
             </div>
           </div>
         </div>
       </div>
 
       {/* Community Banner */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-8">
+      <div className="bg-gradient-to-r from-gray-900 to-black text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-6">
-              <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-4xl font-bold">
+              <div className="w-24 h-24 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center text-4xl font-bold border border-gray-700">
                 {community.logo ? (
                   <img src={community.logo} alt={community.name} className="w-full h-full object-cover rounded-2xl" />
                 ) : (
@@ -370,7 +370,7 @@ const CommunityDashboard = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-bold mb-2">{community.name}</h1>
-                <p className="text-white/90 mb-2">
+                <p className="text-gray-300 mb-2">
                   {community.shortDescription || community.description?.substring(0, 120) + '...'}
                 </p>
                 <div className="flex flex-wrap items-center gap-4 text-sm">
@@ -396,10 +396,10 @@ const CommunityDashboard = () => {
             <Button 
               className={`px-6 font-semibold ${
                 joinStatus === 'joined' 
-                  ? 'bg-green-500 hover:bg-green-600' 
+                  ? 'bg-gray-800 hover:bg-gray-700' 
                   : joinStatus === 'requested'
                   ? 'bg-yellow-500 hover:bg-yellow-600'
-                  : 'bg-white text-blue-600 hover:bg-blue-50'
+                  : 'bg-black hover:bg-gray-800 text-white'
               }`}
               onClick={handleJoinCommunity}
               disabled={joinStatus !== 'not-joined'}
@@ -432,7 +432,7 @@ const CommunityDashboard = () => {
                     }}
                     className={`px-5 py-2.5 rounded-xl font-medium text-sm whitespace-nowrap transition-all ${
                       activeTab === tab.toLowerCase()
-                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                        ? 'bg-black text-white shadow-lg'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     } ${joinStatus !== 'joined' && tab.toLowerCase() !== 'pulses' ? 'opacity-50' : ''}`}
                   >
@@ -444,11 +444,11 @@ const CommunityDashboard = () => {
 
             {/* Tab Content */}
             {joinStatus !== 'joined' && activeTab !== 'pulses' ? (
-              <Card className="p-12 text-center mt-6">
-                <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Join to Access</h3>
+              <Card className="p-12 text-center mt-6 bg-white border border-gray-200">
+                <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-black mb-2">Join to Access</h3>
                 <p className="text-gray-600 mb-4">You need to join this community to view {activeTab}</p>
-                <Button onClick={handleJoinCommunity} className="bg-gradient-to-r from-blue-600 to-purple-600">
+                <Button onClick={handleJoinCommunity} className="bg-black hover:bg-gray-800 text-white">
                   Join Community
                 </Button>
               </Card>
@@ -458,61 +458,63 @@ const CommunityDashboard = () => {
                 {activeTab === 'pulses' && (
                   <div className="mt-6">
                     <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-2xl font-bold text-gray-900">Community Pulses</h2>
+                      <h2 className="text-2xl font-bold text-black">Community Pulses</h2>
                       {joinStatus === 'joined' && (
                         <Dialog open={showPulseDialog} onOpenChange={setShowPulseDialog}>
                           <DialogTrigger asChild>
-                            <Button className="bg-gradient-to-r from-blue-600 to-purple-600">
+                            <Button className="bg-black hover:bg-gray-800 text-white">
                               <Plus className="w-4 h-4 mr-2" />
                               Add Pulse
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
+                          <DialogContent className="max-w-2xl bg-white border border-gray-200">
                             <DialogHeader>
-                              <DialogTitle>Create New Pulse</DialogTitle>
+                              <DialogTitle className="text-black">Create New Pulse</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4 mt-4">
                               <div>
-                                <label className="block text-sm font-medium mb-2">Territory</label>
+                                <label className="block text-sm font-medium mb-2 text-gray-700">Territory</label>
                                 <Select value={pulseForm.territory} onValueChange={(value) => setPulseForm({...pulseForm, territory: value})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger className="bg-white border-gray-300 text-black">
                                     <SelectValue placeholder="Select territory" />
                                   </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="general">General</SelectItem>
-                                    <SelectItem value="block-a">Block A</SelectItem>
-                                    <SelectItem value="block-b">Block B</SelectItem>
-                                    <SelectItem value="block-c">Block C</SelectItem>
+                                  <SelectContent className="bg-white border-gray-200">
+                                    <SelectItem value="general" className="text-black">General</SelectItem>
+                                    <SelectItem value="block-a" className="text-black">Block A</SelectItem>
+                                    <SelectItem value="block-b" className="text-black">Block B</SelectItem>
+                                    <SelectItem value="block-c" className="text-black">Block C</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
                               <div>
-                                <label className="block text-sm font-medium mb-2">Title</label>
+                                <label className="block text-sm font-medium mb-2 text-gray-700">Title</label>
                                 <Input 
                                   value={pulseForm.title}
                                   onChange={(e) => setPulseForm({...pulseForm, title: e.target.value})}
                                   placeholder="Enter pulse title"
+                                  className="bg-white border-gray-300 text-black"
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium mb-2">Description</label>
+                                <label className="block text-sm font-medium mb-2 text-gray-700">Description</label>
                                 <Textarea
                                   value={pulseForm.description}
                                   onChange={(e) => setPulseForm({...pulseForm, description: e.target.value})}
                                   placeholder="What's on your mind?"
                                   rows={4}
+                                  className="bg-white border-gray-300 text-black"
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium mb-2">Attachment (1 image)</label>
-                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
+                                <label className="block text-sm font-medium mb-2 text-gray-700">Attachment (1 image)</label>
+                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer bg-white">
                                   <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                                  <p className="text-sm text-gray-600">Click to upload or drag and drop</p>
+                                  <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
                                 </div>
                               </div>
                               <div className="flex justify-end gap-3">
-                                <Button variant="outline" onClick={() => setShowPulseDialog(false)}>Cancel</Button>
-                                <Button className="bg-gradient-to-r from-blue-600 to-purple-600">Post Pulse</Button>
+                                <Button variant="outline" onClick={() => setShowPulseDialog(false)} className="border-gray-300 text-gray-700 hover:bg-gray-100">Cancel</Button>
+                                <Button className="bg-black hover:bg-gray-800 text-white">Post Pulse</Button>
                               </div>
                             </div>
                           </DialogContent>
@@ -527,20 +529,20 @@ const CommunityDashboard = () => {
                               <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                   <Avatar className="w-10 h-10">
-                                    <AvatarFallback>{pulse.userId.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                    <AvatarFallback className="bg-gray-100 text-black">{pulse.userId.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                                   </Avatar>
                                   <div>
-                                    <h4 className="font-semibold text-gray-900">{pulse.userId.name}</h4>
+                                    <h4 className="font-semibold text-black">{pulse.userId.name}</h4>
                                     <p className="text-sm text-gray-500">
                                       {new Date(pulse.createdAt).toLocaleDateString()}
                                     </p>
                                   </div>
                                 </div>
-                                <Badge variant="secondary" className="capitalize">
+                                <Badge variant="secondary" className="capitalize bg-gray-100 text-gray-700">
                                   {pulse.territory}
                                 </Badge>
                               </div>
-                              <h3 className="text-lg font-bold text-gray-900 mb-2">{pulse.title}</h3>
+                              <h3 className="text-lg font-bold text-black mb-2">{pulse.title}</h3>
                               <p className="text-gray-700 mb-4">{pulse.description}</p>
                               {pulse.attachment && (
                                 <div className="rounded-lg overflow-hidden border border-gray-200 mb-4">
@@ -566,12 +568,12 @@ const CommunityDashboard = () => {
                         ))}
                       </div>
                     ) : (
-                      <Card className="p-12 text-center">
-                        <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">No Pulses Yet</h3>
+                      <Card className="p-12 text-center bg-white border border-gray-200">
+                        <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-xl font-bold text-black mb-2">No Pulses Yet</h3>
                         <p className="text-gray-600 mb-4">Be the first to share a pulse in this community</p>
                         {joinStatus === 'joined' && (
-                          <Button onClick={() => setShowPulseDialog(true)} className="bg-gradient-to-r from-blue-600 to-purple-600">
+                          <Button onClick={() => setShowPulseDialog(true)} className="bg-black hover:bg-gray-800 text-white">
                             <Plus className="w-4 h-4 mr-2" />
                             Create Pulse
                           </Button>
@@ -585,68 +587,71 @@ const CommunityDashboard = () => {
                 {activeTab === 'marketplace' && (
                   <div className="mt-6">
                     <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-2xl font-bold text-gray-900">Marketplace</h2>
+                      <h2 className="text-2xl font-bold text-black">Marketplace</h2>
                       {joinStatus === 'joined' && (
                         <Dialog open={showListingDialog} onOpenChange={setShowListingDialog}>
                           <DialogTrigger asChild>
-                            <Button className="bg-gradient-to-r from-blue-600 to-purple-600">
+                            <Button className="bg-black hover:bg-gray-800 text-white">
                               <Plus className="w-4 h-4 mr-2" />
                               Add Listing
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
+                          <DialogContent className="max-w-2xl bg-white border border-gray-200">
                             <DialogHeader>
-                              <DialogTitle>Create New Listing</DialogTitle>
+                              <DialogTitle className="text-black">Create New Listing</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4 mt-4">
                               <div>
-                                <label className="block text-sm font-medium mb-2">Type</label>
+                                <label className="block text-sm font-medium mb-2 text-gray-700">Type</label>
                                 <Select value={listingForm.type} onValueChange={(value) => setListingForm({...listingForm, type: value as 'want' | 'offer'})}>
-                                  <SelectTrigger>
+                                  <SelectTrigger className="bg-white border-gray-300 text-black">
                                     <SelectValue placeholder="Select type" />
                                   </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="want">Want</SelectItem>
-                                    <SelectItem value="offer">Offer</SelectItem>
+                                  <SelectContent className="bg-white border-gray-200">
+                                    <SelectItem value="want" className="text-black">Want</SelectItem>
+                                    <SelectItem value="offer" className="text-black">Offer</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
                               <div>
-                                <label className="block text-sm font-medium mb-2">Title</label>
+                                <label className="block text-sm font-medium mb-2 text-gray-700">Title</label>
                                 <Input 
                                   value={listingForm.title}
                                   onChange={(e) => setListingForm({...listingForm, title: e.target.value})}
                                   placeholder="Enter listing title"
+                                  className="bg-white border-gray-300 text-black"
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium mb-2">Description</label>
+                                <label className="block text-sm font-medium mb-2 text-gray-700">Description</label>
                                 <Textarea
                                   value={listingForm.description}
                                   onChange={(e) => setListingForm({...listingForm, description: e.target.value})}
                                   placeholder="Describe what you're offering or looking for"
                                   rows={4}
+                                  className="bg-white border-gray-300 text-black"
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium mb-2">Price (₹)</label>
+                                <label className="block text-sm font-medium mb-2 text-gray-700">Price (₹)</label>
                                 <Input 
                                   type="number"
                                   value={listingForm.price}
                                   onChange={(e) => setListingForm({...listingForm, price: e.target.value})}
                                   placeholder="Enter price"
+                                  className="bg-white border-gray-300 text-black"
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium mb-2">Attachment (1 image)</label>
-                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
+                                <label className="block text-sm font-medium mb-2 text-gray-700">Attachment (1 image)</label>
+                                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer bg-white">
                                   <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                                  <p className="text-sm text-gray-600">Click to upload or drag and drop</p>
+                                  <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
                                 </div>
                               </div>
                               <div className="flex justify-end gap-3">
-                                <Button variant="outline" onClick={() => setShowListingDialog(false)}>Cancel</Button>
-                                <Button className="bg-gradient-to-r from-blue-600 to-purple-600">Post Listing</Button>
+                                <Button variant="outline" onClick={() => setShowListingDialog(false)} className="border-gray-300 text-gray-700 hover:bg-gray-100">Cancel</Button>
+                                <Button className="bg-black hover:bg-gray-800 text-white">Post Listing</Button>
                               </div>
                             </div>
                           </DialogContent>
@@ -660,16 +665,16 @@ const CommunityDashboard = () => {
                             <CardContent className="p-5">
                               <div className="flex items-start justify-between mb-3">
                                 <div className="flex items-center gap-2">
-                                  <Badge variant={listing.type === 'offer' ? 'default' : 'secondary'}>
+                                  <Badge variant={listing.type === 'offer' ? 'default' : 'secondary'} className="bg-gray-100 text-black">
                                     {listing.type}
                                   </Badge>
-                                  <Badge variant="outline" className="capitalize">
+                                  <Badge variant="outline" className="capitalize bg-gray-100 text-gray-700 border-gray-300">
                                     {listing.status}
                                   </Badge>
                                 </div>
-                                <span className="text-lg font-bold text-green-600">₹{listing.price}</span>
+                                <span className="text-lg font-bold text-black">₹{listing.price}</span>
                               </div>
-                              <h3 className="font-bold text-gray-900 mb-2">{listing.title}</h3>
+                              <h3 className="font-bold text-black mb-2">{listing.title}</h3>
                               <p className="text-gray-700 text-sm mb-4 line-clamp-2">{listing.description}</p>
                               {listing.attachment && (
                                 <div className="rounded-lg overflow-hidden border border-gray-200 mb-4">
@@ -679,7 +684,7 @@ const CommunityDashboard = () => {
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                   <Avatar className="w-8 h-8">
-                                    <AvatarFallback>{listing.userId.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                    <AvatarFallback className="bg-gray-100 text-black">{listing.userId.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                                   </Avatar>
                                   <span className="text-sm text-gray-600">{listing.userId.name}</span>
                                 </div>
@@ -692,12 +697,12 @@ const CommunityDashboard = () => {
                         ))}
                       </div>
                     ) : (
-                      <Card className="p-12 text-center">
-                        <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">No Listings Yet</h3>
+                      <Card className="p-12 text-center bg-white border border-gray-200">
+                        <ShoppingBag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-xl font-bold text-black mb-2">No Listings Yet</h3>
                         <p className="text-gray-600 mb-4">Be the first to post a listing in this community</p>
                         {joinStatus === 'joined' && (
-                          <Button onClick={() => setShowListingDialog(true)} className="bg-gradient-to-r from-blue-600 to-purple-600">
+                          <Button onClick={() => setShowListingDialog(true)} className="bg-black hover:bg-gray-800 text-white">
                             <Plus className="w-4 h-4 mr-2" />
                             Create Listing
                           </Button>
@@ -710,7 +715,7 @@ const CommunityDashboard = () => {
                 {/* Directory Tab */}
                 {activeTab === 'directory' && (
                   <div className="mt-6">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Community Directory</h2>
+                    <h2 className="text-2xl font-bold text-black mb-6">Community Directory</h2>
                     {members.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {members.map((member) => (
@@ -718,12 +723,12 @@ const CommunityDashboard = () => {
                             <CardContent className="p-4">
                               <div className="flex items-center gap-3">
                                 <Avatar className="w-12 h-12">
-                                  <AvatarFallback>{member.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                  <AvatarFallback className="bg-gray-100 text-black">{member.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1">
-                                  <h3 className="font-semibold text-gray-900">{member.name}</h3>
-                                  <p className="text-sm text-gray-500">{member.email || 'No email provided'}</p>
-                                  <Badge variant={member.isManager ? 'default' : 'secondary'} className="mt-1">
+                                  <h3 className="font-semibold text-black">{member.name}</h3>
+                                  <p className="text-sm text-gray-600">{member.email || 'No email provided'}</p>
+                                  <Badge variant={member.isManager ? 'default' : 'secondary'} className="mt-1 bg-gray-100 text-black">
                                     {member.isManager ? 'Manager' : member.role}
                                   </Badge>
                                 </div>
@@ -733,9 +738,9 @@ const CommunityDashboard = () => {
                         ))}
                       </div>
                     ) : (
-                      <Card className="p-12 text-center">
-                        <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">No Members Found</h3>
+                      <Card className="p-12 text-center bg-white border border-gray-200">
+                        <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-xl font-bold text-black mb-2">No Members Found</h3>
                         <p className="text-gray-600">This community doesn't have any members yet</p>
                       </Card>
                     )}
@@ -745,7 +750,7 @@ const CommunityDashboard = () => {
                 {/* Events Tab */}
                 {activeTab === 'events' && (
                   <div className="mt-6">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Community Events</h2>
+                    <h2 className="text-2xl font-bold text-black mb-6">Community Events</h2>
                     {events.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {events.map((event) => (
@@ -758,6 +763,7 @@ const CommunityDashboard = () => {
                                     event.status === 'Ongoing' ? 'secondary' : 
                                     event.status === 'Completed' ? 'outline' : 'destructive'
                                   }
+                                  className="bg-gray-100 text-black"
                                 >
                                   {event.status}
                                 </Badge>
@@ -765,7 +771,7 @@ const CommunityDashboard = () => {
                                   {new Date(event.eventDate).toLocaleDateString()}
                                 </span>
                               </div>
-                              <h3 className="font-bold text-gray-900 mb-2">{event.title}</h3>
+                              <h3 className="font-bold text-black mb-2">{event.title}</h3>
                               <p className="text-gray-700 text-sm mb-4 line-clamp-2">{event.description}</p>
                               <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
                                 <span className="flex items-center gap-1">
@@ -782,17 +788,17 @@ const CommunityDashboard = () => {
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                   <Avatar className="w-8 h-8">
-                                    <AvatarFallback>{event.createdBy.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                    <AvatarFallback className="bg-gray-100 text-black">{event.createdBy.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                                   </Avatar>
                                   <span className="text-sm text-gray-600">By {event.createdBy.name}</span>
                                 </div>
                                 <div className="flex gap-2">
-                                  <Button size="sm" variant="outline">
+                                  <Button size="sm" variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-100">
                                     Details
                                   </Button>
                                   <Button 
                                     size="sm" 
-                                    className="bg-gradient-to-r from-blue-600 to-purple-600"
+                                    className="bg-black hover:bg-gray-800 text-white"
                                     onClick={() => handleRegisterEvent(event._id)}
                                   >
                                     Register
@@ -804,12 +810,12 @@ const CommunityDashboard = () => {
                         ))}
                       </div>
                     ) : (
-                      <Card className="p-12 text-center">
-                        <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">No Events Scheduled</h3>
+                      <Card className="p-12 text-center bg-white border border-gray-200">
+                        <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-xl font-bold text-black mb-2">No Events Scheduled</h3>
                         <p className="text-gray-600 mb-4">There are no upcoming events in this community</p>
                         {joinStatus === 'joined' && (
-                          <Button className="bg-gradient-to-r from-blue-600 to-purple-600">
+                          <Button className="bg-black hover:bg-gray-800 text-white">
                             <Plus className="w-4 h-4 mr-2" />
                             Create Event
                           </Button>
@@ -827,17 +833,17 @@ const CommunityDashboard = () => {
             {/* Community Info Card */}
             <Card className="bg-white border border-gray-200">
               <CardHeader className="border-b border-gray-200">
-                <h3 className="text-lg font-bold text-gray-900">Community Info</h3>
+                <h3 className="text-lg font-bold text-black">Community Info</h3>
               </CardHeader>
               <CardContent className="p-5 space-y-4">
                 <div>
                   <h4 className="text-sm font-medium text-gray-500 mb-1">Description</h4>
-                  <p className="text-gray-900">{community.description}</p>
+                  <p className="text-black">{community.description}</p>
                 </div>
                 
                 <div>
                   <h4 className="text-sm font-medium text-gray-500 mb-1">Location</h4>
-                  <p className="text-gray-900">
+                  <p className="text-black">
                     {community.location.address && `${community.location.address}, `}
                     {community.location.city}, {community.location.state} {community.location.zipCode}
                   </p>
@@ -847,13 +853,13 @@ const CommunityDashboard = () => {
                   <h4 className="text-sm font-medium text-gray-500 mb-1">Contact</h4>
                   <div className="space-y-1">
                     {community.contactInfo?.email && (
-                      <p className="text-gray-900">📧 {community.contactInfo.email}</p>
+                      <p className="text-black">📧 {community.contactInfo.email}</p>
                     )}
                     {community.contactInfo?.phone && (
-                      <p className="text-gray-900">📞 {community.contactInfo.phone}</p>
+                      <p className="text-black">📞 {community.contactInfo.phone}</p>
                     )}
                     {community.contactInfo?.website && (
-                      <p className="text-gray-900">🌐 {community.contactInfo.website}</p>
+                      <p className="text-black">🌐 {community.contactInfo.website}</p>
                     )}
                   </div>
                 </div>
@@ -865,6 +871,7 @@ const CommunityDashboard = () => {
                       community.status === 'Active' || community.status === 'active' ? 'default' : 
                       community.status === 'UnderDevelopment' ? 'secondary' : 'outline'
                     }
+                    className="bg-gray-100 text-black"
                   >
                     {community.status}
                   </Badge>
@@ -872,7 +879,7 @@ const CommunityDashboard = () => {
                 
                 <div>
                   <h4 className="text-sm font-medium text-gray-500 mb-1">Created</h4>
-                  <p className="text-gray-900">
+                  <p className="text-black">
                     {new Date(community.createdAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -883,19 +890,19 @@ const CommunityDashboard = () => {
             {community.amenityIds && community.amenityIds.length > 0 && (
               <Card className="bg-white border border-gray-200">
                 <CardHeader className="border-b border-gray-200">
-                  <h3 className="text-lg font-bold text-gray-900">Amenities</h3>
+                  <h3 className="text-lg font-bold text-black">Amenities</h3>
                 </CardHeader>
                 <CardContent className="p-5">
                   <div className="grid grid-cols-2 gap-3">
                     {community.amenityIds.map((amenity) => (
                       <div key={amenity._id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-blue-600 text-sm font-bold">
+                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                          <span className="text-black text-sm font-bold">
                             {amenity.name.substring(0, 1).toUpperCase()}
                           </span>
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{amenity.name}</p>
+                          <p className="text-sm font-medium text-black">{amenity.name}</p>
                           <p className="text-xs text-gray-500">{amenity.category}</p>
                         </div>
                       </div>
@@ -909,16 +916,16 @@ const CommunityDashboard = () => {
             {community.highlights && community.highlights.length > 0 && (
               <Card className="bg-white border border-gray-200">
                 <CardHeader className="border-b border-gray-200">
-                  <h3 className="text-lg font-bold text-gray-900">Highlights</h3>
+                  <h3 className="text-lg font-bold text-black">Highlights</h3>
                 </CardHeader>
                 <CardContent className="p-5">
                   <ul className="space-y-2">
                     {community.highlights.map((highlight, index) => (
                       <li key={index} className="flex items-start gap-2">
-                        <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <span className="text-green-600 text-xs">✓</span>
+                        <div className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-black text-xs">✓</span>
                         </div>
-                        <span className="text-gray-900">{highlight}</span>
+                        <span className="text-black">{highlight}</span>
                       </li>
                     ))}
                   </ul>
@@ -930,7 +937,7 @@ const CommunityDashboard = () => {
             {community.bannerImage && (
               <Card className="bg-white border border-gray-200">
                 <CardHeader className="border-b border-gray-200">
-                  <h3 className="text-lg font-bold text-gray-900">Community View</h3>
+                  <h3 className="text-lg font-bold text-black">Community View</h3>
                 </CardHeader>
                 <CardContent className="p-0">
                   <img 

@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { PrivateRoute } from './PrivateRoute';
 import { PublicRoute } from './PublicRoute';
+import { GuestRoute } from './GuestRoute';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { OtpPage } from '../pages/auth/OtpPage';
 import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage';
@@ -73,17 +74,17 @@ export const AppRoutes = () => {
   return (
     <Routes>
       {/* ROOT - Show Landing Page with Hero Section */}
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<GuestRoute><LandingPage /></GuestRoute>} />
       
       {/* USER DASHBOARD - Default page for authenticated users */}
       <Route path="/dashboard" element={<UserDashboard />} />
       
       {/* COMMUNITY DASHBOARD - Individual community view */}
-      <Route path="/community/:communityId" element={<CommunityDashboard />} />
+      <Route path="/community/:communityId" element={<GuestRoute><CommunityDashboard /></GuestRoute>} />
       
-      {/* PROFILE & SETTINGS */}
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/settings" element={<SettingsPage />} />
+      {/* PROFILE & SETTINGS - Require authentication */}
+      <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+      <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
       
       {/* ADMIN PANEL - For admin users with child routes */}
       <Route path="/admin" element={<AdminPanel />}>
@@ -98,7 +99,7 @@ export const AppRoutes = () => {
       </Route>
       
       {/* PUBLIC COMMUNITY EVENTS PAGE */}
-      <Route path="/events" element={<CommunityEventsPage />} />
+      <Route path="/events" element={<GuestRoute><CommunityEventsPage /></GuestRoute>} />
 
       {/* PUBLIC AUTH ROUTES */}
       <Route

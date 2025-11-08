@@ -83,39 +83,39 @@ const CommunityEventsPage = () => {
   const upcomingEvents = events.slice(3, 9);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
+    <div className="min-h-screen bg-white">
       {/* Header Navigation */}
-      <nav className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-purple-100">
+      <nav className="bg-white backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-10 h-10 bg-gradient-to-br from-gray-900 to-black rounded-xl flex items-center justify-center shadow-lg border border-gray-300">
                 <Calendar className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-black bg-clip-text text-transparent">
                   Real Estate Community
                 </h1>
-                <p className="text-xs text-gray-500">Workshops, meetups, celebrations and more.</p>
+                <p className="text-xs text-gray-600">Workshops, meetups, celebrations and more.</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               {!isAuthenticated ? (
                 <>
-                  <Button variant="ghost" onClick={() => navigate('/login')}>
+                  <Button variant="ghost" onClick={() => navigate('/login')} className="text-gray-700 hover:text-black hover:bg-gray-100">
                     Sign In
                   </Button>
-                  <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700" onClick={() => navigate('/register')}>
+                  <Button className="bg-black hover:bg-gray-800 text-white" onClick={() => navigate('/register')}>
                     Register
                   </Button>
                 </>
               ) : (
                 <>
-                  <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                  <Button className="bg-black hover:bg-gray-800 text-white">
                     <Plus className="w-4 h-4 mr-2" />
                     Create Event
                   </Button>
-                  <Button variant="outline" onClick={() => navigate('/')}>
+                  <Button variant="outline" onClick={() => navigate('/')} className="border-gray-300 text-gray-700 hover:bg-gray-100">
                     Dashboard
                   </Button>
                 </>
@@ -134,8 +134,8 @@ const CommunityEventsPage = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
                 activeTab === tab.id
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                  ? 'bg-black text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               {tab.label}
@@ -144,34 +144,34 @@ const CommunityEventsPage = () => {
         </div>
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-3">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <Input
                 type="text"
                 placeholder="Search by title, category, location..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-11"
+                className="pl-10 h-11 border-gray-300 text-black"
               />
             </div>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2 border-gray-300 text-gray-700 hover:bg-gray-100">
               <Calendar className="w-4 h-4" />
               Date Range
               <ChevronDown className="w-4 h-4" />
             </Button>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2 border-gray-300 text-gray-700 hover:bg-gray-100">
               <Filter className="w-4 h-4" />
               Category
               <ChevronDown className="w-4 h-4" />
             </Button>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2 border-gray-300 text-gray-700 hover:bg-gray-100">
               <MapPin className="w-4 h-4" />
               Community
               <ChevronDown className="w-4 h-4" />
             </Button>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2 border-gray-300 text-gray-700 hover:bg-gray-100">
               <Users className="w-4 h-4" />
               More Filters
             </Button>
@@ -179,15 +179,15 @@ const CommunityEventsPage = () => {
 
           {/* Active Filters */}
           {(activeFilters.category.length > 0 || activeFilters.community.length > 0) && (
-            <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-100">
+            <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-200">
               <span className="text-sm text-gray-600 font-medium">Active Filters:</span>
               {activeFilters.category.map(filter => (
-                <Badge key={filter} variant="secondary" className="gap-1 bg-blue-100 text-blue-700 hover:bg-blue-200">
+                <Badge key={filter} variant="secondary" className="gap-1 bg-gray-100 text-gray-700 hover:bg-gray-200">
                   {filter}
                   <X className="w-3 h-3 cursor-pointer" onClick={() => removeFilter('category', filter)} />
                 </Badge>
               ))}
-              <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+              <button className="text-sm text-gray-700 hover:text-black font-medium">
                 Clear All
               </button>
             </div>
@@ -200,11 +200,11 @@ const CommunityEventsPage = () => {
             {/* Featured Events */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                  <Sparkles className="w-6 h-6 text-yellow-500" />
+                <h2 className="text-2xl font-bold text-black flex items-center gap-2">
+                  <Sparkles className="w-6 h-6 text-gray-700" />
                   Featured Events
                 </h2>
-                <Button variant="link" className="text-blue-600">
+                <Button variant="link" className="text-gray-700 hover:text-black">
                   Sort by: Upcoming
                   <ChevronDown className="w-4 h-4 ml-1" />
                 </Button>
@@ -212,24 +212,24 @@ const CommunityEventsPage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {featuredEvents.map((event, index) => (
-                  <Card key={event._id} className="overflow-hidden hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-purple-200 group">
+                  <Card key={event._id} className="overflow-hidden hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-gray-300 group bg-white">
                     <div className="relative">
                       <div className={`h-40 bg-gradient-to-br ${
-                        index === 0 ? 'from-pink-400 to-rose-500' :
-                        index === 1 ? 'from-purple-400 to-indigo-500' :
-                        'from-blue-400 to-cyan-500'
+                        index === 0 ? 'from-gray-800 to-gray-900' :
+                        index === 1 ? 'from-gray-700 to-gray-800' :
+                        'from-gray-600 to-gray-700'
                       } group-hover:scale-105 transition-transform duration-300`}>
                         {/* Image placeholder */}
                       </div>
-                      <Badge className="absolute top-3 left-3 bg-yellow-400 text-yellow-900 border-0">
+                      <Badge className="absolute top-3 left-3 bg-gray-900 text-white border-0">
                         Featured
                       </Badge>
-                      <Badge className="absolute top-3 right-3 bg-white/90 text-gray-700">
+                      <Badge className="absolute top-3 right-3 bg-white text-black">
                         {index === 0 ? 'Workshop' : index === 1 ? 'Community' : 'Meetup'}
                       </Badge>
                     </div>
                     <CardContent className="p-4">
-                      <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                      <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover:text-gray-800 transition-colors text-black">
                         {event.title || `Event ${index + 1}`}
                       </h3>
                       <p className="text-sm text-gray-600 mb-3 line-clamp-2">
@@ -238,11 +238,11 @@ const CommunityEventsPage = () => {
                       
                       <div className="space-y-2 text-sm text-gray-600 mb-3">
                         <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-blue-600" />
+                          <MapPin className="w-4 h-4 text-gray-500" />
                           <span>Skyline Recreation Center</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-blue-600" />
+                          <Clock className="w-4 h-4 text-gray-500" />
                           <span>Sunday, Dec 15 • 9:30 AM</span>
                         </div>
                       </div>
@@ -251,12 +251,12 @@ const CommunityEventsPage = () => {
                         <div className="flex -space-x-2">
                           {[1, 2, 3].map(i => (
                             <Avatar key={i} className="w-7 h-7 border-2 border-white">
-                              <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-400 text-white text-xs">
+                              <AvatarFallback className="bg-gradient-to-br from-gray-800 to-gray-900 text-white text-xs">
                                 U{i}
                               </AvatarFallback>
                             </Avatar>
                           ))}
-                          <div className="w-7 h-7 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-medium">
+                          <div className="w-7 h-7 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-medium text-gray-700">
                             +5
                           </div>
                         </div>
@@ -269,12 +269,12 @@ const CommunityEventsPage = () => {
                           <span>30 / 47</span>
                         </div>
                         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500" style={{ width: '64%' }} />
+                          <div className="h-full bg-gradient-to-r from-gray-700 to-gray-900" style={{ width: '64%' }} />
                         </div>
                       </div>
 
                       <Button 
-                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                        className="w-full bg-black hover:bg-gray-800 text-white"
                         onClick={() => handleRegisterEvent(event._id)}
                       >
                         Register Now
@@ -287,23 +287,23 @@ const CommunityEventsPage = () => {
 
             {/* Upcoming Events */}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Upcoming Events</h2>
+              <h2 className="text-2xl font-bold text-black mb-4">Upcoming Events</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {upcomingEvents.map((event, index) => (
-                  <Card key={event._id} className="overflow-hidden hover:shadow-lg transition-all duration-300 group">
+                  <Card key={event._id} className="overflow-hidden hover:shadow-lg transition-all duration-300 group bg-white border-gray-200">
                     <div className="relative">
                       <div className={`h-32 bg-gradient-to-br ${
-                        index % 4 === 0 ? 'from-orange-400 to-pink-500' :
-                        index % 4 === 1 ? 'from-green-400 to-teal-500' :
-                        index % 4 === 2 ? 'from-yellow-400 to-orange-500' :
-                        'from-indigo-400 to-purple-500'
+                        index % 4 === 0 ? 'from-gray-800 to-gray-900' :
+                        index % 4 === 1 ? 'from-gray-700 to-gray-800' :
+                        index % 4 === 2 ? 'from-gray-600 to-gray-700' :
+                        'from-gray-500 to-gray-600'
                       }`} />
-                      <Badge className="absolute top-2 right-2 bg-white/90">
+                      <Badge className="absolute top-2 right-2 bg-white text-black">
                         {index % 2 === 0 ? 'Workshop' : 'Meetup'}
                       </Badge>
                     </div>
                     <CardContent className="p-3">
-                      <h3 className="font-semibold text-base mb-2 line-clamp-1">
+                      <h3 className="font-semibold text-base mb-2 line-clamp-1 text-black">
                         {event.title || `Upcoming Event ${index + 1}`}
                       </h3>
                       <div className="space-y-1 text-xs text-gray-600 mb-2">
@@ -320,7 +320,7 @@ const CommunityEventsPage = () => {
                         <div className="flex -space-x-1">
                           {[1, 2].map(i => (
                             <Avatar key={i} className="w-5 h-5 border border-white">
-                              <AvatarFallback className="bg-gray-300 text-xs">U</AvatarFallback>
+                              <AvatarFallback className="bg-gray-200 text-xs text-black">U</AvatarFallback>
                             </Avatar>
                           ))}
                         </div>
@@ -328,7 +328,7 @@ const CommunityEventsPage = () => {
                       </div>
                       <Button 
                         size="sm" 
-                        className="w-full h-8 text-xs"
+                        className="w-full h-8 text-xs bg-black hover:bg-gray-800 text-white"
                         variant="outline"
                         onClick={() => handleRegisterEvent(event._id)}
                       >
@@ -344,7 +344,7 @@ const CommunityEventsPage = () => {
           {/* Sidebar */}
           <div className="lg:col-span-4 space-y-6">
             {/* Upcoming Highlights */}
-            <Card className="bg-gradient-to-br from-purple-600 to-blue-600 text-white">
+            <Card className="bg-gradient-to-br from-gray-900 to-black text-white border-gray-800">
               <CardContent className="p-6">
                 <h3 className="font-bold text-lg mb-4">Upcoming Highlights</h3>
                 <div className="space-y-3">
@@ -365,17 +365,17 @@ const CommunityEventsPage = () => {
             </Card>
 
             {/* Recommended For You */}
-            <Card>
+            <Card className="bg-white border-gray-200">
               <CardContent className="p-6">
-                <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-purple-600" />
+                <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-black">
+                  <Sparkles className="w-5 h-5 text-gray-700" />
                   Recommended For You
                 </h3>
                 <div className="space-y-3">
                   {['Photography Workshop', 'Yoga Session', 'Tech Meetup'].map((title, i) => (
-                    <div key={i} className="border-b border-gray-100 last:border-0 pb-3 last:pb-0">
-                      <h4 className="font-semibold text-sm text-blue-600 mb-1">{title}</h4>
-                      <p className="text-xs text-gray-500">Based on your interests</p>
+                    <div key={i} className="border-b border-gray-200 last:border-0 pb-3 last:pb-0">
+                      <h4 className="font-semibold text-sm text-black mb-1">{title}</h4>
+                      <p className="text-xs text-gray-600">Based on your interests</p>
                     </div>
                   ))}
                 </div>
@@ -383,17 +383,17 @@ const CommunityEventsPage = () => {
             </Card>
 
             {/* Popular Events */}
-            <Card>
+            <Card className="bg-white border-gray-200">
               <CardContent className="p-6">
-                <h3 className="font-bold text-lg mb-4">Popular Events</h3>
+                <h3 className="font-bold text-lg mb-4 text-black">Popular Events</h3>
                 <div className="space-y-3">
                   {['Community Festival', 'Art Walk', 'Networking Night'].map((title, i) => (
                     <div key={i} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-blue-600" />
-                        <span className="text-sm">{title}</span>
+                        <div className="w-2 h-2 rounded-full bg-gray-700" />
+                        <span className="text-sm text-black">{title}</span>
                       </div>
-                      <span className="text-xs text-gray-500">{62 - i * 10} registered</span>
+                      <span className="text-xs text-gray-600">{62 - i * 10} registered</span>
                     </div>
                   ))}
                 </div>
@@ -401,11 +401,11 @@ const CommunityEventsPage = () => {
             </Card>
 
             {/* Community Manager CTA */}
-            <Card className="bg-gradient-to-br from-orange-500 to-pink-500 text-white">
+            <Card className="bg-gradient-to-br from-gray-900 to-black text-white border-gray-800">
               <CardContent className="p-6 text-center">
                 <h3 className="font-bold text-lg mb-2">Community Manager?</h3>
                 <p className="text-sm opacity-90 mb-4">Create and manage events for your community</p>
-                <Button className="w-full bg-white text-orange-600 hover:bg-gray-100">
+                <Button className="w-full bg-white text-black hover:bg-gray-200">
                   Create Event
                 </Button>
               </CardContent>

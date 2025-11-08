@@ -20,16 +20,16 @@ const AdminProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-green-950 to-black">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-emerald-100 mb-2">Admin Profile</h1>
-            <p className="text-gray-400">Manage your profile information and account settings</p>
+            <h1 className="text-3xl font-bold text-black mb-2">Admin Profile</h1>
+            <p className="text-gray-600">Manage your profile information and account settings</p>
           </div>
           <Button 
-            className="bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800"
+            className="bg-black text-white hover:bg-gray-800"
             onClick={() => setIsEditing(!isEditing)}
           >
             {isEditing ? 'Cancel' : 'Edit Profile'}
@@ -40,12 +40,12 @@ const AdminProfile = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Card */}
         <div className="lg:col-span-1">
-          <Card>
+          <Card className="bg-white border border-gray-300">
             <CardContent className="p-6">
               <div className="flex flex-col items-center">
                 <div className="relative">
-                  <Avatar className="w-24 h-24 border-4 border-indigo-100">
-                    <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white text-2xl font-bold">
+                  <Avatar className="w-24 h-24 border-4 border-gray-300">
+                    <AvatarFallback className="bg-gray-800 text-white text-2xl font-bold">
                       AU
                     </AvatarFallback>
                   </Avatar>
@@ -53,31 +53,31 @@ const AdminProfile = () => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="absolute bottom-0 right-0 rounded-full p-2 bg-white shadow-md"
+                      className="absolute bottom-0 right-0 rounded-full p-2 bg-white shadow-md border border-gray-400"
                     >
                       <Camera className="w-4 h-4" />
                     </Button>
                   )}
                 </div>
                 
-                <h2 className="text-xl font-bold text-emerald-100 mt-4">{adminData.name}</h2>
-                <p className="text-emerald-500 font-medium">{adminData.role}</p>
+                <h2 className="text-xl font-bold text-black mt-4">{adminData.name}</h2>
+                <p className="text-gray-700 font-medium">{adminData.role}</p>
                 
                 <div className="mt-6 w-full space-y-3">
-                  <div className="flex items-center gap-3 text-sm text-gray-400">
-                    <Mail className="w-4 h-4 text-emerald-400" />
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <Mail className="w-4 h-4" />
                     <span>{adminData.email}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-400">
-                    <Phone className="w-4 h-4 text-emerald-400" />
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <Phone className="w-4 h-4" />
                     <span>{adminData.phone}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-400">
-                    <MapPin className="w-4 h-4 text-emerald-400" />
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <MapPin className="w-4 h-4" />
                     <span>{adminData.address}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-400">
-                    <Calendar className="w-4 h-4 text-emerald-400" />
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <Calendar className="w-4 h-4" />
                     <span>Joined: {adminData.joinDate}</span>
                   </div>
                 </div>
@@ -85,21 +85,21 @@ const AdminProfile = () => {
             </CardContent>
           </Card>
           
-          <Card className="mt-6">
+          <Card className="mt-6 bg-white border border-gray-300">
             <CardHeader className="border-b border-gray-200 pb-3">
               <h3 className="font-bold text-lg">Account Security</h3>
             </CardHeader>
             <CardContent className="p-4">
               <div className="space-y-3">
-                <Button variant="outline" className="w-full justify-start border-emerald-700 text-emerald-300 hover:bg-emerald-900/30">
-                  <Lock className="w-4 h-4 mr-2 text-emerald-400" />
+                <Button variant="outline" className="w-full justify-start border border-gray-400 text-black hover:bg-gray-100">
+                  <Lock className="w-4 h-4 mr-2" />
                   Change Password
                 </Button>
-                <Button variant="outline" className="w-full justify-start border-emerald-700 text-emerald-300 hover:bg-emerald-900/30">
-                  <User className="w-4 h-4 mr-2 text-emerald-400" />
+                <Button variant="outline" className="w-full justify-start border border-gray-400 text-black hover:bg-gray-100">
+                  <User className="w-4 h-4 mr-2" />
                   Two-Factor Authentication
                 </Button>
-                <Button variant="outline" className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-900/30 border-red-700">
+                <Button variant="outline" className="w-full justify-start text-black hover:bg-gray-100 border border-gray-400">
                   <Lock className="w-4 h-4 mr-2" />
                   Deactivate Account
                 </Button>
@@ -110,70 +110,70 @@ const AdminProfile = () => {
         
         {/* Profile Details */}
         <div className="lg:col-span-2">
-          <Card className="bg-gray-800 border-emerald-900/30">
-            <CardHeader className="border-b border-emerald-900/30">
-              <h3 className="font-bold text-lg flex items-center gap-2 text-emerald-100">
-                <User className="w-5 h-5 text-emerald-500" />
+          <Card className="bg-white border border-gray-300">
+            <CardHeader className="border-b border-gray-300">
+              <h3 className="font-bold text-lg flex items-center gap-2 text-black">
+                <User className="w-5 h-5" />
                 Profile Information
               </h3>
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-emerald-300 mb-2">Full Name</label>
+                  <label className="block text-sm font-medium text-black mb-2">Full Name</label>
                   {isEditing ? (
-                    <Input defaultValue={adminData.name} className="bg-gray-900 border-emerald-700 text-emerald-100" />
+                    <Input defaultValue={adminData.name} className="border border-gray-400 text-black" />
                   ) : (
-                    <p className="text-emerald-100">{adminData.name}</p>
+                    <p className="text-black">{adminData.name}</p>
                   )}
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-emerald-300 mb-2">Email Address</label>
+                  <label className="block text-sm font-medium text-black mb-2">Email Address</label>
                   {isEditing ? (
-                    <Input type="email" defaultValue={adminData.email} className="bg-gray-900 border-emerald-700 text-emerald-100" />
+                    <Input type="email" defaultValue={adminData.email} className="border border-gray-400 text-black" />
                   ) : (
-                    <p className="text-emerald-100">{adminData.email}</p>
+                    <p className="text-black">{adminData.email}</p>
                   )}
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-emerald-300 mb-2">Phone Number</label>
+                  <label className="block text-sm font-medium text-black mb-2">Phone Number</label>
                   {isEditing ? (
-                    <Input type="tel" defaultValue={adminData.phone} className="bg-gray-900 border-emerald-700 text-emerald-100" />
+                    <Input type="tel" defaultValue={adminData.phone} className="border border-gray-400 text-black" />
                   ) : (
-                    <p className="text-emerald-100">{adminData.phone}</p>
+                    <p className="text-black">{adminData.phone}</p>
                   )}
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-emerald-300 mb-2">Role</label>
-                  <p className="text-emerald-100">{adminData.role}</p>
+                  <label className="block text-sm font-medium text-black mb-2">Role</label>
+                  <p className="text-black">{adminData.role}</p>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-emerald-300 mb-2">Address</label>
+                  <label className="block text-sm font-medium text-black mb-2">Address</label>
                   {isEditing ? (
-                    <Input defaultValue={adminData.address} className="bg-gray-900 border-emerald-700 text-emerald-100" />
+                    <Input defaultValue={adminData.address} className="border border-gray-400 text-black" />
                   ) : (
-                    <p className="text-emerald-100">{adminData.address}</p>
+                    <p className="text-black">{adminData.address}</p>
                   )}
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-emerald-300 mb-2">Join Date</label>
-                  <p className="text-emerald-100">{adminData.joinDate}</p>
+                  <label className="block text-sm font-medium text-black mb-2">Join Date</label>
+                  <p className="text-black">{adminData.joinDate}</p>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-emerald-300 mb-2">Last Login</label>
-                  <p className="text-emerald-100">{adminData.lastLogin}</p>
+                  <label className="block text-sm font-medium text-black mb-2">Last Login</label>
+                  <p className="text-black">{adminData.lastLogin}</p>
                 </div>
               </div>
               
               {isEditing && (
                 <div className="flex justify-end mt-6">
-                  <Button className="bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800">
+                  <Button className="bg-gray-900 text-white hover:bg-gray-800">
                     <Save className="w-4 h-4 mr-2" />
                     Save Changes
                   </Button>
@@ -183,30 +183,30 @@ const AdminProfile = () => {
           </Card>
           
           {/* Activity Log */}
-          <Card className="mt-6 bg-gray-800 border-emerald-900/30">
-            <CardHeader className="border-b border-emerald-900/30">
-              <h3 className="font-bold text-lg text-emerald-100">Recent Activity</h3>
+          <Card className="mt-6 bg-white border border-gray-300">
+            <CardHeader className="border-b border-gray-300">
+              <h3 className="font-bold text-lg text-black">Recent Activity</h3>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-gray-200">
                 <div className="p-4">
-                  <p className="font-medium text-emerald-100">Logged in to admin panel</p>
-                  <p className="text-sm text-gray-400">IP: 192.168.1.100 • Mumbai, India</p>
+                  <p className="font-medium text-black">Logged in to admin panel</p>
+                  <p className="text-sm text-gray-600">IP: 192.168.1.100 • Mumbai, India</p>
                   <p className="text-xs text-gray-500 mt-1">Today, 14:30</p>
                 </div>
                 <div className="p-4">
-                  <p className="font-medium text-emerald-100">Updated community settings</p>
-                  <p className="text-sm text-gray-400">Modified Green Valley Apartments configuration</p>
+                  <p className="font-medium text-black">Updated community settings</p>
+                  <p className="text-sm text-gray-600">Modified Green Valley Apartments configuration</p>
                   <p className="text-xs text-gray-500 mt-1">Yesterday, 16:45</p>
                 </div>
                 <div className="p-4">
-                  <p className="font-medium text-emerald-100">Generated monthly report</p>
-                  <p className="text-sm text-gray-400">Created November financial summary</p>
+                  <p className="font-medium text-black">Generated monthly report</p>
+                  <p className="text-sm text-gray-600">Created November financial summary</p>
                   <p className="text-xs text-gray-500 mt-1">Dec 5, 2023, 10:15</p>
                 </div>
                 <div className="p-4">
-                  <p className="font-medium text-emerald-100">Added new user</p>
-                  <p className="text-sm text-gray-400">Registered John Doe as Resident</p>
+                  <p className="font-medium text-black">Added new user</p>
+                  <p className="text-sm text-gray-600">Registered John Doe as Resident</p>
                   <p className="text-xs text-gray-500 mt-1">Dec 4, 2023, 09:30</p>
                 </div>
               </div>

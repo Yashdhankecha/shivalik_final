@@ -18,10 +18,10 @@ const AdminDashboard = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const stats = [
-    { title: 'Total Users', value: '1,234', change: '+12%', icon: Users, color: 'from-blue-500 to-cyan-500' },
-    { title: 'Communities', value: '45', change: '+5%', icon: Building2, color: 'from-purple-500 to-pink-500' },
-    { title: 'Active Events', value: '23', change: '+8%', icon: Calendar, color: 'from-green-500 to-emerald-500' },
-    { title: 'Reports', value: '12', change: '-3%', icon: FileText, color: 'from-orange-500 to-red-500' }
+    { title: 'Total Users', value: '1,234', change: '+12%', icon: Users },
+    { title: 'Communities', value: '45', change: '+5%', icon: Building2 },
+    { title: 'Active Events', value: '23', change: '+8%', icon: Calendar },
+    { title: 'Reports', value: '12', change: '-3%', icon: FileText }
   ];
 
   const recentUsers = [
@@ -44,11 +44,11 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-green-950 to-black">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-emerald-100 mb-2">Dashboard Overview</h1>
-        <p className="text-gray-400">Welcome back, Admin! Here's what's happening today.</p>
+        <h1 className="text-3xl font-bold text-black mb-2">Dashboard Overview</h1>
+        <p className="text-gray-600">Welcome back, Admin! Here's what's happening today.</p>
       </div>
 
       {/* Stats Grid */}
@@ -56,18 +56,18 @@ const AdminDashboard = () => {
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={index} className="hover:shadow-lg transition-shadow border-2 border-transparent hover:border-emerald-700/50 bg-gray-800">
+            <Card key={index} className="hover:shadow-lg transition-shadow border border-gray-300 bg-white">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-md`}>
+                  <div className="w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center shadow-md">
                     <Icon className="w-6 h-6 text-white" />
                   </div>
-                  <Badge className={`${stat.change.startsWith('+') ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
+                  <Badge className={`${stat.change.startsWith('+') ? 'bg-gray-800 text-white' : 'bg-gray-300 text-gray-800'}`}>
                     {stat.change}
                   </Badge>
                 </div>
-                <h3 className="text-2xl font-bold text-emerald-100 mb-1">{stat.value}</h3>
-                <p className="text-sm text-gray-400">{stat.title}</p>
+                <h3 className="text-2xl font-bold text-black mb-1">{stat.value}</h3>
+                <p className="text-sm text-gray-600">{stat.title}</p>
               </CardContent>
             </Card>
           );
@@ -76,14 +76,14 @@ const AdminDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Users */}
-        <Card className="lg:col-span-2 bg-gray-800 border-emerald-900/30">
-          <CardHeader className="border-b border-emerald-900/30">
+        <Card className="lg:col-span-2 bg-white border border-gray-300">
+          <CardHeader className="border-b border-gray-300">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg flex items-center gap-2 text-emerald-100">
-                <Users className="w-5 h-5 text-emerald-500" />
+              <h3 className="font-bold text-lg flex items-center gap-2 text-black">
+                <Users className="w-5 h-5" />
                 Recent Users
               </h3>
-              <Button variant="outline" size="sm" className="gap-2 border-emerald-700 text-emerald-300 hover:bg-emerald-900/30">
+              <Button variant="outline" size="sm" className="gap-2 border-gray-400 text-black hover:bg-gray-100">
                 <UserPlus className="w-4 h-4" />
                 Add User
               </Button>
@@ -92,46 +92,42 @@ const AdminDashboard = () => {
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="bg-gray-100 border-b border-gray-300">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-emerald-300 uppercase">User</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-emerald-300 uppercase">Role</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-emerald-300 uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-emerald-300 uppercase">Joined</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-emerald-300 uppercase">Action</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">User</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Role</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Joined</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {recentUsers.map((user, index) => (
-                    <tr key={index} className="hover:bg-emerald-900/20 transition-colors">
+                    <tr key={index} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <Avatar className="w-10 h-10">
-                            <AvatarFallback className={`bg-gradient-to-br ${
-                              index % 3 === 0 ? 'from-blue-500 to-cyan-500' :
-                              index % 3 === 1 ? 'from-purple-500 to-pink-500' :
-                              'from-green-500 to-emerald-500'
-                            } text-white font-semibold`}>
+                            <AvatarFallback className="bg-gray-800 text-white font-semibold">
                               {user.name.split(' ').map(n => n[0]).join('')}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-semibold text-sm text-emerald-100">{user.name}</p>
-                            <p className="text-xs text-gray-400">{user.email}</p>
+                            <p className="font-semibold text-sm text-black">{user.name}</p>
+                            <p className="text-xs text-gray-600">{user.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <Badge className="bg-emerald-900 text-emerald-300">{user.role}</Badge>
+                        <Badge className="bg-gray-800 text-white">{user.role}</Badge>
                       </td>
                       <td className="px-6 py-4">
-                        <Badge className={user.status === 'Active' ? 'bg-green-900 text-green-300' : 'bg-yellow-900 text-yellow-300'}>
+                        <Badge className={user.status === 'Active' ? 'bg-gray-800 text-white' : 'bg-gray-300 text-gray-800'}>
                           {user.status}
                         </Badge>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-400">{user.joinDate}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{user.joinDate}</td>
                       <td className="px-6 py-4">
-                        <Button variant="ghost" size="sm" className="text-emerald-300 hover:text-emerald-100 hover:bg-emerald-900/30">View</Button>
+                        <Button variant="ghost" size="sm" className="text-black hover:text-black hover:bg-gray-100">View</Button>
                       </td>
                     </tr>
                   ))}
@@ -142,31 +138,26 @@ const AdminDashboard = () => {
         </Card>
 
         {/* Recent Activities */}
-        <Card className="bg-gray-800 border-emerald-900/30">
-          <CardHeader className="border-b border-emerald-900/30">
-            <h3 className="font-bold text-lg flex items-center gap-2 text-emerald-100">
-              <Activity className="w-5 h-5 text-emerald-500" />
+        <Card className="bg-white border border-gray-300">
+          <CardHeader className="border-b border-gray-300">
+            <h3 className="font-bold text-lg flex items-center gap-2 text-black">
+              <Activity className="w-5 h-5" />
               Recent Activities
             </h3>
           </CardHeader>
           <CardContent className="p-4">
             <div className="space-y-4">
               {recentActivities.map((activity, index) => (
-                <div key={index} className="flex gap-3 pb-4 border-b border-emerald-900/20 last:border-0 last:pb-0">
-                  <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center ${
-                    activity.type === 'user' ? 'bg-blue-900/50' :
-                    activity.type === 'community' ? 'bg-purple-900/50' :
-                    activity.type === 'event' ? 'bg-green-900/50' :
-                    'bg-orange-900/50'
-                  }`}>
-                    {activity.type === 'user' && <Users className="w-5 h-5 text-blue-400" />}
-                    {activity.type === 'community' && <Building2 className="w-5 h-5 text-purple-400" />}
-                    {activity.type === 'event' && <Calendar className="w-5 h-5 text-green-400" />}
-                    {activity.type === 'report' && <FileText className="w-5 h-5 text-orange-400" />}
+                <div key={index} className="flex gap-3 pb-4 border-b border-gray-200 last:border-0 last:pb-0">
+                  <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center bg-gray-800">
+                    {activity.type === 'user' && <Users className="w-5 h-5 text-white" />}
+                    {activity.type === 'community' && <Building2 className="w-5 h-5 text-white" />}
+                    {activity.type === 'event' && <Calendar className="w-5 h-5 text-white" />}
+                    {activity.type === 'report' && <FileText className="w-5 h-5 text-white" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-emerald-100">{activity.action}</p>
-                    <p className="text-xs text-gray-400">by {activity.user}</p>
+                    <p className="text-sm font-semibold text-black">{activity.action}</p>
+                    <p className="text-xs text-gray-600">by {activity.user}</p>
                     <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
                   </div>
                 </div>
@@ -178,36 +169,36 @@ const AdminDashboard = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-        <Card className="bg-gradient-to-br from-blue-700 to-cyan-800 text-white border border-emerald-900/30">
+        <Card className="bg-white text-black border border-gray-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <BarChart3 className="w-8 h-8 opacity-80" />
+              <BarChart3 className="w-8 h-8" />
               <TrendingUp className="w-6 h-6" />
             </div>
             <h3 className="text-3xl font-bold mb-1">78%</h3>
-            <p className="text-white/80 text-sm">Platform Engagement</p>
+            <p className="text-gray-600 text-sm">Platform Engagement</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-700 to-pink-800 text-white border border-emerald-900/30">
+        <Card className="bg-white text-black border border-gray-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <MessageSquare className="w-8 h-8 opacity-80" />
+              <MessageSquare className="w-8 h-8" />
               <TrendingUp className="w-6 h-6" />
             </div>
             <h3 className="text-3xl font-bold mb-1">342</h3>
-            <p className="text-white/80 text-sm">Active Discussions</p>
+            <p className="text-gray-600 text-sm">Active Discussions</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-700 to-emerald-800 text-white border border-emerald-900/30">
+        <Card className="bg-white text-black border border-gray-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <Calendar className="w-8 h-8 opacity-80" />
+              <Calendar className="w-8 h-8" />
               <TrendingUp className="w-6 h-6" />
             </div>
             <h3 className="text-3xl font-bold mb-1">23</h3>
-            <p className="text-white/80 text-sm">Upcoming Events</p>
+            <p className="text-gray-600 text-sm">Upcoming Events</p>
           </CardContent>
         </Card>
       </div>

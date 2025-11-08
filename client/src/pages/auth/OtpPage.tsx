@@ -103,16 +103,13 @@ export const OtpPage = () => {
     };
 
     return (
-        <div
-            style={{ backgroundImage: "url('/authBgImage.svg')" }}
-            className="min-h-screen w-full bg-white flex items-center justify-center p-4 bg-no-repeat bg-center bg-cover"
-        >
-            <div className="w-full max-w-sm rounded-2xl shadow-lg border border-gray-100 text-center p-6">
-                <div className="w-12 h-12 mx-auto rounded-[10px] bg-white border border-[#F0F0F0] flex items-center justify-center">
+        <div className="min-h-screen w-full bg-white flex items-center justify-center p-4 bg-no-repeat bg-center bg-cover">
+            <div className="w-full max-w-sm rounded-2xl shadow-lg border border-gray-200 text-center p-6 bg-white">
+                <div className="w-12 h-12 mx-auto rounded-[10px] bg-white border border-gray-200 flex items-center justify-center">
                     <img src="/loginIcon.svg" alt="Login" className="w-5 h-5" loading="lazy" />
                 </div>
-                <h1 className="my-4 text-2xl font-bold text-[#2E2E2E]">R OS</h1>
-                <p className="inline-block px-[14px] py-[6px] h-[36px] rounded-full bg-[#EDEDED] text-[#757575] text-[14px] leading-[24px] font-semibold text-center">
+                <h1 className="my-4 text-2xl font-bold text-black">R OS</h1>
+                <p className="inline-block px-[14px] py-[6px] h-[36px] rounded-full bg-gray-100 text-gray-700 text-[14px] leading-[24px] font-semibold text-center">
                     Enter OTP
                 </p>
                 <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -134,7 +131,7 @@ export const OtpPage = () => {
                                         <NewInputOTPSlot
                                             key={index}
                                             index={index}
-                                            className="w-[46px] h-[46px] text-[24px] text-[#1B1B1B] text-center font-medium border-[#E0E0E0] bg-transparent outline-none focus:outline-none"
+                                            className="w-[46px] h-[46px] text-[24px] text-black text-center font-medium border-gray-300 bg-transparent outline-none focus:outline-none"
                                             ref={(el) => (inputRefs.current[index] = el)}
                                             onKeyDown={(e: any) => handleBackspace(e, index)}
                                             onPaste={(e: any) => handlePaste(e, index)}
@@ -161,7 +158,18 @@ export const OtpPage = () => {
                         )}
                     </Button>
                 </form>
-                <p className="mt-6 text-xs text-gray-400">R-OS Admin v1.0.0</p>
+                <div className="mt-4 text-center">
+                    <p className="text-sm text-gray-500">
+                        Continue as{' '}
+                        <button 
+                            onClick={() => navigate('/dashboard')}
+                            className="text-black hover:text-gray-800 font-medium underline"
+                        >
+                            Guest
+                        </button>
+                    </p>
+                </div>
+                <p className="mt-6 text-xs text-gray-500">R-OS Admin v1.0.0</p>
             </div>
         </div>
     );
