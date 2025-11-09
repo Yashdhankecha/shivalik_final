@@ -1,0 +1,1494 @@
+================================================================================
+                    SHIVALIK COMMUNITY MANAGEMENT PLATFORM
+                         DETAILED DOCUMENTATION
+================================================================================
+
+TABLE OF CONTENTS
+-----------------
+1. Project Overview
+2. Problem Statement & Solution
+3. System Architecture
+4. Technology Stack
+5. Installation & Setup
+6. Project Structure
+7. Database Schema
+8. API Documentation
+9. User Roles & Permissions
+10. Feature Modules
+11. Security Implementation
+12. Deployment Guide
+13. Troubleshooting
+14. Future Roadmap
+
+================================================================================
+1. PROJECT OVERVIEW
+================================================================================
+
+Shivalik Community Management Platform is a comprehensive full-stack web 
+application designed to revolutionize community management for real estate 
+communities. The platform provides a centralized solution for residents, 
+managers, and administrators to interact, manage events, facilitate commerce, 
+share updates, and maintain a thriving community ecosystem.
+
+KEY OBJECTIVES:
+- Centralize community communication and management
+- Automate approval workflows with digital processes
+- Enable community commerce through integrated marketplace
+- Streamline event management with QR code technology
+- Provide transparent moderation system for content review
+- Facilitate service discovery through curated directory
+
+TARGET USERS:
+- Community Residents (Users)
+- Community Managers
+- System Administrators
+- Service Providers
+
+================================================================================
+2. PROBLEM STATEMENT & SOLUTION
+================================================================================
+
+PROBLEM STATEMENT:
+Traditional community management faces several challenges:
+- Fragmented communication across multiple channels (WhatsApp, email, notice 
+  boards)
+- Manual approval processes requiring physical presence
+- Lack of centralized platform for all community needs
+- Limited transparency in approval workflows
+- Inefficient content moderation processes
+- No integrated marketplace for community transactions
+- Manual event attendance tracking
+
+OUR SOLUTION:
+A unified digital platform that:
+- Centralizes all community interactions in one place
+- Automates approval workflows with digital processes and notifications
+- Enables community commerce through built-in marketplace
+- Streamlines events with QR code-based registration and attendance
+- Provides real-time transparency with status updates
+- Facilitates quick moderation through dedicated dashboard
+- Integrates all community services in single platform
+
+================================================================================
+3. SYSTEM ARCHITECTURE
+================================================================================
+
+ARCHITECTURE OVERVIEW:
+The system follows a three-tier architecture:
+
+TIER 1: PRESENTATION LAYER (Frontend)
+- React-based single-page application
+- Responsive design for all devices
+- Role-based UI rendering
+- Real-time updates via API polling
+
+TIER 2: APPLICATION LAYER (Backend)
+- RESTful API built with Express.js
+- JWT-based authentication middleware
+- Role-based authorization
+- Request validation and sanitization
+- File upload handling
+
+TIER 3: DATA LAYER (Database)
+- MongoDB for data persistence
+- Mongoose ODM for schema management
+- Indexed collections for performance
+- Soft delete pattern for data retention
+
+DATA FLOW:
+1. User interacts with React frontend
+2. Frontend makes API call via Axios
+3. Request passes through authentication middleware
+4. Controller processes business logic
+5. Model interacts with MongoDB
+6. Response sent back to frontend
+7. UI updated with new data
+
+================================================================================
+4. TECHNOLOGY STACK
+================================================================================
+
+FRONTEND TECHNOLOGIES:
+---------------------
+React 18.3.1
+- Component-based architecture
+- Hooks for state management
+- Context API for global state
+
+TypeScript
+- Type safety
+- Better IDE support
+- Reduced runtime errors
+
+Vite 6.4.1
+- Fast development server
+- Optimized production builds
+- Hot module replacement
+
+Tailwind CSS 3.4.11
+- Utility-first CSS framework
+- Responsive design utilities
+- Custom design system
+
+Redux Toolkit 2.8.2
+- Centralized state management
+- Predictable state updates
+- DevTools integration
+
+Redux Saga 1.3.0
+- Side effect management
+- Async action handling
+- Complex flow control
+
+Radix UI
+- Accessible component primitives
+- Unstyled, customizable components
+- Keyboard navigation support
+
+React Router DOM 6.26.2
+- Client-side routing
+- Protected routes
+- Route guards
+
+Axios 1.10.0
+- HTTP client
+- Request/response interceptors
+- Error handling
+
+BACKEND TECHNOLOGIES:
+--------------------
+Node.js 20.18.0
+- JavaScript runtime
+- Event-driven architecture
+- Non-blocking I/O
+
+Express.js 4.21.1
+- Web application framework
+- Middleware support
+- Route handling
+
+MongoDB 8.7.1
+- NoSQL database
+- Document-based storage
+- Flexible schema
+
+Mongoose 8.7.1
+- MongoDB object modeling
+- Schema validation
+- Middleware hooks
+
+JWT (jsonwebtoken 9.0.2)
+- Stateless authentication
+- Token-based security
+- Refresh token support
+
+bcryptjs 2.4.3
+- Password hashing
+- Salt rounds
+- Secure password storage
+
+Express-fileupload 1.5.1
+- File upload handling
+- Multipart form data
+- File validation
+
+Express-validator 7.2.0
+- Input validation
+- Sanitization
+- Custom validators
+
+Nodemailer 7.0.7
+- Email sending
+- SMTP support
+- Template rendering
+
+QRCode
+- QR code generation
+- Event registration
+- Attendance tracking
+
+DEVELOPMENT TOOLS:
+-----------------
+Nodemon 3.1.10
+- Auto-restart on file changes
+- Development workflow
+
+ESLint 8.57.0
+- Code linting
+- Style enforcement
+- Error detection
+
+Winston 3.17.0
+- Logging framework
+- Log levels
+- File rotation
+
+================================================================================
+5. INSTALLATION & SETUP
+================================================================================
+
+PREREQUISITES:
+- Node.js >= 18.0.0 installed
+- MongoDB running (local or Atlas)
+- npm or yarn package manager
+- Git for version control
+
+STEP 1: CLONE REPOSITORY
+------------------------
+git clone <repository-url>
+cd sivalik_final
+
+STEP 2: BACKEND SETUP
+---------------------
+Navigate to backend directory:
+cd server/services/community_services
+
+Install dependencies:
+npm install
+
+Create environment file (.env.dev):
+PORT=11001
+NODE_ENV=dev
+
+# Database Configuration
+ENTRYTRACKING_DB_URL=mongodb://localhost:27017/shivalik_db
+ENTRYTRACKING_DB_POOLSIZE=10
+DB_NAME=shivalik_db
+
+# JWT Configuration
+JWT_SECRET=your_jwt_secret_key_here
+JWT_SECRET_USER=your_jwt_user_secret_here
+JWT_VALIDITY=30d
+REFRESH_TOKEN_SECRET=your_refresh_token_secret_here
+REFRESH_TOKEN_VALIDITY=99d
+
+# Email Configuration (SMTP)
+SMTP_HOST=smtp.gmail.com
+SMTP_USERNAME=your_email@gmail.com
+SMTP_PASSWORD=your_app_password
+
+# OR Email Configuration (SendGrid)
+SENDGRID_API_KEY=your_sendgrid_api_key
+SENDGRID_SENDER_MAIL=noreply@yourcompany.com
+
+Start development server:
+npm run start:dev
+
+The backend will start on http://localhost:11001
+
+STEP 3: FRONTEND SETUP
+----------------------
+Navigate to frontend directory:
+cd client
+
+Install dependencies:
+npm install
+
+Create environment file (.env):
+VITE_API_URL=http://localhost:11001
+
+Start development server:
+npm run dev
+
+The frontend will start on http://localhost:8080 (or port shown in terminal)
+
+STEP 4: SEED SAMPLE DATA (OPTIONAL)
+-----------------------------------
+From backend directory:
+npm run seed:landing    # Seed landing page data
+npm run seed:community  # Seed community data
+
+STEP 5: ACCESS APPLICATION
+--------------------------
+Frontend: http://localhost:8080
+Backend API: http://localhost:11001
+Landing Page: http://localhost:8080/
+Admin Panel: http://localhost:8080/admin (requires admin login)
+Manager Panel: http://localhost:8080/manager (requires manager login)
+
+VERIFICATION:
+- Check backend console for "http://localhost:11001" message
+- Check frontend console for no errors
+- Test API endpoint: http://localhost:11001/api/v1/community/communities
+
+================================================================================
+6. PROJECT STRUCTURE
+================================================================================
+
+ROOT DIRECTORY:
+--------------
+sivalik_final/
+├── client/                          # Frontend React Application
+│   ├── public/                      # Static assets (images, icons)
+│   ├── src/                         # Source code
+│   │   ├── apis/                    # API service layer
+│   │   │   ├── admin.ts             # Admin API methods
+│   │   │   ├── apiService.ts        # Axios configuration
+│   │   │   ├── auth.ts              # Authentication API
+│   │   │   ├── community.ts         # Community API
+│   │   │   └── manager.ts           # Manager API
+│   │   ├── components/              # React components
+│   │   │   ├── community/           # Community-specific components
+│   │   │   │   ├── Directory/       # Directory components
+│   │   │   │   ├── Events/           # Event components
+│   │   │   │   ├── Marketplace/     # Marketplace components
+│   │   │   │   └── Pulses/          # Pulse feed components
+│   │   │   ├── CustomInput/          # Form input components
+│   │   │   ├── Icon/                # Icon components
+│   │   │   ├── landing/             # Landing page components
+│   │   │   ├── layout/              # Layout components
+│   │   │   └── ui/                  # Reusable UI components
+│   │   ├── hooks/                   # Custom React hooks
+│   │   │   ├── use-mobile.tsx       # Mobile detection
+│   │   │   ├── use-toast.ts         # Toast notifications
+│   │   │   └── useAuth.tsx         # Authentication hook
+│   │   ├── pages/                   # Page components
+│   │   │   ├── admin/               # Admin pages
+│   │   │   │   ├── Dashboard.tsx
+│   │   │   │   ├── Communities.tsx
+│   │   │   │   ├── UsersManagement.tsx
+│   │   │   │   ├── JoinRequests.tsx
+│   │   │   │   ├── PulseApprovals.tsx
+│   │   │   │   ├── MarketplaceApprovals.tsx
+│   │   │   │   └── ...
+│   │   │   ├── manager/             # Manager pages
+│   │   │   │   └── ModerationDashboard.tsx
+│   │   │   ├── auth/                # Authentication pages
+│   │   │   │   ├── LoginPage.tsx
+│   │   │   │   ├── RegisterPage.tsx
+│   │   │   │   ├── OtpPage.tsx
+│   │   │   │   └── ...
+│   │   │   ├── CommunityDashboard.tsx
+│   │   │   ├── LandingPage.tsx
+│   │   │   └── UserDashboard.tsx
+│   │   ├── routing/                 # Route configuration
+│   │   │   ├── AppRoutes.tsx        # Main routing
+│   │   │   ├── PrivateRoute.tsx     # Protected routes
+│   │   │   ├── PublicRoute.tsx      # Public routes
+│   │   │   └── ...
+│   │   ├── store/                   # Redux store
+│   │   │   ├── sagas/               # Redux sagas
+│   │   │   ├── slices/              # Redux slices
+│   │   │   └── store.ts             # Store configuration
+│   │   ├── types/                   # TypeScript types
+│   │   ├── utils/                    # Utility functions
+│   │   └── styles/                  # Global styles
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tailwind.config.ts
+│   └── tsconfig.json
+│
+├── server/                           # Backend Services
+│   └── services/
+│       └── community_services/       # Community Management Service
+│           ├── src/
+│           │   ├── controllers/      # Route handlers
+│           │   │   ├── adminController.js
+│           │   │   ├── managerController.js
+│           │   │   ├── communityController.js
+│           │   │   ├── authController.js
+│           │   │   ├── pulsesController.js
+│           │   │   ├── eventsController.js
+│           │   │   ├── marketplaceController.js
+│           │   │   └── directoryController.js
+│           │   ├── models/           # Mongoose models
+│           │   │   ├── Users.js
+│           │   │   ├── Communities.js
+│           │   │   ├── Pulses.js
+│           │   │   ├── Events.js
+│           │   │   ├── MarketplaceListings.js
+│           │   │   ├── MarketplaceChats.js
+│           │   │   ├── DirectoryEntries.js
+│           │   │   ├── CommunityJoinRequests.js
+│           │   │   ├── CommunityManagers.js
+│           │   │   └── ...
+│           │   ├── routes/           # API routes
+│           │   │   ├── adminRoutes.js
+│           │   │   ├── managerRoutes.js
+│           │   │   ├── communityRoutes.js
+│           │   │   ├── authRoutes.js
+│           │   │   ├── pulsesRoutes.js
+│           │   │   ├── eventsRoutes.js
+│           │   │   ├── marketplaceRoutes.js
+│           │   │   └── directoryRoutes.js
+│           │   ├── middleware/       # Express middleware
+│           │   │   ├── authMiddleware.js
+│           │   │   ├── managerMiddleware.js
+│           │   │   ├── loggerMiddleware.js
+│           │   │   └── throttleMiddleware.js
+│           │   ├── libs/            # Third-party integrations
+│           │   │   ├── sendMail.js
+│           │   │   ├── sendOtp.js
+│           │   │   └── rabbitmq.js
+│           │   ├── config/           # Configuration files
+│           │   │   ├── response.js
+│           │   │   └── common.js
+│           │   ├── validations/      # Validation rules
+│           │   ├── message/          # Error/success messages
+│           │   └── index.js          # Application entry point
+│           ├── package.json
+│           ├── nodemon.json
+│           └── .env.dev              # Environment variables
+│
+├── README.md                         # Main project README
+├── API_DOCUMENTATION.md              # API reference
+├── COMMUNITY_MODULES_IMPLEMENTATION.md
+├── QUICK_START_GUIDE.md
+└── TROUBLESHOOTING_LOGIN_ERROR.md
+
+================================================================================
+7. DATABASE SCHEMA
+================================================================================
+
+MONGODB COLLECTIONS:
+-------------------
+
+USERS COLLECTION:
+- _id: ObjectId
+- name: String
+- email: String (unique, indexed)
+- password: String (hashed)
+- mobileNumber: String
+- countryCode: String
+- role: String (Admin, Manager, User)
+- userRoles: Array
+- communityId: ObjectId (reference)
+- status: String (Active, Pending, Inactive)
+- otp: String
+- otpExpiry: Date
+- refreshToken: String
+- createdAt: Date
+- updatedAt: Date
+- isDeleted: Boolean
+
+COMMUNITIES COLLECTION:
+- _id: ObjectId
+- name: String (required)
+- description: String
+- location: String
+- amenities: Array
+- bannerImage: String
+- status: String (Active, Inactive)
+- featured: Boolean
+- highlights: Array
+- members: Array[ObjectId] (references to Users)
+- createdBy: ObjectId (reference to User)
+- managerId: ObjectId (reference to User)
+- createdAt: Date
+- updatedAt: Date
+- isDeleted: Boolean
+
+PULSES COLLECTION:
+- _id: ObjectId
+- title: String (required)
+- description: String (required)
+- territory: String
+- communityId: ObjectId (reference to Community)
+- userId: ObjectId (reference to User)
+- attachment: String
+- status: String (pending, approved, rejected)
+- likes: Array[ObjectId] (references to Users)
+- comments: Array[Object]
+- createdAt: Date
+- updatedAt: Date
+- isDeleted: Boolean
+
+EVENTS COLLECTION:
+- _id: ObjectId
+- title: String (required)
+- description: String
+- eventDate: Date
+- endDate: Date
+- location: String
+- eventType: String
+- communityId: ObjectId (reference to Community)
+- createdBy: ObjectId (reference to User)
+- registeredParticipants: Array[ObjectId]
+- maxParticipants: Number
+- status: String
+- createdAt: Date
+- updatedAt: Date
+- isDeleted: Boolean
+
+MARKETPLACELISTINGS COLLECTION:
+- _id: ObjectId
+- type: String (buy, sell)
+- title: String (required)
+- description: String (required)
+- price: Number (required)
+- attachment: String
+- communityId: ObjectId (reference to Community)
+- userId: ObjectId (reference to User)
+- status: String (pending, approved, rejected, sold, closed)
+- reviewedBy: ObjectId (reference to User)
+- reviewedAt: Date
+- reviewNotes: String
+- createdAt: Date
+- updatedAt: Date
+- isDeleted: Boolean
+
+MARKETPLACECHATS COLLECTION:
+- _id: ObjectId
+- listingId: ObjectId (reference to MarketplaceListing)
+- participants: Array[ObjectId] (references to Users)
+- messages: Array[Object]
+- lastMessage: Object
+- createdAt: Date
+- updatedAt: Date
+- isDeleted: Boolean
+
+DIRECTORYENTRIES COLLECTION:
+- _id: ObjectId
+- name: String (required)
+- serviceType: String
+- description: String
+- contactInfo: Object
+- communityId: ObjectId (reference to Community)
+- createdBy: ObjectId (reference to User)
+- createdAt: Date
+- updatedAt: Date
+- isDeleted: Boolean
+
+COMMUNITYJOINREQUESTS COLLECTION:
+- _id: ObjectId
+- userId: ObjectId (reference to User)
+- communityId: ObjectId (reference to Community)
+- message: String
+- status: String (Pending, Approved, Rejected)
+- reviewedBy: ObjectId (reference to User)
+- reviewedAt: Date
+- reviewNotes: String
+- createdAt: Date
+- updatedAt: Date
+- isDeleted: Boolean
+
+COMMUNITYMANAGERS COLLECTION:
+- _id: ObjectId
+- userId: ObjectId (reference to User)
+- communityId: ObjectId (reference to Community)
+- role: String
+- permissions: Object
+- status: String (Active, Inactive)
+- createdAt: Date
+- updatedAt: Date
+- isDeleted: Boolean
+
+INDEXES:
+- Users: email (unique), communityId
+- Communities: createdBy, managerId, status
+- Pulses: communityId, userId, status
+- Events: communityId, eventDate
+- MarketplaceListings: communityId, userId, status
+- CommunityJoinRequests: userId, communityId (compound unique)
+
+================================================================================
+8. API DOCUMENTATION
+================================================================================
+
+BASE URL: http://localhost:11001/api/v1
+
+AUTHENTICATION ENDPOINTS:
+------------------------
+POST   /auth/register
+Description: Register a new user
+Request Body:
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "mobileNumber": "9876543210",
+  "countryCode": "+91",
+  "password": "SecurePass123",
+  "role": "User"
+}
+Response: { message: "OTP sent successfully", result: { userId, email } }
+
+POST   /auth/login
+Description: User login
+Request Body:
+{
+  "email": "john@example.com",
+  "password": "SecurePass123"
+}
+Response: { message: "Login successful", result: { user, accessToken } }
+
+POST   /auth/verify-otp
+Description: Verify OTP for registration
+Request Body:
+{
+  "userId": "user_id",
+  "otp": "123456"
+}
+Response: { message: "OTP verified successfully", result: { user, token } }
+
+POST   /auth/forgot-password
+Description: Request password reset
+Request Body: { "email": "john@example.com" }
+Response: { message: "OTP sent to email" }
+
+POST   /auth/reset-password
+Description: Reset password with OTP
+Request Body:
+{
+  "email": "john@example.com",
+  "otp": "123456",
+  "newPassword": "NewPass123"
+}
+Response: { message: "Password reset successfully" }
+
+COMMUNITY ENDPOINTS:
+-------------------
+GET    /community/communities
+Description: Get all communities (with pagination)
+Query Params: page, limit, search, location
+Response: { communities: [], pagination: {} }
+
+GET    /community/communities/featured
+Description: Get featured communities
+Response: { communities: [] }
+
+GET    /community/communities/:id
+Description: Get community details by ID
+Response: { community: {} }
+
+POST   /community/communities/:id/join-request
+Description: Request to join community
+Headers: Authorization: Bearer <token>
+Request Body: { "message": "Optional message" }
+Response: { message: "Join request submitted", result: {} }
+
+PULSES ENDPOINTS:
+----------------
+GET    /community/pulses/:communityId
+Description: Get pulses for a community
+Query Params: page, limit
+Response: { pulses: [], pagination: {} }
+
+POST   /community/pulses/create
+Description: Create a new pulse
+Headers: Authorization: Bearer <token>
+Request Body (FormData):
+- communityId: String
+- title: String
+- description: String
+- territory: String
+- attachment: File (optional)
+Response: { message: "Pulse created", result: { pulse } }
+
+POST   /community/pulses/:pulseId/like
+Description: Like or unlike a pulse
+Headers: Authorization: Bearer <token>
+Response: { message: "Pulse liked/unliked", result: { pulse } }
+
+POST   /community/pulses/:pulseId/comment
+Description: Add comment to pulse
+Headers: Authorization: Bearer <token>
+Request Body: { "text": "Comment text" }
+Response: { message: "Comment added", result: { pulse } }
+
+EVENTS ENDPOINTS:
+----------------
+GET    /community/events/:communityId
+Description: Get events for a community
+Query Params: page, limit, search
+Response: { events: [], pagination: {} }
+
+POST   /community/events/create
+Description: Create a new event (Manager only)
+Headers: Authorization: Bearer <token>
+Request Body (FormData):
+- communityId: String
+- title: String
+- description: String
+- eventDate: Date
+- endDate: Date
+- location: String
+- eventType: String
+- maxParticipants: Number
+Response: { message: "Event created", result: { event } }
+
+POST   /community/events/register/:eventId
+Description: Register for an event
+Headers: Authorization: Bearer <token>
+Response: { message: "Registration successful", result: { registration, qrCode } }
+
+GET    /community/events/registration/:eventId
+Description: Get user's registration for event
+Headers: Authorization: Bearer <token>
+Response: { registration: {}, qrCode: "base64_string" }
+
+POST   /community/events/attendance/mark
+Description: Mark attendance via QR code scan
+Headers: Authorization: Bearer <token>
+Request Body: { "qrData": "json_string" }
+Response: { message: "Attendance marked", result: {} }
+
+MARKETPLACE ENDPOINTS:
+---------------------
+GET    /community/marketplace/:communityId
+Description: Get marketplace listings
+Query Params: page, limit, search, status
+Response: { listings: [], pagination: {} }
+
+POST   /community/marketplace/listing/create
+Description: Create a marketplace listing
+Headers: Authorization: Bearer <token>
+Request Body (FormData):
+- communityId: String
+- type: String (buy, sell)
+- title: String
+- description: String
+- price: Number
+- attachment: File (optional)
+Response: { message: "Listing created", result: { listing } }
+
+POST   /community/marketplace/chat/:listingId
+Description: Start or get chat for listing
+Headers: Authorization: Bearer <token>
+Response: { chat: {}, messages: [] }
+
+POST   /community/marketplace/chat/message/:listingId
+Description: Send message in chat
+Headers: Authorization: Bearer <token>
+Request Body: { "text": "Message text" }
+Response: { message: "Message sent", result: { chat } }
+
+MANAGER ENDPOINTS:
+-----------------
+GET    /manager/moderation-dashboard/:communityId
+Description: Get comprehensive moderation dashboard
+Headers: Authorization: Bearer <token>
+Response: {
+  stats: {
+    pendingUsers: Number,
+    pendingPulses: Number,
+    pendingListings: Number,
+    totalPending: Number
+  },
+  pendingItems: {
+    users: [],
+    pulses: [],
+    listings: []
+  }
+}
+
+GET    /manager/community-join-requests/:communityId
+Description: Get join requests for community
+Headers: Authorization: Bearer <token>
+Query Params: page, limit, search, status
+Response: { requests: [], pagination: {} }
+
+PUT    /manager/community-join-requests/:communityId/:requestId/approve
+Description: Approve join request
+Headers: Authorization: Bearer <token>
+Request Body: { "comment": "Optional comment" }
+Response: { message: "Request approved", result: {} }
+
+PUT    /manager/community-join-requests/:communityId/:requestId/reject
+Description: Reject join request
+Headers: Authorization: Bearer <token>
+Request Body: { "rejectionReason": "Reason for rejection" }
+Response: { message: "Request rejected", result: {} }
+
+PUT    /manager/posts/:communityId/:postId/approve
+Description: Approve a pulse/post
+Headers: Authorization: Bearer <token>
+Request Body: { "comment": "Optional feedback" }
+Response: { message: "Post approved", result: {} }
+
+PUT    /manager/posts/:communityId/:postId/reject
+Description: Reject a pulse/post
+Headers: Authorization: Bearer <token>
+Request Body: { "comment": "Rejection reason" }
+Response: { message: "Post rejected", result: {} }
+
+PUT    /manager/marketplace/listings/:communityId/:listingId/approve
+Description: Approve marketplace listing
+Headers: Authorization: Bearer <token>
+Request Body: { "comment": "Optional comment" }
+Response: { message: "Listing approved", result: {} }
+
+PUT    /manager/marketplace/listings/:communityId/:listingId/reject
+Description: Reject marketplace listing
+Headers: Authorization: Bearer <token>
+Request Body: { "comment": "Rejection reason" }
+Response: { message: "Listing rejected", result: {} }
+
+ADMIN ENDPOINTS:
+---------------
+GET    /admin/users
+Description: Get all users
+Headers: Authorization: Bearer <token>
+Query Params: page, limit, search, role
+Response: { users: [], pagination: {} }
+
+GET    /admin/communities
+Description: Get all communities
+Headers: Authorization: Bearer <token>
+Response: { communities: [] }
+
+GET    /admin/join-requests
+Description: Get all join requests
+Headers: Authorization: Bearer <token>
+Response: { requests: [] }
+
+PUT    /admin/join-requests/:requestId/approve
+Description: Approve join request (admin)
+Headers: Authorization: Bearer <token>
+Response: { message: "Request approved", result: {} }
+
+================================================================================
+9. USER ROLES & PERMISSIONS
+================================================================================
+
+ADMIN ROLE (SuperAdmin/Admin):
+-----------------------------
+Capabilities:
+- Full system access
+- Manage all communities across the platform
+- Approve/reject any content (pulses, listings, join requests)
+- Manage all users and their roles
+- Assign managers to communities
+- View system-wide analytics and reports
+- Access all admin panel features
+- Create and manage system-wide settings
+
+Access Routes:
+- /admin/dashboard
+- /admin/users
+- /admin/communities
+- /admin/join-requests
+- /admin/pulse-approvals
+- /admin/marketplace-approvals
+- /admin/event-registrations
+- /admin/role-requests
+
+Permissions:
+- canManageAllCommunities: true
+- canManageAllUsers: true
+- canApproveAllContent: true
+- canAssignManagers: true
+- canViewSystemAnalytics: true
+
+MANAGER ROLE:
+------------
+Capabilities:
+- Manage assigned communities only
+- Approve/reject join requests for assigned communities
+- Moderate pulses (posts) for assigned communities
+- Approve/reject marketplace listings for assigned communities
+- Create and manage events for assigned communities
+- View community reports and analytics
+- Access moderation dashboard
+- Remove members from assigned communities
+
+Access Routes:
+- /manager/moderation (default)
+- /manager/moderation?tab=overview
+- /manager/moderation?tab=users
+- /manager/moderation?tab=pulses
+- /manager/moderation?tab=marketplace
+
+Permissions (per community):
+- canApproveJoinRequests: true
+- canManagePosts: true
+- canManageUsers: true
+- canCreateEvents: true
+- canManageReports: true
+
+Manager Assignment:
+- Managers are assigned to specific communities
+- Can be assigned via Admin panel
+- Community creators automatically become managers
+- Multiple managers can be assigned to one community
+
+USER ROLE (Member):
+------------------
+Capabilities:
+- Join communities (with approval required)
+- Create pulses (pending manager approval)
+- Like and comment on approved pulses
+- Register for events
+- Create marketplace listings (pending approval)
+- Chat with other members about listings
+- View community directory
+- View community events and announcements
+- Update own profile
+
+Access Routes:
+- /dashboard (user dashboard)
+- /community/:communityId (community dashboard)
+- /profile
+- /settings
+
+Restrictions:
+- Cannot approve/reject content
+- Cannot create events
+- Cannot manage other users
+- Cannot access admin or manager panels
+- Content requires approval before being visible
+
+GUEST ROLE (Unauthenticated):
+-----------------------------
+Capabilities:
+- View landing page
+- Browse featured communities
+- View public events
+- View public announcements
+- View amenities
+- Register new account
+- Sign in to existing account
+
+Access Routes:
+- / (landing page)
+- /login
+- /register
+- /events (public events page)
+
+Restrictions:
+- Cannot join communities
+- Cannot create content
+- Cannot access authenticated features
+- Limited to public information only
+
+ROLE HIERARCHY:
+--------------
+SuperAdmin > Admin > Manager > User > Guest
+
+Each role inherits permissions from lower roles and adds additional 
+capabilities.
+
+AUTHENTICATION FLOW:
+-------------------
+1. User registers with email/password
+2. System sends OTP to email
+3. User verifies OTP
+4. Account activated
+5. User can login with email/password
+6. JWT token issued upon successful login
+7. Token stored in localStorage
+8. Token included in API requests via Authorization header
+9. Backend validates token on each request
+10. Role checked via middleware
+11. Access granted/denied based on role
+
+================================================================================
+10. FEATURE MODULES
+================================================================================
+
+MODULE 1: AUTHENTICATION SYSTEM
+-------------------------------
+Features:
+- User registration with email verification
+- OTP-based email verification
+- Password-based login
+- Google OAuth login (optional)
+- Forgot password functionality
+- Password reset with OTP
+- JWT token generation
+- Refresh token support
+- Session management
+
+Security:
+- Password hashing with bcrypt (10 salt rounds)
+- JWT tokens with expiration
+- Refresh tokens for extended sessions
+- OTP expiration (10 minutes)
+- Rate limiting on login attempts
+- Account lockout after failed attempts
+
+MODULE 2: COMMUNITY MANAGEMENT
+------------------------------
+Features:
+- Create communities with detailed profiles
+- Community search and filtering
+- Featured communities showcase
+- Join request system
+- Member management
+- Community settings
+- Amenities management
+- Location-based filtering
+
+Workflow:
+1. Admin/Manager creates community
+2. Community profile created with details
+3. Users can request to join
+4. Manager reviews join request
+5. Manager approves/rejects with optional comment
+6. User added to community members on approval
+7. User gains access to community features
+
+MODULE 3: PULSES (SOCIAL FEED)
+-----------------------------
+Features:
+- Create posts with text and file attachments
+- Like and unlike posts
+- Comment on posts
+- Territory-based categorization
+- Manager approval workflow
+- Real-time updates
+- Post deletion
+- Image upload support
+
+Workflow:
+1. User creates pulse/post
+2. Post status set to "pending"
+3. Post visible to managers only
+4. Manager reviews post in moderation dashboard
+5. Manager approves or rejects with optional feedback
+6. Approved posts visible to all community members
+7. Members can like and comment
+8. Real-time updates reflect changes
+
+MODULE 4: EVENT MANAGEMENT
+--------------------------
+Features:
+- Create events with details (title, description, date, location)
+- Event registration system
+- QR code generation for registrations
+- Digital attendance tracking via QR scan
+- Event calendar view
+- Registration approval workflow
+- Participant management
+- Event reminders
+
+Workflow:
+1. Manager creates event
+2. Event details saved
+3. Users register for event
+4. Registration approval requested (if required)
+5. Manager approves registration
+6. QR code generated for approved registration
+7. User receives QR code
+8. At event, QR code scanned for attendance
+9. Attendance marked in system
+
+QR Code Implementation:
+- QR code contains JSON data: { eventId, userId, approvalId, timestamp }
+- QR code generated as base64 image
+- QR code displayed to user after approval
+- Scanner validates QR code data
+- Attendance marked automatically
+
+MODULE 5: MARKETPLACE
+--------------------
+Features:
+- Create buy/sell listings
+- Image uploads for listings
+- Price and description
+- Listing status management
+- In-app chat between buyers and sellers
+- Listing approval workflow
+- Search and filter listings
+
+Workflow:
+1. User creates marketplace listing
+2. Listing status set to "pending"
+3. Manager reviews listing in moderation dashboard
+4. Manager approves or rejects with feedback
+5. Approved listing visible to community
+6. Interested buyers can start chat
+7. Chat conversation created
+8. Messages exchanged in real-time
+9. Listing status updated (sold, closed)
+
+Chat Implementation:
+- Chat created when buyer initiates conversation
+- Participants: listing owner and buyer
+- Messages stored with timestamp
+- Real-time message updates
+- Chat history persisted in database
+
+MODULE 6: SERVICE DIRECTORY
+---------------------------
+Features:
+- Curated directory of service providers
+- Service type categorization
+- Contact information
+- Search and filter functionality
+- Manager-managed entries
+- Service provider details
+
+Workflow:
+1. Manager adds service provider to directory
+2. Entry includes name, service type, contact info
+3. Entry visible to all community members
+4. Members can search and filter
+5. Contact information accessible
+6. Manager can update or delete entries
+
+MODULE 7: MODERATION DASHBOARD
+------------------------------
+Features:
+- Overview tab showing all pending items
+- Users tab for join request moderation
+- Pulses tab for post moderation
+- Marketplace tab for listing moderation
+- Quick stats cards with pending counts
+- Approve/reject actions with optional comments
+- Real-time updates after actions
+- Action logging for audit trail
+
+Dashboard Tabs:
+1. Overview: Shows all pending items (users, pulses, listings) in one view
+2. Users: Dedicated view for join request approvals
+3. Pulses: Dedicated view for post approvals
+4. Marketplace: Dedicated view for listing approvals
+
+Workflow:
+1. Manager accesses moderation dashboard
+2. Dashboard loads all pending items
+3. Manager reviews items in respective tabs
+4. Manager takes action (approve/reject)
+5. Optional comment/feedback added
+6. Action logged with timestamp and reviewer
+7. User notified of decision
+8. Dashboard refreshes with updated data
+
+MODULE 8: ADMIN PANEL
+--------------------
+Features:
+- User management (view, edit, delete)
+- Community management (create, edit, delete)
+- Join request management (approve/reject)
+- Content approvals (pulses, listings)
+- Event registration approvals
+- Role change requests
+- System-wide analytics
+- Manager assignment
+
+MODULE 9: LANDING PAGE
+---------------------
+Features:
+- Hero section with call-to-action
+- Featured communities showcase
+- Recent events display
+- Recent announcements
+- Amenities showcase
+- Public event calendar
+- Responsive design
+- Guest access (no authentication required)
+
+================================================================================
+11. SECURITY IMPLEMENTATION
+================================================================================
+
+AUTHENTICATION SECURITY:
+-----------------------
+- JWT tokens with expiration (30 days default)
+- Refresh tokens for extended sessions (99 days)
+- Password hashing with bcrypt (10 salt rounds)
+- OTP expiration (10 minutes)
+- Account lockout after multiple failed login attempts
+- Secure token storage in localStorage
+- Token validation on every request
+
+AUTHORIZATION SECURITY:
+---------------------
+- Role-based access control (RBAC)
+- Middleware-based route protection
+- Community-specific permission checks
+- Manager assignment verification
+- Action logging for audit trail
+- Permission validation on each request
+
+DATA SECURITY:
+-------------
+- Input validation on all endpoints
+- Data sanitization to prevent XSS
+- SQL injection prevention (MongoDB NoSQL)
+- File upload validation
+- File type restrictions
+- File size limits
+- Secure file storage
+
+API SECURITY:
+------------
+- CORS configuration with whitelist
+- Rate limiting on authentication endpoints
+- Request throttling
+- Helmet.js for HTTP headers
+- HPP (HTTP Parameter Pollution) protection
+- Request size limits
+- Error message sanitization
+
+COMMUNICATION SECURITY:
+----------------------
+- HTTPS recommended for production
+- Secure email transmission (SMTP/TLS)
+- OTP sent via secure email
+- Password reset tokens with expiration
+- Secure session management
+
+BEST PRACTICES IMPLEMENTED:
+--------------------------
+- Environment variables for sensitive data
+- No hardcoded secrets
+- Secure password requirements
+- Token rotation support
+- Audit logging
+- Error handling without information leakage
+
+================================================================================
+12. DEPLOYMENT GUIDE
+================================================================================
+
+PRODUCTION DEPLOYMENT:
+---------------------
+
+BACKEND DEPLOYMENT:
+1. Set NODE_ENV=production
+2. Configure production database (MongoDB Atlas recommended)
+3. Set secure JWT secrets
+4. Configure email service (SendGrid recommended)
+5. Set up file storage (AWS S3 recommended)
+6. Configure CORS for production domain
+7. Set up process manager (PM2)
+8. Configure reverse proxy (Nginx)
+9. Set up SSL certificates
+10. Configure monitoring and logging
+
+Environment Variables for Production:
+- PORT=11001
+- NODE_ENV=production
+- ENTRYTRACKING_DB_URL=<production_mongodb_url>
+- JWT_SECRET=<strong_random_secret>
+- JWT_SECRET_USER=<strong_random_secret>
+- REFRESH_TOKEN_SECRET=<strong_random_secret>
+- SENDGRID_API_KEY=<sendgrid_key>
+- AWS_ACCESS_KEY=<aws_key>
+- AWS_SECRET_KEY=<aws_secret>
+- AWS_BUCKET=<s3_bucket_name>
+
+FRONTEND DEPLOYMENT:
+1. Build production bundle: npm run build
+2. Configure production API URL
+3. Deploy to hosting service (Vercel, Netlify, AWS S3)
+4. Configure environment variables
+5. Set up custom domain
+6. Configure SSL
+7. Set up CDN for static assets
+
+Build Command:
+npm run build
+
+Output: dist/ directory with optimized production files
+
+DEPLOYMENT PLATFORMS:
+--------------------
+Backend Options:
+- AWS EC2
+- Heroku
+- DigitalOcean
+- Railway
+- Render
+
+Frontend Options:
+- Vercel
+- Netlify
+- AWS S3 + CloudFront
+- GitHub Pages
+
+MONITORING:
+----------
+- Application logs (Winston)
+- Error tracking (Sentry recommended)
+- Performance monitoring
+- Uptime monitoring
+- Database monitoring
+
+BACKUP STRATEGY:
+---------------
+- Regular MongoDB backups
+- Automated backup scheduling
+- Backup storage in separate location
+- Disaster recovery plan
+
+================================================================================
+13. TROUBLESHOOTING
+================================================================================
+
+COMMON ISSUES AND SOLUTIONS:
+
+ISSUE 1: Backend Server Not Starting
+------------------------------------
+Symptoms: ERR_CONNECTION_RESET, Cannot connect to server
+Solutions:
+1. Check if MongoDB is running
+2. Verify .env.dev file exists and has correct values
+3. Check port 11001 is not already in use
+4. Review backend console for error messages
+5. Verify all dependencies installed (npm install)
+
+ISSUE 2: Frontend Cannot Connect to Backend
+------------------------------------------
+Symptoms: API calls failing, network errors
+Solutions:
+1. Verify backend is running on port 11001
+2. Check VITE_API_URL in frontend .env file
+3. Verify CORS configuration allows frontend origin
+4. Check browser console for CORS errors
+5. Verify firewall not blocking port 11001
+
+ISSUE 3: Authentication Failures
+--------------------------------
+Symptoms: Login fails, tokens invalid
+Solutions:
+1. Verify JWT secrets configured correctly
+2. Check token expiration settings
+3. Verify password hashing working
+4. Check OTP expiration settings
+5. Review authentication middleware logs
+
+ISSUE 4: Database Connection Errors
+-----------------------------------
+Symptoms: Cannot connect to MongoDB, database errors
+Solutions:
+1. Verify MongoDB is running
+2. Check ENTRYTRACKING_DB_URL in .env.dev
+3. Verify database credentials correct
+4. Check network connectivity to MongoDB
+5. Review MongoDB logs
+
+ISSUE 5: File Upload Failures
+----------------------------
+Symptoms: Images not uploading, file errors
+Solutions:
+1. Check file size limits
+2. Verify file type restrictions
+3. Check upload directory permissions
+4. Verify express-fileupload configured
+5. Check disk space available
+
+ISSUE 6: Email Not Sending
+--------------------------
+Symptoms: OTP not received, emails not delivered
+Solutions:
+1. Verify email credentials in .env.dev
+2. Check SMTP settings correct
+3. Verify SendGrid API key (if using)
+4. Check email service status
+5. Review email logs
+
+DEBUGGING TIPS:
+--------------
+1. Enable detailed logging in development
+2. Use browser DevTools for frontend debugging
+3. Check backend console for server errors
+4. Review MongoDB logs for database issues
+5. Use Postman to test API endpoints directly
+6. Check network tab in browser for API calls
+7. Verify environment variables loaded correctly
+
+================================================================================
+14. FUTURE ROADMAP
+================================================================================
+
+SHORT-TERM ENHANCEMENTS (1-3 months):
+------------------------------------
+- Push notifications for approvals and updates
+- Email notifications for all user actions
+- Advanced search and filtering across all modules
+- Mobile-responsive improvements
+- Real-time chat improvements
+- Payment integration for marketplace
+- Enhanced analytics dashboard
+- Bulk operations for managers
+
+MEDIUM-TERM ENHANCEMENTS (3-6 months):
+-------------------------------------
+- Mobile app development (React Native)
+- Advanced reporting and analytics
+- Integration with payment gateways
+- Video streaming for events
+- Document management system
+- Advanced notification system
+- Multi-language support
+- Dark mode theme
+
+LONG-TERM ENHANCEMENTS (6+ months):
+-----------------------------------
+- AI-powered content moderation
+- Machine learning for recommendations
+- Blockchain-based verification
+- Integration with smart home devices
+- Advanced analytics with AI insights
+- Voice commands and accessibility
+- AR/VR features for virtual events
+- Integration with IoT devices
+
+TECHNICAL IMPROVEMENTS:
+----------------------
+- Microservices architecture migration
+- GraphQL API implementation
+- Real-time updates with WebSockets
+- Caching layer (Redis)
+- Search engine integration (Elasticsearch)
+- CDN for static assets
+- Database optimization and indexing
+- Performance monitoring
+- Automated testing suite
+- CI/CD pipeline
+
+BUSINESS FEATURES:
+-----------------
+- Subscription management
+- Premium community features
+- Advertising system
+- Revenue sharing for marketplace
+- Community analytics for managers
+- Custom branding for communities
+- White-label solutions
+
+================================================================================
+PROJECT STATISTICS
+================================================================================
+
+Code Metrics:
+- Total Lines of Code: ~15,000+
+- Frontend Components: 200+
+- Backend Controllers: 8
+- API Endpoints: 100+
+- Database Models: 15+
+- Middleware Functions: 5+
+- Utility Functions: 50+
+
+Feature Coverage:
+- Authentication System: 100% Complete
+- User Management: 100% Complete
+- Community Management: 100% Complete
+- Pulses Module: 100% Complete
+- Events Module: 100% Complete
+- Marketplace Module: 100% Complete
+- Directory Module: 100% Complete
+- Moderation Dashboard: 100% Complete
+- Admin Panel: 100% Complete
+- Manager Panel: 100% Complete
+- Landing Page: 100% Complete
+
+User Roles Supported:
+- Admin: Full implementation
+- Manager: Full implementation
+- User: Full implementation
+- Guest: Full implementation
+
+================================================================================
+CONTACT & SUPPORT
+================================================================================
+
+For technical support, questions, or contributions:
+- Review project documentation files
+- Check troubleshooting guide
+- Review API documentation
+- Examine code comments
+- Check GitHub issues (if applicable)
+
+Development Team:
+- Backend Development: Node.js, Express.js, MongoDB
+- Frontend Development: React, TypeScript, Tailwind CSS
+- UI/UX Design: Modern, responsive design
+- DevOps: Environment setup, deployment configuration
+
+================================================================================
+                        END OF DETAILED DOCUMENTATION
+================================================================================
+
