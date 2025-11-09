@@ -93,7 +93,7 @@ const AdminDashboard = () => {
 
         // Fetch recent activities
         try {
-          const activitiesResponse = await adminApi.getRecentActivities({ limit: 6 });
+          const activitiesResponse = await adminApi.getRecentActivities({ limit: 3 });
           console.log('Activities response:', activitiesResponse);
           
           // Handle different response formats
@@ -111,7 +111,8 @@ const AdminDashboard = () => {
           const activities = Array.isArray(activitiesData) 
             ? activitiesData 
             : (activitiesData?.activities || []);
-          setRecentActivities(activities);
+          // Limit to 3 activities for display
+          setRecentActivities(activities.slice(0, 3));
         } catch (error) {
           console.error('Error fetching recent activities:', error);
           setRecentActivities([]);
@@ -260,30 +261,30 @@ const AdminDashboard = () => {
 
         {/* Recent Activities */}
         <Card className="bg-white border border-gray-200">
-          <CardHeader className="border-b border-gray-200 p-3 md:p-4 lg:p-5">
-            <h3 className="font-bold text-base md:text-lg lg:text-xl flex items-center gap-2 text-gray-900">
+          <CardHeader className="border-b border-gray-200 p-3 md:p-4">
+            <h3 className="font-bold text-base md:text-lg flex items-center gap-2 text-gray-900">
               <Activity className="w-4 h-4 md:w-5 md:h-5" />
               Recent Activities
             </h3>
           </CardHeader>
-          <CardContent className="p-3 md:p-4 lg:p-5">
-            <div className="space-y-3 md:space-y-4">
+          <CardContent className="p-3 md:p-4">
+            <div className="space-y-2.5 md:space-y-3">
               {recentActivities.length === 0 ? (
-                <div className="text-center py-6 md:py-8 text-gray-500 text-sm">
+                <div className="text-center py-4 md:py-6 text-gray-500 text-xs md:text-sm">
                   No recent activities found
                 </div>
               ) : (
-                recentActivities.map((activity, index) => (
-                <div key={index} className="flex gap-2 md:gap-3 pb-3 md:pb-4 border-b border-gray-100 last:border-0 last:pb-0">
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex-shrink-0 flex items-center justify-center bg-gray-900">
-                    {activity.type === 'user' && <Users className="w-4 h-4 md:w-5 md:h-5 text-white" />}
-                    {activity.type === 'community' && <Building2 className="w-4 h-4 md:w-5 md:h-5 text-white" />}
-                    {activity.type === 'event' && <Calendar className="w-4 h-4 md:w-5 md:h-5 text-white" />}
+                recentActivities.slice(0, 3).map((activity, index) => (
+                <div key={index} className="flex gap-2.5 md:gap-3 pb-2.5 md:pb-3 border-b border-gray-100 last:border-0 last:pb-0">
+                  <div className="w-8 h-8 md:w-9 md:h-9 rounded-full flex-shrink-0 flex items-center justify-center bg-gray-900">
+                    {activity.type === 'user' && <Users className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />}
+                    {activity.type === 'community' && <Building2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />}
+                    {activity.type === 'event' && <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs md:text-sm font-semibold text-gray-900 break-words">{activity.action}</p>
-                    <p className="text-xs text-gray-600 break-words">{activity.user}{activity.community ? ` in ${activity.community}` : ''}</p>
-                    <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                  <div className="flex-1 min-w-0 space-y-0.5">
+                    <p className="text-xs md:text-sm font-semibold text-gray-900 break-words leading-tight">{activity.action}</p>
+                    <p className="text-xs text-gray-600 break-words leading-tight">{activity.user}{activity.community ? ` in ${activity.community}` : ''}</p>
+                    <p className="text-xs text-gray-500 leading-tight">{activity.time}</p>
                   </div>
                 </div>
                 ))
