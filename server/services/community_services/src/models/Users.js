@@ -32,7 +32,7 @@ const UsersSchema = new Schema({
     },
     role: {
         type: String,
-        enum: ['User', 'Admin', 'SuperAdmin'],
+        enum: ['User', 'Manager', 'Admin', 'SuperAdmin'],
         default: 'User'
     },
     communityId: {

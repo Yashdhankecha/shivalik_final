@@ -76,25 +76,6 @@ export const adminApi = {
     return response.data;
   },
 
-  // Get reports
-  getReports: async (params: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    status?: string;
-    type?: string;
-  } = {}) => {
-    const queryParams = new URLSearchParams();
-    if (params.page) queryParams.append('page', params.page.toString());
-    if (params.limit) queryParams.append('limit', params.limit.toString());
-    if (params.search) queryParams.append('search', params.search);
-    if (params.status) queryParams.append('status', params.status);
-    if (params.type) queryParams.append('type', params.type);
-    
-    const response = await apiClient.get(`/api/v1/admin/reports?${queryParams.toString()}`);
-    return response.data;
-  },
-
   // Create new community
   createCommunity: async (data: FormData) => {
     try {
@@ -170,6 +151,107 @@ export const adminApi = {
       // Re-throw the error so it can be handled by the calling function
       throw error;
     }
+  },
+
+  // Community join requests
+  getJoinRequests: async (params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  } = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+    if (params.status) queryParams.append('status', params.status);
+    
+    const response = await apiClient.get(`/api/v1/admin/join-requests?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  approveJoinRequest: async (requestId: string) => {
+    const response = await apiClient.put(`/api/v1/admin/join-requests/${requestId}/approve`);
+    return response.data;
+  },
+
+  rejectJoinRequest: async (requestId: string, rejectionReason: string) => {
+    const response = await apiClient.put(`/api/v1/admin/join-requests/${requestId}/reject`, { rejectionReason });
+    return response.data;
+  },
+
+  // Marketplace product listing approvals
+  getMarketplaceListings: async (params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  } = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+    if (params.status) queryParams.append('status', params.status);
+    
+    const response = await apiClient.get(`/api/v1/admin/marketplace/listings?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  approveMarketplaceListing: async (listingId: string) => {
+    const response = await apiClient.put(`/api/v1/admin/marketplace/listings/${listingId}/approve`);
+    return response.data;
+  },
+
+  rejectMarketplaceListing: async (listingId: string, rejectionReason: string) => {
+    const response = await apiClient.put(`/api/v1/admin/marketplace/listings/${listingId}/reject`, { rejectionReason });
+    return response.data;
+  },
+
+  // Event registration approvals
+  getPendingEventRegistrations: async (params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  } = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+    
+    const response = await apiClient.get(`/api/v1/admin/events/registrations?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  approveEventRegistration: async (approvalId: string) => {
+    const response = await apiClient.put(`/api/v1/admin/events/registrations/${approvalId}/approve`);
+    return response.data;
+  },
+
+  rejectEventRegistration: async (approvalId: string, rejectionReason: string) => {
+    const response = await apiClient.put(`/api/v1/admin/events/registrations/${approvalId}/reject`, { rejectionReason });
+    return response.data;
+  },
+
+  // Moderator management
+  getCommunityMembers: async (params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    communityId?: string;
+  } = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+    if (params.communityId) queryParams.append('communityId', params.communityId);
+    
+    const response = await apiClient.get(`/api/v1/admin/moderators/members?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  assignModeratorRole: async (userId: string, communityId: string) => {
+    const response = await apiClient.put(`/api/v1/admin/moderators/${userId}/assign`, { communityId });
+    return response.data;
   }
 };
 

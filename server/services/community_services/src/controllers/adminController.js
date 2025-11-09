@@ -4,8 +4,9 @@ const { validationResult } = require('express-validator');
 const CommunitiesModel = require('../models/Communities.js');
 const UsersModel = require('../models/Users.js');
 const EventsModel = require('../models/Events.js');
-const ReportsModel = require('../models/Reports.js');
 const RoleChangeRequestsModel = require('../models/RoleChangeRequests.js');
+const CommunityJoinRequestsModel = require('../models/CommunityJoinRequests.js');
+const MarketplaceListingsModel = require('../models/MarketplaceListings.js');
 const mongoose = require('mongoose');
 const path = require('path');
 
@@ -44,17 +45,10 @@ const getDashboardStats = async (req, res) => {
             status: { $in: ['Upcoming', 'Ongoing', 'upcoming', 'ongoing'] }
         });
 
-        // Get reports count
-        const reportsCount = await ReportsModel.countDocuments({
-            communityId: { $in: communityIds },
-            isDeleted: false
-        });
-
         const stats = {
             totalUsers: usersCount,
             totalCommunities: communitiesCount,
-            activeEvents: eventsCount,
-            totalReports: reportsCount
+            activeEvents: eventsCount
         };
 
         return res.status(200).send(response.toJson(
@@ -165,13 +159,25 @@ const getCommunityUsers = async (req, res) => {
         }
 
         if (search) {
-            userFilter.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } }
+            userFilter.$and = [
+                {
+                    $or: [
+                        { communityId: communityId },
+                        { _id: community.managerId }
+                    ]
+                },
+                {
+                    $or: [
+                        { name: { $regex: search, $options: 'i' } },
+                        { email: { $regex: search, $options: 'i' } }
+                    ]
+                }
             ];
+            delete userFilter.$or;
         }
 
         const users = await UsersModel.find(userFilter)
+            .populate('communityId', 'name location')
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 })
@@ -292,7 +298,7 @@ const getAllUsers = async (req, res) => {
         const userFilter = {
             $or: [
                 { communityId: { $in: communityIds } },
-                { _id: { $in: communities.map(c => c.managerId) } }
+                { _id: { $in: communities.map(c => c.managerId).filter(Boolean) } }
             ],
             isDeleted: false
         };
@@ -303,13 +309,26 @@ const getAllUsers = async (req, res) => {
         }
 
         if (search) {
-            userFilter.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } }
+            // Use $and to combine community filter with search filter
+            userFilter.$and = [
+                {
+                    $or: [
+                        { communityId: { $in: communityIds } },
+                        { _id: { $in: communities.map(c => c.managerId).filter(Boolean) } }
+                    ]
+                },
+                {
+                    $or: [
+                        { name: { $regex: search, $options: 'i' } },
+                        { email: { $regex: search, $options: 'i' } }
+                    ]
+                }
             ];
+            delete userFilter.$or;
         }
 
         const users = await UsersModel.find(userFilter)
+            .populate('communityId', 'name location')
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 })
@@ -413,79 +432,6 @@ const getRecentActivities = async (req, res) => {
         return res.status(200).send(response.toJson(
             messages['en'].common.detail_success,
             allActivities
-        ));
-
-    } catch (err) {
-        const statusCode = err.statusCode || 500;
-        const errMess = err.message || err;
-        return res.status(statusCode).send(response.toJson(errMess));
-    }
-};
-
-/**
- * Get reports for communities created by current admin
- */
-const getReports = async (req, res) => {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
-        const search = req.query.search || '';
-        const statusParam = req.query.status;
-        const typeParam = req.query.type;
-
-        // Get communities created by current admin
-        const communities = await CommunitiesModel.find({
-            createdBy: req.user._id,
-            isDeleted: false
-        }).select('_id');
-
-        const communityIds = communities.map(community => community._id);
-
-        // Build report filter
-        const reportFilter = {
-            communityId: { $in: communityIds },
-            isDeleted: false
-        };
-
-        // Handle status filter
-        if (statusParam) {
-            reportFilter.status = statusParam;
-        }
-
-        // Handle type filter
-        if (typeParam) {
-            reportFilter.type = typeParam;
-        }
-
-        if (search) {
-            reportFilter.$or = [
-                { title: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } }
-            ];
-        }
-
-        const reports = await ReportsModel.find(reportFilter)
-            .populate('createdBy', 'name')
-            .populate('communityId', 'name')
-            .skip(skip)
-            .limit(limit)
-            .sort({ createdAt: -1 })
-            .lean();
-
-        const total = await ReportsModel.countDocuments(reportFilter);
-
-        return res.status(200).send(response.toJson(
-            messages['en'].common.detail_success,
-            {
-                reports,
-                pagination: {
-                    total,
-                    page,
-                    limit,
-                    totalPages: Math.ceil(total / limit)
-                }
-            }
         ));
 
     } catch (err) {
@@ -1011,20 +957,825 @@ const createCommunityEvent = async (req, res) => {
     }
 };
 
+/**
+ * Get all community join requests for admin's communities
+ */
+const getJoinRequests = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const search = req.query.search || '';
+        const statusParam = req.query.status;
+        
+        // Get communities managed by current admin (managerId or createdBy)
+        const communities = await CommunitiesModel.find({
+            $or: [
+                { managerId: req.user._id },
+                { createdBy: req.user._id }
+            ],
+            isDeleted: false
+        }).select('_id');
+        
+        const communityIds = communities.map(community => community._id);
+        
+        if (communityIds.length === 0) {
+            return res.status(200).send(response.toJson(
+                messages['en'].common.detail_success,
+                {
+                    requests: [],
+                    pagination: {
+                        total: 0,
+                        page: 1,
+                        limit: 10,
+                        totalPages: 0
+                    }
+                }
+            ));
+        }
+        
+        // Build request filter
+        const requestFilter = {
+            communityId: { $in: communityIds },
+            isDeleted: false
+        };
+        
+        // Handle status filter
+        if (statusParam) {
+            requestFilter.status = { $in: [statusParam, statusParam.charAt(0).toUpperCase() + statusParam.slice(1).toLowerCase()] };
+        }
+        
+        if (search) {
+            // Search by user name or email
+            const users = await UsersModel.find({
+                $or: [
+                    { name: { $regex: search, $options: 'i' } },
+                    { email: { $regex: search, $options: 'i' } }
+                ],
+                isDeleted: false
+            }).select('_id');
+            
+            const userIds = users.map(user => user._id);
+            requestFilter.userId = { $in: userIds };
+        }
+        
+        const requests = await CommunityJoinRequestsModel.find(requestFilter)
+            .populate('userId', 'name email role')
+            .populate('communityId', 'name logo location')
+            .populate('reviewedBy', 'name email')
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 })
+            .lean();
+        
+        const total = await CommunityJoinRequestsModel.countDocuments(requestFilter);
+        
+        return res.status(200).send(response.toJson(
+            messages['en'].common.detail_success,
+            {
+                requests,
+                pagination: {
+                    total,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(total / limit)
+                }
+            }
+        ));
+        
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+/**
+ * Approve a community join request
+ */
+const approveJoinRequest = async (req, res) => {
+    try {
+        const { requestId } = req.params;
+        
+        // Find the join request
+        const joinRequest = await CommunityJoinRequestsModel.findOne({
+            _id: requestId,
+            isDeleted: false
+        }).populate('userId').populate('communityId');
+        
+        if (!joinRequest) {
+            return res.status(404).send(response.toJson('Join request not found'));
+        }
+        
+        // Verify admin has permission (is manager or creator of the community)
+        const community = await CommunitiesModel.findOne({
+            _id: joinRequest.communityId._id,
+            $or: [
+                { managerId: req.user._id },
+                { createdBy: req.user._id }
+            ],
+            isDeleted: false
+        });
+        
+        if (!community) {
+            return res.status(403).send(response.toJson('You do not have permission to approve requests for this community'));
+        }
+        
+        // Check if already processed
+        if (joinRequest.status !== 'Pending') {
+            return res.status(400).send(response.toJson(`This request has already been ${joinRequest.status.toLowerCase()}`));
+        }
+        
+        // Add user to community members
+        const userId = joinRequest.userId._id || joinRequest.userId;
+        const communityId = joinRequest.communityId._id || joinRequest.communityId;
+        
+        // Check if user is already a member
+        const isAlreadyMember = community.members.some(
+            memberId => memberId.toString() === userId.toString()
+        );
+        
+        if (!isAlreadyMember) {
+            // Add user to members array
+            community.members.push(userId);
+            
+            // Remove from pendingRequests if exists
+            community.pendingRequests = community.pendingRequests.filter(
+                reqId => reqId.toString() !== userId.toString()
+            );
+            
+            await community.save();
+        }
+        
+        // Update user's communityId field (optional - for single community assignment)
+        await UsersModel.findByIdAndUpdate(userId, {
+            $set: { communityId: communityId }
+        });
+        
+        // Update request status
+        joinRequest.status = 'Approved';
+        joinRequest.reviewedBy = req.user._id;
+        joinRequest.reviewedAt = new Date();
+        await joinRequest.save();
+        
+        await joinRequest.populate('userId', 'name email');
+        await joinRequest.populate('communityId', 'name');
+        await joinRequest.populate('reviewedBy', 'name email');
+        
+        return res.status(200).send(response.toJson(
+            'Join request approved successfully. User has been added to the community.',
+            joinRequest
+        ));
+        
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+/**
+ * Reject a community join request
+ */
+const rejectJoinRequest = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).send(response.toJson(errors.array()[0].msg));
+        }
+        
+        const { requestId } = req.params;
+        const { rejectionReason } = req.body;
+        
+        if (!rejectionReason || !rejectionReason.trim()) {
+            return res.status(400).send(response.toJson('Rejection reason is required'));
+        }
+        
+        // Find the join request
+        const joinRequest = await CommunityJoinRequestsModel.findOne({
+            _id: requestId,
+            isDeleted: false
+        }).populate('userId').populate('communityId');
+        
+        if (!joinRequest) {
+            return res.status(404).send(response.toJson('Join request not found'));
+        }
+        
+        // Verify admin has permission (is manager or creator of the community)
+        const community = await CommunitiesModel.findOne({
+            _id: joinRequest.communityId._id,
+            $or: [
+                { managerId: req.user._id },
+                { createdBy: req.user._id }
+            ],
+            isDeleted: false
+        });
+        
+        if (!community) {
+            return res.status(403).send(response.toJson('You do not have permission to reject requests for this community'));
+        }
+        
+        // Check if already processed
+        if (joinRequest.status !== 'Pending') {
+            return res.status(400).send(response.toJson(`This request has already been ${joinRequest.status.toLowerCase()}`));
+        }
+        
+        // Update request status with rejection reason
+        joinRequest.status = 'Rejected';
+        joinRequest.reviewedBy = req.user._id;
+        joinRequest.reviewedAt = new Date();
+        joinRequest.reviewNotes = rejectionReason.trim(); // Store rejection message
+        await joinRequest.save();
+        
+        await joinRequest.populate('userId', 'name email');
+        await joinRequest.populate('communityId', 'name');
+        await joinRequest.populate('reviewedBy', 'name email');
+        
+        // TODO: Send notification/email to user about rejection with reason
+        // You can integrate email service here to notify the user
+        
+        return res.status(200).send(response.toJson(
+            'Join request rejected successfully',
+            joinRequest
+        ));
+        
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+// Get Marketplace Listings for Approval
+const getMarketplaceListings = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const search = req.query.search || '';
+        const status = req.query.status || 'pending'; // Default to pending
+
+        // Get communities created or managed by current admin
+        const communities = await CommunitiesModel.find({
+            $or: [
+                { createdBy: req.user._id },
+                { managerId: req.user._id }
+            ],
+            isDeleted: false
+        }).select('_id');
+
+        const communityIds = communities.map(c => c._id);
+
+        if (communityIds.length === 0) {
+            return res.status(200).send(response.toJson(
+                messages['en'].common.detail_success,
+                {
+                    listings: [],
+                    pagination: {
+                        total: 0,
+                        page,
+                        limit,
+                        totalPages: 0
+                    }
+                }
+            ));
+        }
+
+        // Build filter
+        const filter = {
+            communityId: { $in: communityIds },
+            isDeleted: false
+        };
+
+        if (status !== 'all') {
+            filter.status = status;
+        }
+
+        // Search filter
+        if (search) {
+            filter.$or = [
+                { title: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const listings = await MarketplaceListingsModel.find(filter)
+            .populate('userId', 'name email')
+            .populate('communityId', 'name')
+            .populate('reviewedBy', 'name email')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        const total = await MarketplaceListingsModel.countDocuments(filter);
+
+        return res.status(200).send(response.toJson(
+            messages['en'].common.detail_success,
+            {
+                listings,
+                pagination: {
+                    total,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(total / limit)
+                }
+            }
+        ));
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+// Approve Marketplace Listing
+const approveMarketplaceListing = async (req, res) => {
+    try {
+        const { listingId } = req.params;
+
+        const listing = await MarketplaceListingsModel.findById(listingId)
+            .populate('communityId');
+
+        if (!listing || listing.isDeleted) {
+            return res.status(404).send(response.toJson('Product listing not found'));
+        }
+
+        // Verify admin has permission for this community
+        const community = listing.communityId;
+        const isCreator = community.createdBy && community.createdBy.toString() === req.user._id.toString();
+        const isManager = community.managerId && community.managerId.toString() === req.user._id.toString();
+        const isAdmin = req.user.role === 'Admin' || req.user.role === 'SuperAdmin';
+
+        if (!isCreator && !isManager && !isAdmin) {
+            return res.status(403).send(response.toJson('You do not have permission to approve listings for this community'));
+        }
+
+        listing.status = 'approved';
+        listing.reviewedBy = req.user._id;
+        listing.reviewedAt = new Date();
+        await listing.save();
+
+        return res.status(200).send(response.toJson(
+            'Product listing approved successfully',
+            listing
+        ));
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+// Reject Marketplace Listing
+const rejectMarketplaceListing = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).send(response.toJson(errors.array()[0].msg));
+        }
+
+        const { listingId } = req.params;
+        const { rejectionReason } = req.body;
+
+        if (!rejectionReason || !rejectionReason.trim()) {
+            return res.status(400).send(response.toJson('Rejection reason is required'));
+        }
+
+        const listing = await MarketplaceListingsModel.findById(listingId)
+            .populate('communityId');
+
+        if (!listing || listing.isDeleted) {
+            return res.status(404).send(response.toJson('Product listing not found'));
+        }
+
+        // Verify admin has permission for this community
+        const community = listing.communityId;
+        const isCreator = community.createdBy && community.createdBy.toString() === req.user._id.toString();
+        const isManager = community.managerId && community.managerId.toString() === req.user._id.toString();
+        const isAdmin = req.user.role === 'Admin' || req.user.role === 'SuperAdmin';
+
+        if (!isCreator && !isManager && !isAdmin) {
+            return res.status(403).send(response.toJson('You do not have permission to reject listings for this community'));
+        }
+
+        listing.status = 'rejected';
+        listing.reviewedBy = req.user._id;
+        listing.reviewedAt = new Date();
+        listing.reviewNotes = rejectionReason.trim();
+        await listing.save();
+
+        return res.status(200).send(response.toJson(
+            'Product listing rejected successfully',
+            listing
+        ));
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+/**
+ * Get pending event registrations for admin's communities
+ */
+const getPendingEventRegistrations = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const search = req.query.search || '';
+
+        // Get communities created or managed by current admin
+        const communities = await CommunitiesModel.find({
+            $or: [
+                { createdBy: req.user._id },
+                { managerId: req.user._id }
+            ],
+            isDeleted: false
+        }).select('_id');
+
+        const communityIds = communities.map(c => c._id);
+
+        if (communityIds.length === 0) {
+            return res.status(200).send(response.toJson(
+                messages['en'].common.detail_success,
+                {
+                    registrations: [],
+                    pagination: {
+                        total: 0,
+                        page,
+                        limit,
+                        totalPages: 0
+                    }
+                }
+            ));
+        }
+
+        // Build filter
+        const filter = {
+            communityId: { $in: communityIds },
+            status: 'pending',
+            isDeleted: false
+        };
+
+        // Search filter
+        if (search) {
+            filter.$or = [
+                { 'userId.name': { $regex: search, $options: 'i' } },
+                { 'eventId.title': { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const registrations = await EventRegistrationApprovalsModel.find(filter)
+            .populate('userId', 'name email')
+            .populate('eventId', 'title eventDate location')
+            .populate('communityId', 'name')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        const total = await EventRegistrationApprovalsModel.countDocuments(filter);
+
+        return res.status(200).send(response.toJson(
+            messages['en'].common.detail_success,
+            {
+                registrations,
+                pagination: {
+                    total,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(total / limit)
+                }
+            }
+        ));
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        console.error('Error in admin getPendingEventRegistrations:', err); // Add logging for debugging
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+/**
+ * Approve event registration
+ */
+const approveEventRegistration = async (req, res) => {
+    try {
+        const { approvalId } = req.params;
+
+        // Find the approval request
+        const approvalRequest = await EventRegistrationApprovalsModel.findById(approvalId);
+        if (!approvalRequest || approvalRequest.isDeleted) {
+            return res.status(404).send(response.toJson('Registration request not found'));
+        }
+
+        // Verify admin has permission for this community
+        const community = await CommunitiesModel.findOne({
+            _id: approvalRequest.communityId,
+            $or: [
+                { createdBy: req.user._id },
+                { managerId: req.user._id }
+            ],
+            isDeleted: false
+        });
+
+        if (!community) {
+            return res.status(403).send(response.toJson('Not authorized to approve this registration'));
+        }
+
+        // Check if request is already processed
+        if (approvalRequest.status !== 'pending') {
+            return res.status(400).send(response.toJson(`Registration request is already ${approvalRequest.status}`));
+        }
+
+        // Generate QR code data
+        const qrData = JSON.stringify({
+            eventId: approvalRequest.eventId.toString(),
+            userId: approvalRequest.userId.toString(),
+            approvalId: approvalRequest._id.toString(),
+            timestamp: Date.now()
+        });
+
+        // Generate QR code image
+        const qrCode = await QRCode.toDataURL(qrData);
+
+        // Update approval request
+        approvalRequest.status = 'approved';
+        approvalRequest.reviewedBy = req.user._id;
+        approvalRequest.reviewedAt = new Date();
+        approvalRequest.qrCode = qrCode;
+        approvalRequest.qrCodeData = qrData;
+        await approvalRequest.save();
+
+        // Create actual event registration
+        const registration = new EventRegistrationsModel({
+            eventId: approvalRequest.eventId,
+            userId: approvalRequest.userId,
+            status: 'registered',
+            qrCode: qrCode,
+            qrCodeData: qrData
+        });
+
+        await registration.save();
+
+        // Add to event's registered participants
+        const event = await EventsModel.findById(approvalRequest.eventId);
+        if (event && !event.registeredParticipants.includes(approvalRequest.userId)) {
+            event.registeredParticipants.push(approvalRequest.userId);
+            await event.save();
+        }
+
+        await approvalRequest.populate('userId', 'name email');
+        await approvalRequest.populate('eventId', 'title eventDate location');
+        await approvalRequest.populate('reviewedBy', 'name email');
+
+        return res.status(200).send(response.toJson(
+            'Registration approved successfully',
+            approvalRequest
+        ));
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        console.error('Error in admin approveEventRegistration:', err); // Add logging for debugging
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+/**
+ * Reject event registration
+ */
+const rejectEventRegistration = async (req, res) => {
+    try {
+        const { approvalId } = req.params;
+        const { rejectionReason } = req.body;
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).send(response.toJson(errors.array()[0].msg));
+        }
+
+        if (!rejectionReason || !rejectionReason.trim()) {
+            return res.status(400).send(response.toJson('Rejection reason is required'));
+        }
+
+        // Find the approval request
+        const approvalRequest = await EventRegistrationApprovalsModel.findById(approvalId);
+        if (!approvalRequest || approvalRequest.isDeleted) {
+            return res.status(404).send(response.toJson('Registration request not found'));
+        }
+
+        // Verify admin has permission for this community
+        const community = await CommunitiesModel.findOne({
+            _id: approvalRequest.communityId,
+            $or: [
+                { createdBy: req.user._id },
+                { managerId: req.user._id }
+            ],
+            isDeleted: false
+        });
+
+        if (!community) {
+            return res.status(403).send(response.toJson('Not authorized to reject this registration'));
+        }
+
+        // Check if request is already processed
+        if (approvalRequest.status !== 'pending') {
+            return res.status(400).send(response.toJson(`Registration request is already ${approvalRequest.status}`));
+        }
+
+        // Update approval request
+        approvalRequest.status = 'rejected';
+        approvalRequest.reviewedBy = req.user._id;
+        approvalRequest.reviewedAt = new Date();
+        approvalRequest.rejectionReason = rejectionReason.trim();
+        await approvalRequest.save();
+
+        await approvalRequest.populate('userId', 'name email');
+        await approvalRequest.populate('eventId', 'title eventDate location');
+        await approvalRequest.populate('reviewedBy', 'name email');
+
+        return res.status(200).send(response.toJson(
+            'Registration rejected successfully',
+            approvalRequest
+        ));
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        console.error('Error in admin rejectEventRegistration:', err); // Add logging for debugging
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+/**
+ * Get all community members for moderator assignment
+ */
+const getCommunityMembers = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 50;
+        const skip = (page - 1) * limit;
+        const search = req.query.search || '';
+        const communityId = req.query.communityId;
+
+        // Get communities created by current admin
+        const communities = await CommunitiesModel.find({
+            createdBy: req.user._id,
+            isDeleted: false
+        }).select('_id name');
+
+        const communityIds = communities.map(c => c._id);
+
+        if (communityIds.length === 0) {
+            return res.status(200).send(response.toJson(
+                messages['en'].common.detail_success,
+                {
+                    members: [],
+                    communities: [],
+                    pagination: {
+                        total: 0,
+                        page: 1,
+                        limit: 50,
+                        totalPages: 0
+                    }
+                }
+            ));
+        }
+
+        // Build filter for community members
+        const memberFilter = {
+            communityId: { $in: communityIds },
+            isDeleted: false
+        };
+
+        // Filter by specific community if provided
+        if (communityId && communityIds.includes(communityId)) {
+            memberFilter.communityId = communityId;
+        }
+
+        // Search filter
+        if (search) {
+            memberFilter.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const members = await UsersModel.find(memberFilter)
+            .populate('communityId', 'name location')
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const total = await UsersModel.countDocuments(memberFilter);
+
+        return res.status(200).send(response.toJson(
+            messages['en'].common.detail_success,
+            {
+                members,
+                communities,
+                pagination: {
+                    total,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(total / limit)
+                }
+            }
+        ));
+
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+/**
+ * Assign moderator role to a user
+ */
+const assignModeratorRole = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { communityId } = req.body;
+
+        // Verify user exists
+        const user = await UsersModel.findById(userId);
+        if (!user || user.isDeleted) {
+            return res.status(404).send(response.toJson('User not found'));
+        }
+
+        // Verify community exists and was created by current admin
+        const community = await CommunitiesModel.findOne({
+            _id: communityId,
+            createdBy: req.user._id,
+            isDeleted: false
+        });
+
+        if (!community) {
+            return res.status(404).send(response.toJson('Community not found'));
+        }
+
+        // Verify user is part of this community
+        if (user.communityId && user.communityId.toString() !== communityId) {
+            return res.status(400).send(response.toJson('User is not part of this community'));
+        }
+
+        // Update user role to Manager (moderator)
+        // Note: We're using 'Manager' role as moderator since Users model doesn't have 'Moderator' enum
+        // If you want to add 'Moderator' role, update the Users model enum first
+        await UsersModel.findByIdAndUpdate(userId, {
+            role: 'Manager'
+        });
+
+        // Also update community managerId if needed (optional)
+        // community.managerId = userId;
+        // await community.save();
+
+        return res.status(200).send(response.toJson(
+            'Moderator role assigned successfully',
+            { userId, role: 'Manager' }
+        ));
+
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
 module.exports = {
     getDashboardStats,
+    getRecentActivities,
     getAdminCommunities,
-    getCommunityUsers,
-    getCommunityEvents,
-    getAllUsers,
-    getReports,
     createCommunity,
     updateCommunity,
     deleteCommunity,
+    getCommunityUsers,
+    getAllUsers,
+    getCommunityEvents,
+    createCommunityEvent,
     createRoleChangeRequest,
     getRoleChangeRequests,
     approveRoleChangeRequest,
     rejectRoleChangeRequest,
-    createCommunityEvent,
-    getRecentActivities
+    getJoinRequests,
+    approveJoinRequest,
+    rejectJoinRequest,
+    getMarketplaceListings,
+    approveMarketplaceListing,
+    rejectMarketplaceListing,
+    getCommunityMembers,
+    assignModeratorRole
 };
+
+
+
+
+
+
+
+
+
+

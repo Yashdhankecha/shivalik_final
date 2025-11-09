@@ -42,13 +42,45 @@ router.get('/users', auth.verifyToken, auth.verifyAdmin, adminController.getAllU
 router.get('/communities/:communityId/events', auth.verifyToken, auth.verifyAdmin, adminController.getCommunityEvents);
 router.post('/communities/:communityId/events', auth.verifyToken, auth.verifyAdmin, adminController.createCommunityEvent);
 
-// Reports
-router.get('/reports', auth.verifyToken, auth.verifyAdmin, adminController.getReports);
-
 // Role change requests
 router.post('/role-change-requests', auth.verifyToken, auth.verifyAdmin, adminController.createRoleChangeRequest);
 router.get('/role-change-requests', auth.verifyToken, auth.verifyAdmin, adminController.getRoleChangeRequests);
 router.put('/role-change-requests/:requestId/approve', auth.verifyToken, auth.verifyAdmin, adminController.approveRoleChangeRequest);
-router.put('/role-change-requests/:requestId/reject', auth.verifyToken, auth.verifyAdmin, adminController.rejectRoleChangeRequest);
+router.put('/role-change-requests/:requestId/reject', 
+    auth.verifyToken, 
+    auth.verifyAdmin,
+    [
+        body('rejectionReason').notEmpty().withMessage('Rejection reason is required')
+    ],
+    adminController.rejectRoleChangeRequest
+);
+
+// Community join requests
+router.get('/join-requests', auth.verifyToken, auth.verifyAdmin, adminController.getJoinRequests);
+router.put('/join-requests/:requestId/approve', auth.verifyToken, auth.verifyAdmin, adminController.approveJoinRequest);
+router.put('/join-requests/:requestId/reject', 
+    auth.verifyToken, 
+    auth.verifyAdmin,
+    [
+        body('rejectionReason').notEmpty().withMessage('Rejection reason is required')
+    ],
+    adminController.rejectJoinRequest
+);
+
+// Marketplace product listing approvals
+router.get('/marketplace/listings', auth.verifyToken, auth.verifyAdmin, adminController.getMarketplaceListings);
+router.put('/marketplace/listings/:listingId/approve', auth.verifyToken, auth.verifyAdmin, adminController.approveMarketplaceListing);
+router.put('/marketplace/listings/:listingId/reject', 
+    auth.verifyToken, 
+    auth.verifyAdmin,
+    [
+        body('rejectionReason').notEmpty().withMessage('Rejection reason is required')
+    ],
+    adminController.rejectMarketplaceListing
+);
+
+// Moderator management
+router.get('/moderators/members', auth.verifyToken, auth.verifyAdmin, adminController.getCommunityMembers);
+router.put('/moderators/:userId/assign', auth.verifyToken, auth.verifyAdmin, adminController.assignModeratorRole);
 
 module.exports = router;

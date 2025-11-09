@@ -20,10 +20,12 @@ import SettingsPage from '../pages/SettingsPage';
 import AdminDashboard from '../pages/admin/Dashboard';
 import UsersManagement from '../pages/admin/UsersManagement';
 import CommunitiesManagement from '../pages/admin/Communities';
+import Moderators from '../pages/admin/Moderators';
 import EventsManagement from '../pages/admin/Events';
-import ReportsPage from '../pages/admin/Reports';
-
+import JoinRequests from '../pages/admin/JoinRequests';
+import MarketplaceApprovals from '../pages/admin/MarketplaceApprovals';
 import RoleChangeRequests from '../pages/admin/RoleChangeRequests';
+import EventRegistrationApprovals from '../pages/admin/EventRegistrationApprovals';
 
 /* current user roles */
 const getUserRoles = (): string[] => {
@@ -103,8 +105,11 @@ export const AppRoutes = () => {
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="users" element={<UsersManagement />} />
         <Route path="communities" element={<CommunitiesManagement />} />
+        <Route path="moderators" element={<Moderators />} />
+        <Route path="join-requests" element={<JoinRequests />} />
+        <Route path="marketplace-approvals" element={<MarketplaceApprovals />} />
         <Route path="events" element={<EventsManagement />} />
-        <Route path="reports" element={<ReportsPage />} />
+        <Route path="event-registrations" element={<EventRegistrationApprovals />} />
         <Route path="role-requests" element={<RoleChangeRequests />} />
       </Route>
       

@@ -255,14 +255,14 @@ const Events = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <div className="mb-4 md:mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 mb-4 md:mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-black mb-2">Events Management</h1>
-            <p className="text-gray-600">Manage all community events and activities</p>
+            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-black mb-1 md:mb-2">Events Management</h1>
+            <p className="text-sm md:text-base text-gray-600">Manage all community events and activities</p>
           </div>
           <Button 
-            className="bg-black text-white hover:bg-gray-800"
+            className="bg-black text-white hover:bg-gray-800 text-sm md:text-base w-full md:w-auto"
             onClick={() => setShowCreateForm(true)}
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -271,13 +271,13 @@ const Events = () => {
         </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-3 md:gap-4 mb-4 md:mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 w-4 h-4" />
             <Input
               type="text"
               placeholder="Search events by title..."
-              className="pl-10 border border-gray-400 text-black"
+              className="pl-10 border border-gray-400 text-black text-sm md:text-base"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -286,7 +286,7 @@ const Events = () => {
             <select
               value={selectedCommunity}
               onChange={(e) => handleCommunityChange(e.target.value)}
-              className="border border-gray-400 rounded-md px-3 py-2 text-black"
+              className="border border-gray-400 rounded-md px-3 py-2 text-black text-sm md:text-base w-full md:w-auto"
             >
               <option value="">Select Community</option>
               {communities.map((community: any) => (
@@ -784,7 +784,7 @@ const Events = () => {
       )}
 
       {/* Events List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 lg:gap-6 mb-4 md:mb-6">
         {events.map((event: any) => (
           <Card key={event._id} className="hover:shadow-lg transition-shadow bg-white border border-gray-300">
             <CardHeader className="border-b border-gray-300 pb-3">
@@ -954,64 +954,64 @@ const Events = () => {
       )}
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 lg:gap-6 mt-4 md:mt-6">
         <Card className="bg-white border border-gray-300">
-          <CardContent className="p-6">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Events</p>
-                <p className="text-2xl font-bold text-black">{pagination.total || 0}</p>
+                <p className="text-xs md:text-sm text-gray-600">Total Events</p>
+                <p className="text-xl md:text-2xl font-bold text-black">{pagination.total || 0}</p>
               </div>
-              <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-800 rounded-lg flex items-center justify-center">
+                <Calendar className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card className="bg-white border border-gray-300">
-          <CardContent className="p-6">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Published Events</p>
-                <p className="text-2xl font-bold text-black">
+                <p className="text-xs md:text-sm text-gray-600">Published Events</p>
+                <p className="text-xl md:text-2xl font-bold text-black">
                   {events.filter(e => e.status === 'Published').length}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-800 rounded-lg flex items-center justify-center">
+                <Calendar className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card className="bg-white border border-gray-300">
-          <CardContent className="p-6">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Upcoming Events</p>
-                <p className="text-2xl font-bold text-black">
+                <p className="text-xs md:text-sm text-gray-600">Upcoming Events</p>
+                <p className="text-xl md:text-2xl font-bold text-black">
                   {events.filter(e => e.status === 'Scheduled').length}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-gray-500 rounded-lg flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-500 rounded-lg flex items-center justify-center">
+                <Calendar className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card className="bg-white border border-gray-300">
-          <CardContent className="p-6">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Attendees</p>
-                <p className="text-2xl font-bold text-black">
+                <p className="text-xs md:text-sm text-gray-600">Total Attendees</p>
+                <p className="text-xl md:text-2xl font-bold text-black">
                   {events.reduce((sum, e) => sum + (e.registeredParticipants?.length || 0), 0)}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-gray-300 rounded-lg flex items-center justify-center">
-                <Users className="w-6 h-6 text-gray-800" />
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-300 rounded-lg flex items-center justify-center">
+                <Users className="w-5 h-5 md:w-6 md:h-6 text-gray-800" />
               </div>
             </div>
           </CardContent>

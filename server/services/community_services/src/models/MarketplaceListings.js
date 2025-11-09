@@ -40,6 +40,20 @@ const MarketplaceListingsSchema = new Schema({
         enum: ['pending', 'approved', 'rejected', 'sold', 'closed'],
         default: 'pending'
     },
+    reviewedBy: {
+        type: Schema.Types.ObjectId,
+        ref: 'users',
+        default: null
+    },
+    reviewedAt: {
+        type: Date,
+        default: null
+    },
+    reviewNotes: {
+        type: String,
+        trim: true,
+        default: null
+    },
     deletedAt: {
         type: Date,
         default: null

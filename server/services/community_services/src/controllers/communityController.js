@@ -343,6 +343,79 @@ const getUserJoinRequests = async (req, res) => {
     }
 };
 
+// Check if user is a member of a community (Requires Authentication)
+const checkCommunityMembership = async (req, res) => {
+    try {
+        // Get userId from req.user - auth middleware sets req.user._id
+        if (!req.user || !req.user._id) {
+            return res.status(401).send(response.toJson('User not authenticated'));
+        }
+        
+        const { communityId } = req.params;
+        
+        if (!mongoose.Types.ObjectId.isValid(communityId)) {
+            return res.status(400).send(response.toJson('Invalid community ID'));
+        }
+
+        // Ensure userId is a valid ObjectId
+        let userId = req.user._id;
+        if (typeof userId === 'string' && mongoose.Types.ObjectId.isValid(userId)) {
+            userId = new mongoose.Types.ObjectId(userId);
+        }
+
+        // Check if community exists
+        const community = await CommunitiesModel.findOne({
+            _id: communityId,
+            isDeleted: false
+        }).select('members managerId createdBy');
+
+        if (!community) {
+            return res.status(404).send(response.toJson('Community not found'));
+        }
+
+        // Check if user is a member
+        const isMember = community.members.some(
+            memberId => memberId.toString() === userId.toString()
+        );
+
+        // Check if user is manager or creator
+        const isManager = community.managerId && community.managerId.toString() === userId.toString();
+        const isCreator = community.createdBy && community.createdBy.toString() === userId.toString();
+
+        // Check if user has approved join request
+        const joinRequest = await CommunityJoinRequestsModel.findOne({
+            userId,
+            communityId,
+            status: 'Approved',
+            isDeleted: false
+        });
+
+        const hasApprovedRequest = !!joinRequest;
+
+        // User is considered a member if:
+        // 1. They are in the members array, OR
+        // 2. They are the manager/creator, OR
+        // 3. They have an approved join request
+        const isCommunityMember = isMember || isManager || isCreator || hasApprovedRequest;
+
+        return res.status(200).send(response.toJson(
+            messages['en'].common.detail_success,
+            {
+                isMember: isCommunityMember,
+                isManager,
+                isCreator,
+                hasApprovedRequest
+            }
+        ));
+
+    } catch (err) {
+        console.error('Error checking community membership:', err);
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
 // Get Pulses for a Community
 const getCommunityPulses = async (req, res) => {
     try {
@@ -577,6 +650,7 @@ module.exports = {
     getAllAmenities,
     createJoinRequest,
     getUserJoinRequests,
+    checkCommunityMembership,
     getCommunityPulses,
     getCommunityMarketplaceListings,
     getCommunityMembers,

@@ -12,7 +12,7 @@ import {
   Divider,
   Modal,
 } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import {
   IconUsers,
   IconMapPin,
@@ -193,14 +193,23 @@ const getFilteredNavigation = (roles: string[] = []) => {
 };
 
 export const DashboardLayout = () => {
-  const [opened, { toggle, close }] = useDisclosure();
+  const [opened, { toggle, close }] = useDisclosure(false);
   const { user, logout }: any = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  
+  console.log('DashboardLayout - isMobile:', isMobile, 'opened:', opened);
+  
+  useEffect(() => {
+    console.log('DashboardLayout - useEffect - isMobile:', isMobile, 'opened:', opened);
+  }, [isMobile, opened]);
+  
   const [activePath, setActivePath] = useState(() => {
     const storedPath = localStorage.getItem('lastActivePath');
     return storedPath || '/users'; // Default to '/users' if no stored path
   });
+  
   const [tabOpenStates, setTabOpenStates] = useState<{ [key: string]: boolean }>(() => {
     try {
       return JSON.parse(localStorage.getItem('tabOpenStates') || '{}');
@@ -444,20 +453,25 @@ export const DashboardLayout = () => {
 
   return (
     <AppShell
-      header={{ height: { base: 60, sm: 70 } }}
+      header={{ height: 60 }}
       navbar={{
-        width: { base: 280, sm: 300 },
+        width: 250,
         breakpoint: 'sm',
-        collapsed: { mobile: !opened },
+        collapsed: { mobile: !opened, desktop: false }
       }}
-      padding={{ base: 'sm', sm: 'md', lg: 'lg' }}
+      padding="md"
       styles={(theme) => ({
         main: {
           backgroundColor: '#f9fafb',
-          minHeight: 'calc(100vh - 70px)',
+          minHeight: 'calc(100vh - 60px)',
           '@keyframes slideDown': {
             '0%': { maxHeight: 0, opacity: 0 },
             '100%': { maxHeight: '200px', opacity: 1 },
+          },
+        },
+        navbar: {
+          [theme.fn.smallerThan('sm')]: {
+            display: opened ? 'block' : 'none',
           },
         },
       })}
@@ -498,21 +512,34 @@ export const DashboardLayout = () => {
           borderBottom: '1px solid #e5e7eb',
         }}
       >
-        <Group h="100%" px={{ base: 'md', sm: 'xl' }} justify="space-between">
-          <Group>
-            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" color="#6c757d" />
+        <Group h="100%" px="sm" justify="space-between">
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Burger 
+              opened={opened} 
+              onClick={() => {
+                console.log('Burger clicked, current opened state:', opened);
+                toggle();
+              }} 
+              size="sm" 
+              color="#6c757d" 
+              style={{ 
+                zIndex: 1000,
+                visibility: 'visible',
+                display: 'block'
+              }}
+            />
             <Text
-              size="xl"
+              size="lg"
               fw={700}
               c="#111827"
-              hiddenFrom="base"
+              style={{ display: 'none' }}
               visibleFrom="xs"
             >
               Welcome back, {userInfo.firstName || 'User'} {userInfo.lastName || ''}
             </Text>
-          </Group>
-
-          <Group gap="md">
+          </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <Menu shadow="md" width={200}>
               <Menu.Target>
                 <UnstyledButton>
@@ -523,7 +550,7 @@ export const DashboardLayout = () => {
                       src={user?.avatar}
                       style={{ backgroundColor: '#e5e7eb' }}
                     />
-                    <Box visibleFrom="sm">
+                    <Box style={{ display: 'none' }} visibleFrom="sm">
                       <Text size="sm" fw={500} c="#111827">
                         {userInfo.firstName || 'User'} {userInfo.lastName || ''}
                       </Text>
@@ -545,7 +572,7 @@ export const DashboardLayout = () => {
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
-          </Group>
+          </div>
         </Group>
       </AppShell.Header>
 
@@ -574,7 +601,7 @@ export const DashboardLayout = () => {
                 R
               </Text>
             </Box>
-            <Text size="lg" fw={700} c="#ffffff">
+            <Text size="lg" fw={700} c="#111827">
               R-OS
             </Text>
           </Group>

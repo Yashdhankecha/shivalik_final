@@ -116,6 +116,7 @@ apiClient.interceptors.response.use(
         // Check for 401 (Unauthorized) or 403 (Forbidden) status codes
         if (status === 401 || status === 403) {
             const authToken = localStorage.getItem('auth_token');
+            const requestUrl = error.config?.url || '';
             
             // Special handling for admin token (offline access)
             if (authToken && (authToken.startsWith('admin-token-') || authToken === 'admin-token')) {
@@ -124,12 +125,34 @@ apiClient.interceptors.response.use(
                 return Promise.reject(new Error(errorMessage));
             }
             
-            // Regular user - remove auth token from localStorage
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('user_data');
-            localStorage.clear();
-            // Navigate to the root page ("/")
-            window.location.href = '/';
+            // Don't logout for specific endpoints that return 403 for authorization (not authentication)
+            // These are business logic errors, not auth failures
+            const noLogoutEndpoints = [
+                '/pulses/create',
+                '/marketplace/listing/create',
+                '/events/create',
+                '/directory/add'
+            ];
+            
+            const isBusinessLogicError = noLogoutEndpoints.some(endpoint => requestUrl.includes(endpoint));
+            
+            if (isBusinessLogicError) {
+                // This is a business logic error (e.g., not a member), not an auth failure
+                // Don't logout, just return the error
+                return Promise.reject(new Error(errorMessage));
+            }
+            
+            // For 401 (authentication failure), logout the user
+            if (status === 401) {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_data');
+                localStorage.clear();
+                // Navigate to the root page ("/")
+                window.location.href = '/';
+            } else {
+                // For 403 (authorization failure) on other endpoints, just reject
+                return Promise.reject(new Error(errorMessage));
+            }
         }
         return Promise.reject(new Error(errorMessage));
     }
