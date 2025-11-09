@@ -6,23 +6,22 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import {
-  LayoutDashboard, Users, Building2, Calendar, FileText, Settings,
-  LogOut, UserPlus, ShieldCheck, Menu, AlertTriangle
+  LayoutDashboard, Users, FileText, ShoppingBag,
+  LogOut, ShieldCheck, Menu
 } from 'lucide-react';
 import { Sheet, SheetContent } from '../components/ui/sheet';
 import { cn } from '../lib/utils';
 
-// Navigation items
-const getNavigationItems = (basePath: string) => [
-  { name: 'Dashboard', href: `${basePath}/dashboard`, icon: LayoutDashboard },
-  { name: 'Moderation', href: `${basePath}/moderation`, icon: ShieldCheck },
-  { name: 'Join Requests', href: `${basePath}/join-requests`, icon: UserPlus },
-  { name: 'Members', href: `${basePath}/members`, icon: Users },
-  { name: 'Events', href: `${basePath}/events`, icon: Calendar },
-  { name: 'Posts', href: `${basePath}/posts`, icon: FileText },
-  { name: 'Reports', href: `${basePath}/reports`, icon: AlertTriangle },
-  { name: 'Settings', href: `${basePath}/settings`, icon: Settings },
-];
+// Navigation items - Only the 4 moderation tabs
+const getNavigationItems = (basePath: string) => {
+  const moderationPath = basePath.includes('/moderation') ? basePath : `${basePath}/moderation`;
+  return [
+    { name: 'Overview', href: `${moderationPath}?tab=overview`, icon: LayoutDashboard, tab: 'overview' },
+    { name: 'Users', href: `${moderationPath}?tab=users`, icon: Users, tab: 'users' },
+    { name: 'Pulses', href: `${moderationPath}?tab=pulses`, icon: FileText, tab: 'pulses' },
+    { name: 'Marketplace', href: `${moderationPath}?tab=marketplace`, icon: ShoppingBag, tab: 'marketplace' },
+  ];
+};
 
 const ManagerPanel = () => {
   const navigate = useNavigate();
@@ -108,8 +107,10 @@ const ManagerPanel = () => {
       <div className="flex-1 overflow-y-auto py-2 md:py-4 min-h-0">
         <ul className="space-y-0.5 md:space-y-1 px-2">
           {navigationItems.map((item) => {
-            const isActive = location.pathname === item.href || 
-                            (item.href !== `${basePath}/dashboard` && location.pathname.startsWith(item.href));
+            // Check if current path matches and tab query param matches
+            const currentTab = new URLSearchParams(location.search).get('tab') || 'overview';
+            const isActive = location.pathname.includes('/moderation') && 
+                            (item.tab === currentTab || (item.tab === 'overview' && !currentTab));
             return (
               <li key={item.name}>
                 <Link

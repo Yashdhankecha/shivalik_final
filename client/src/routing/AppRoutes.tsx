@@ -30,11 +30,6 @@ import PulseApprovals from '../pages/admin/PulseApprovals';
 
 // Manager Pages
 import ManagerPanel from '../pages/ManagerPanel';
-import ManagerDashboard from '../pages/manager/ManagerDashboard';
-import ManagerJoinRequests from '../pages/manager/ManagerJoinRequests';
-import ManagerMembers from '../pages/manager/ManagerMembers';
-import ManagerEvents from '../pages/manager/ManagerEvents';
-import ManagerPosts from '../pages/manager/ManagerPosts';
 import ModerationDashboard from '../pages/manager/ModerationDashboard';
 
 /* current user roles */
@@ -94,19 +89,9 @@ export const AppRoutes = () => {
 
       {/* MANAGER PANEL - For manager users with child routes */}
       <Route path="/manager" element={<PrivateRoute requiredRole="manager"><ManagerPanel /></PrivateRoute>}>
-        <Route index element={<ManagerDashboard />} />
-        <Route path="dashboard" element={<ManagerDashboard />} />
-        <Route path=":communityId/dashboard" element={<ManagerDashboard />} />
+        <Route index element={<ModerationDashboard />} />
         <Route path="moderation" element={<ModerationDashboard />} />
         <Route path=":communityId/moderation" element={<ModerationDashboard />} />
-        <Route path="join-requests" element={<ManagerJoinRequests />} />
-        <Route path=":communityId/join-requests" element={<ManagerJoinRequests />} />
-        <Route path="members" element={<ManagerMembers />} />
-        <Route path=":communityId/members" element={<ManagerMembers />} />
-        <Route path="events" element={<ManagerEvents />} />
-        <Route path=":communityId/events" element={<ManagerEvents />} />
-        <Route path="posts" element={<ManagerPosts />} />
-        <Route path=":communityId/posts" element={<ManagerPosts />} />
       </Route>
 
       {/* PUBLIC COMMUNITY EVENTS PAGE */}
