@@ -305,107 +305,152 @@ const UsersManagement = () => {
 
       {/* Users Table */}
       <Card className="bg-white border border-gray-200">
-        <CardHeader className="border-b border-gray-200 p-3 md:p-4">
+        <CardHeader className="border-b border-gray-200 p-3 sm:p-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <h3 className="font-bold text-base md:text-lg lg:text-xl flex items-center gap-2 text-gray-900">
-              <Users className="w-4 h-4 md:w-5 md:h-5" />
+            <h3 className="font-bold text-sm sm:text-base md:text-lg lg:text-xl flex items-center gap-2 text-gray-900">
+              <Users className="w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5" />
               <span className="truncate">
                 {selectedCommunity 
                   ? `${communities.find(c => c._id === selectedCommunity)?.name || 'Selected Community'} Users` 
                   : 'All Users'}
               </span>
             </h3>
-            <p className="text-xs md:text-sm text-gray-600">Showing {users.length} users</p>
+            <p className="text-xs sm:text-xs md:text-sm text-gray-600">Showing {users.length} users</p>
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto -mx-3 md:mx-0">
-            <table className="w-full min-w-[640px] md:min-w-0">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">User</th>
-                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider hidden sm:table-cell">Role</th>
-                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider hidden sm:table-cell">Status</th>
-                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider hidden lg:table-cell">Join Date</th>
-                  <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
+          <div className="overflow-x-auto">
+            <div className="min-w-full">
+              {/* Mobile View - Card Layout */}
+              <div className="sm:hidden divide-y divide-gray-200">
                 {users.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-3 md:px-4 py-6 md:py-8 text-center text-gray-500 text-sm">
-                      No users found. Try adjusting your search or filters.
-                    </td>
-                  </tr>
+                  <div className="px-3 py-6 text-center text-gray-500 text-xs">
+                    No users found. Try adjusting your search or filters.
+                  </div>
                 ) : (
                   users.map((user: any) => (
-                    <tr key={user._id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-3 md:px-4 py-3 md:py-4">
-                        <div className="flex items-center gap-2 md:gap-3">
-                          <Avatar className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0">
-                            <AvatarFallback className="bg-gray-900 text-white font-semibold text-xs md:text-sm">
-                              {user.name.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-xs md:text-sm text-gray-900 truncate">{user.name}</p>
-                            <p className="text-xs text-gray-600 truncate">{user.email}</p>
-                            <div className="sm:hidden mt-1 flex gap-1.5 flex-wrap">
-                              {getRoleBadge(user.role)}
-                              {getStatusBadge(user.status)}
-                            </div>
-                          </div>
+                    <div key={user._id} className="p-3 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Avatar className="w-10 h-10 flex-shrink-0">
+                          <AvatarFallback className="bg-gray-900 text-white font-semibold text-xs">
+                            {user.name.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-xs text-gray-900 truncate">{user.name}</p>
+                          <p className="text-xs text-gray-600 truncate">{user.email}</p>
                         </div>
-                      </td>
-                      <td className="px-4 py-4 hidden sm:table-cell">
-                        {getRoleBadge(user.role)}
-                      </td>
-                      <td className="px-4 py-4 hidden sm:table-cell">
-                        {getStatusBadge(user.status)}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-600 hidden lg:table-cell">
-                        {formatDateToDDMMYYYY(user.createdAt)}
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="text-gray-900 hover:bg-gray-100 p-2 h-8 w-8"
-                            onClick={() => openRoleChangeModal(user)}
-                          >
-                            <UserPlus className="w-4 h-4" />
-                          </Button>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+                        <div className="flex gap-1.5 flex-wrap">
+                          {getRoleBadge(user.role)}
+                          {getStatusBadge(user.status)}
                         </div>
-                      </td>
-                    </tr>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-gray-900 hover:bg-gray-100 p-1.5 h-7 text-xs"
+                          onClick={() => openRoleChangeModal(user)}
+                        >
+                          <UserPlus className="w-3.5 h-3.5 mr-1" />
+                          Change Role
+                        </Button>
+                      </div>
+                      <p className="text-xs text-gray-500">Joined: {formatDateToDDMMYYYY(user.createdAt)}</p>
+                    </div>
                   ))
                 )}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop View - Table Layout */}
+              <table className="hidden sm:table w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">User</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider hidden md:table-cell">Role</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider hidden md:table-cell">Status</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider hidden lg:table-cell">Join Date</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {users.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-3 sm:px-4 py-6 sm:py-8 text-center text-gray-500 text-xs sm:text-sm">
+                        No users found. Try adjusting your search or filters.
+                      </td>
+                    </tr>
+                  ) : (
+                    users.map((user: any) => (
+                      <tr key={user._id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-3 sm:px-4 py-3 sm:py-4">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <Avatar className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex-shrink-0">
+                              <AvatarFallback className="bg-gray-900 text-white font-semibold text-xs sm:text-xs md:text-sm">
+                                {user.name.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold text-xs sm:text-xs md:text-sm text-gray-900 truncate">{user.name}</p>
+                              <p className="text-xs text-gray-600 truncate hidden sm:block">{user.email}</p>
+                              <div className="sm:hidden mt-1 flex gap-1.5 flex-wrap">
+                                {getRoleBadge(user.role)}
+                                {getStatusBadge(user.status)}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-3 sm:px-4 py-3 sm:py-4 hidden md:table-cell">
+                          {getRoleBadge(user.role)}
+                        </td>
+                        <td className="px-3 sm:px-4 py-3 sm:py-4 hidden md:table-cell">
+                          {getStatusBadge(user.status)}
+                        </td>
+                        <td className="px-3 sm:px-4 py-3 sm:py-4 text-xs sm:text-xs md:text-sm text-gray-600 hidden lg:table-cell">
+                          {formatDateToDDMMYYYY(user.createdAt)}
+                        </td>
+                        <td className="px-3 sm:px-4 py-3 sm:py-4">
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-gray-900 hover:bg-gray-100 p-1.5 sm:p-1.5 md:p-2 h-7 sm:h-7 md:h-8 w-8 sm:w-8 md:w-8"
+                              onClick={() => openRoleChangeModal(user)}
+                              title="Change Role"
+                            >
+                              <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (
-        <div className="flex justify-between items-center mt-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0 mt-4 sm:mt-6">
           <Button
             onClick={() => handlePageChange(pagination.page - 1)}
             disabled={pagination.page === 1}
             variant="outline"
-            className="border border-gray-300 text-gray-900 hover:bg-gray-100"
+            className="border border-gray-300 text-gray-900 hover:bg-gray-100 text-xs sm:text-sm w-full sm:w-auto px-4 py-2 h-9 sm:h-10"
           >
             Previous
           </Button>
-          <span className="text-sm text-gray-600">
+          <span className="text-xs sm:text-sm text-gray-600 text-center">
             Page {pagination.page} of {pagination.totalPages}
           </span>
           <Button
             onClick={() => handlePageChange(pagination.page + 1)}
             disabled={pagination.page === pagination.totalPages}
             variant="outline"
-            className="border border-gray-300 text-gray-900 hover:bg-gray-100"
+            className="border border-gray-300 text-gray-900 hover:bg-gray-100 text-xs sm:text-sm w-full sm:w-auto px-4 py-2 h-9 sm:h-10"
           >
             Next
           </Button>
@@ -414,29 +459,29 @@ const UsersManagement = () => {
 
       {/* Role Change Modal */}
       {showRoleChangeModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
           <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900">Change User Role</h3>
-                <Button variant="ghost" size="sm" onClick={closeRoleChangeModal}>
-                  <X className="w-5 h-5" />
+                <h3 className="text-base sm:text-lg font-bold text-gray-900">Change User Role</h3>
+                <Button variant="ghost" size="sm" onClick={closeRoleChangeModal} className="h-8 w-8 p-0">
+                  <X className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
               </div>
               
               <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-1">User</p>
-                <p className="font-medium text-gray-900">{selectedUser.name}</p>
-                <p className="text-sm text-gray-600">{selectedUser.email}</p>
+                <p className="text-xs sm:text-sm text-gray-600 mb-1">User</p>
+                <p className="font-medium text-sm sm:text-base text-gray-900">{selectedUser.name}</p>
+                <p className="text-xs sm:text-sm text-gray-600">{selectedUser.email}</p>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">Requested Role</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-900 mb-1">Requested Role</label>
                   <select
                     value={requestedRole}
                     onChange={(e) => setRequestedRole(e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base text-gray-900 h-9 sm:h-10"
                   >
                     <option value="Admin">Admin</option>
                     <option value="Manager">Manager</option>
@@ -446,11 +491,11 @@ const UsersManagement = () => {
                 
                 {requestedRole === 'Manager' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-1">Community</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-900 mb-1">Community</label>
                     <select
                       value={selectedModeratorCommunity}
                       onChange={(e) => setSelectedModeratorCommunity(e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base text-gray-900 h-9 sm:h-10"
                     >
                       <option value="">Select Community</option>
                       {communities.map((community) => (
@@ -463,21 +508,28 @@ const UsersManagement = () => {
                 )}
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">Reason</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-900 mb-1">Reason</label>
                   <textarea
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base text-gray-900"
                     rows={3}
                     placeholder="Enter reason for role change..."
                   />
                 </div>
                 
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button variant="outline" onClick={closeRoleChangeModal}>
+                <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-2 pt-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={closeRoleChangeModal}
+                    className="w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10"
+                  >
                     Cancel
                   </Button>
-                  <Button onClick={handleRoleChangeSubmit}>
+                  <Button 
+                    onClick={handleRoleChangeSubmit}
+                    className="w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10"
+                  >
                     Submit Request
                   </Button>
                 </div>
