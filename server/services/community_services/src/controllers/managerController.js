@@ -1236,35 +1236,7 @@ const getModerationDashboard = async (req, res) => {
     }
 };
 
-module.exports = {
-    getManagerCommunities,
-    getDashboardStats,
-    getCommunityJoinRequests,
-    approveCommunityJoinRequest,
-    rejectCommunityJoinRequest,
-    getCommunityMembers,
-    removeCommunityMember,
-    getCommunityEvents,
-    getCommunityReports,
-    getCommunityPosts,
-    approveCommunityPost,
-    rejectCommunityPost,
-    deleteCommunityPost,
-    getCommunityPostStats,
-    getCommunityJoinRequestStats,
-    getCommunityMemberStats,
-    getCommunityEventStats,
-    getMarketplaceListings,
-    approveMarketplaceListing,
-    rejectMarketplaceListing,
-    getMarketplaceListingStats,
-    getModerationDashboard,
-    getPulseApprovals,
-    approvePulse,
-    rejectPulse,
-    getAllUsers,
-    addUserToCommunity
-};
+
 
 /**
  * Get pulse approvals for manager's community
@@ -1556,3 +1528,34 @@ const addUserToCommunity = async (req, res) => {
 };
 
 
+
+// Export all controller functions
+module.exports = {
+    getManagerCommunities,
+    getDashboardStats,
+    getCommunityJoinRequests,
+    approveCommunityJoinRequest,
+    rejectCommunityJoinRequest,
+    getCommunityMembers,
+    removeCommunityMember,
+    getCommunityEvents,
+    getCommunityReports,
+    getCommunityPosts,
+    approveCommunityPost,
+    rejectCommunityPost,
+    deleteCommunityPost,
+    getCommunityPostStats,
+    getCommunityJoinRequestStats,
+    getCommunityMemberStats,
+    getCommunityEventStats,
+    getMarketplaceListings,
+    approveMarketplaceListing,
+    rejectMarketplaceListing,
+    getMarketplaceListingStats,
+    getModerationDashboard,
+    getPulseApprovals,
+    approvePulse,
+    rejectPulse,
+    getAllUsers,
+    addUserToCommunity
+};
