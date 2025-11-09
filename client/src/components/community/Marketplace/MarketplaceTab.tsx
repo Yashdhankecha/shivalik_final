@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { communityApi } from '../../../apis/community';
 import { showMessage } from '../../../utils/Constant';
+import { getImageUrl } from '../../../utils/imageUtils';
 import { Button } from '../../ui/button';
 import { Card, CardContent } from '../../ui/card';
 import { Avatar, AvatarFallback } from '../../ui/avatar';
@@ -314,7 +315,7 @@ const MarketplaceTab = () => {
                 <Card key={listing._id} className="hover:shadow-xl transition-all duration-300 border border-gray-200 rounded-xl overflow-hidden group bg-white">
                   {listing.attachment && (
                     <div className="relative h-48 sm:h-56 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
-                      <img src={listing.attachment} alt={listing.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                      <img src={getImageUrl(listing.attachment)} alt={listing.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
                       <Badge className="absolute top-3 right-3 bg-gray-900 text-white border-0 shadow-lg">For Sale</Badge>
                     </div>
@@ -369,7 +370,7 @@ const MarketplaceTab = () => {
                 <Card key={listing._id} className="hover:shadow-xl transition-all duration-300 border border-gray-200 rounded-xl overflow-hidden group bg-white">
                   {listing.attachment && (
                     <div className="relative h-48 sm:h-56 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
-                      <img src={listing.attachment} alt={listing.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                      <img src={getImageUrl(listing.attachment)} alt={listing.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
                       <Badge className="absolute top-3 right-3 bg-gray-900 text-white border-0 shadow-lg">For Sale</Badge>
                     </div>

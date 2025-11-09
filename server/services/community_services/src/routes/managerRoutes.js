@@ -149,4 +149,36 @@ router.get('/moderation-dashboard/:communityId',
     managerController.getModerationDashboard
 );
 
+// Pulse approvals (Manager)
+router.get('/pulses/:communityId', 
+    auth.verifyToken, 
+    managerMiddleware.verifyCommunityManager, 
+    managerController.getPulseApprovals
+);
+
+router.put('/pulses/:communityId/:pulseId/approve', 
+    auth.verifyToken, 
+    managerMiddleware.verifyCommunityManager, 
+    managerController.approvePulse
+);
+
+router.put('/pulses/:communityId/:pulseId/reject', 
+    auth.verifyToken, 
+    managerMiddleware.verifyCommunityManager, 
+    managerController.rejectPulse
+);
+
+// User management (Manager)
+router.get('/users/:communityId', 
+    auth.verifyToken, 
+    managerMiddleware.verifyCommunityManager, 
+    managerController.getAllUsers
+);
+
+router.post('/users/:communityId/add', 
+    auth.verifyToken, 
+    managerMiddleware.verifyCommunityManager, 
+    managerController.addUserToCommunity
+);
+
 module.exports = router;

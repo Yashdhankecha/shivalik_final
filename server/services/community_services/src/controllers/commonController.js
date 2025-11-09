@@ -2,12 +2,8 @@ const messages = require("../message");
 const response = require("../config/response.js");
 // const CmsModel = require('../models/models/cms.js');
 const { validationResult } = require('express-validator');
-const AWS = require('aws-sdk');
-const s3 = new AWS.S3({
-	accessKeyId: process.env.AWS_ACCESS_KEY,
-	secretAccessKey: process.env.AWS_SECRET_KEY,
-	region: process.env.AWS_DEFAULT_REGION,
-});
+const path = require('path');
+const fs = require('fs');
 const CommonConfig = require('../config/common.js');
 const CommonFun = require('../libs/common.js');
 const axios = require('axios');
@@ -126,6 +122,12 @@ async function commonLargeFileUpload(reqFiles, fileType, root) {
 
 		let uploadedFiles = [];
 
+		// Ensure uploads directory exists
+		const uploadsDir = path.join(__dirname, '../uploads');
+		if (!fs.existsSync(uploadsDir)) {
+			fs.mkdirSync(uploadsDir, { recursive: true });
+		}
+
 		for (const file of files) {
 			if (!allowedMimetypes.includes(file.mimetype)) {
 				return {
@@ -142,22 +144,22 @@ async function commonLargeFileUpload(reqFiles, fileType, root) {
 				};
 			}
 
-			// const root = 'users';
+			// Create directory structure if it doesn't exist
+			const fileDir = path.join(uploadsDir, root, fileType);
+			if (!fs.existsSync(fileDir)) {
+				fs.mkdirSync(fileDir, { recursive: true });
+			}
+
 			const fileName = `${Date.now()}_${file.name}`;
-			const fileKey = `${root}/${fileType}/${fileName}`;
+			const filePath = path.join(fileDir, fileName);
+			const relativePath = `/uploads/${root}/${fileType}/${fileName}`;
 
-			const params = {
-				Bucket: process.env.AWS_BUCKET,
-				Key: fileKey,
-				Body: file.data,
-				ContentType: file.mimetype,
-			};
-
-			await s3.upload(params).promise();
+			// Save file to local storage
+			await file.mv(filePath);
 
 			uploadedFiles.push({
 				fileName: fileName,
-				filePath: `${process.env.AWS_FILE_PATH}${fileKey}`,
+				filePath: relativePath,
 			});
 		}
 
@@ -169,7 +171,7 @@ async function commonLargeFileUpload(reqFiles, fileType, root) {
 		};
 
 	} catch (error) {
-		console.error('commonFileUpload Error:', error);
+		console.error('commonLargeFileUpload Error:', error);
 		return {
 			isSuccess: false,
 			message: error.message || "File upload failed",
@@ -371,6 +373,12 @@ async function commonFileUpload(reqFiles, fileType, root) {
 
 		let uploadedFiles = [];
 
+		// Ensure uploads directory exists
+		const uploadsDir = path.join(__dirname, '../uploads');
+		if (!fs.existsSync(uploadsDir)) {
+			fs.mkdirSync(uploadsDir, { recursive: true });
+		}
+
 		for (const file of files) {
 			if (!allowedMimetypes.includes(file.mimetype)) {
 				return {
@@ -387,22 +395,22 @@ async function commonFileUpload(reqFiles, fileType, root) {
 				};
 			}
 
-			// const root = 'users';
+			// Create directory structure if it doesn't exist
+			const fileDir = path.join(uploadsDir, root, fileType);
+			if (!fs.existsSync(fileDir)) {
+				fs.mkdirSync(fileDir, { recursive: true });
+			}
+
 			const fileName = `${Date.now()}_${file.name}`;
-			const fileKey = `${root}/${fileType}/${fileName}`;
+			const filePath = path.join(fileDir, fileName);
+			const relativePath = `/uploads/${root}/${fileType}/${fileName}`;
 
-			const params = {
-				Bucket: process.env.AWS_BUCKET,
-				Key: fileKey,
-				Body: file.data,
-				ContentType: file.mimetype,
-			};
-
-			await s3.upload(params).promise();
+			// Save file to local storage
+			await file.mv(filePath);
 
 			uploadedFiles.push({
 				fileName: fileName,
-				filePath: `${process.env.AWS_FILE_PATH}${fileKey}`,
+				filePath: relativePath,
 			});
 		}
 
@@ -423,19 +431,9 @@ async function commonFileUpload(reqFiles, fileType, root) {
 }
 
 async function checkFileExists(root, type, fileName) {
-	// const bucket = "your-bucket-name"; // e.g. "my-bucket"
-	// const key = "users/contacts/1751879102895_contacts (1).json";
-	const key = `${root}/${type}/${fileName}`;
-	// const key = 'users/contacts/1751879102895_contacts (1).json';
 	try {
-		const params = {
-			Bucket: process.env.AWS_BUCKET,
-			Key: key,
-		};
-		// await s3.send(new HeadObjectCommand({ Bucket: process.env.AWS_BUCKET, Key: key }));
-		await s3.headObject(params).promise();
-		return true;
-		// console.log("✅ File exists.");
+		const filePath = path.join(__dirname, '../uploads', root, type, fileName);
+		return fs.existsSync(filePath);
 	} catch (err) {
 		return false;
 	}
@@ -444,10 +442,12 @@ async function checkFileExists(root, type, fileName) {
 const getAccessTokenValidate = async (req, res) => {
 	try {
 		const token = req.body.token;
-		const blockList = await TokenBlackListsModel.findOne({ token: token });
-		if (blockList) {
-			return res.status(404).send(response.toJson(messages['en'].common.not_exists));
-		}
+		// TokenBlackListsModel is not currently used in this codebase
+		// const TokenBlackListsModel = require('../models/tokenBlackLists.js');
+		// const blockList = await TokenBlackListsModel.findOne({ token: token });
+		// if (blockList) {
+		// 	return res.status(404).send(response.toJson(messages['en'].common.not_exists));
+		// }
 
 		return res.status(200).send(response.toJson(messages['en'].common.detail_success));
 	} catch (err) {

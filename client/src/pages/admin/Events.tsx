@@ -7,6 +7,7 @@ import { Building2, Calendar, Search, Plus, Edit, Trash2, Eye, Clock, MapPin, Us
 import { adminApi } from '../../apis/admin';
 import { useToast } from '../../hooks/use-toast';
 import { formatDateToDDMMYYYY } from '../../utils/dateUtils';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const Events = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -646,7 +647,7 @@ const Events = () => {
                   <div>
                     <p className="text-sm text-gray-600">Event Banner</p>
                     <img 
-                      src={selectedEvent.images[0]} 
+                      src={getImageUrl(selectedEvent.images?.[0])} 
                       alt="Event Banner" 
                       className="mt-2 max-w-full h-auto rounded-md"
                     />
@@ -762,7 +763,7 @@ const Events = () => {
                     <div className="mt-2">
                       <p className="text-sm text-gray-600">Current Image:</p>
                       <img 
-                        src={selectedEvent.images[0]} 
+                        src={getImageUrl(selectedEvent.images?.[0])} 
                         alt="Current Event Banner" 
                         className="mt-1 max-w-full h-24 object-cover rounded-md"
                       />

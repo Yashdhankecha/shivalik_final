@@ -185,9 +185,66 @@ export const managerApi = {
     return response.data;
   },
 
+  // Dashboard Stats
+  getDashboardStats: async (communityId: string) => {
+    const response = await apiClient.get(`/api/v1/manager/dashboard/stats/${communityId}`);
+    return response.data;
+  },
+
   // Moderation Dashboard
   getModerationDashboard: async (communityId: string) => {
     const response = await apiClient.get(`/api/v1/manager/moderation-dashboard/${communityId}`);
+    return response.data;
+  },
+
+  // Pulse approvals (Manager)
+  getPulseApprovals: async (communityId: string, params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  } = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+    if (params.status) queryParams.append('status', params.status);
+    
+    const response = await apiClient.get(`/api/v1/manager/pulses/${communityId}?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  approvePulse: async (communityId: string, pulseId: string) => {
+    const response = await apiClient.put(`/api/v1/manager/pulses/${communityId}/${pulseId}/approve`);
+    return response.data;
+  },
+
+  rejectPulse: async (communityId: string, pulseId: string, rejectionReason: string) => {
+    const response = await apiClient.put(`/api/v1/manager/pulses/${communityId}/${pulseId}/reject`, {
+      rejectionReason
+    });
+    return response.data;
+  },
+
+  // User management (Manager)
+  getAllUsers: async (communityId: string, params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  } = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+    if (params.status) queryParams.append('status', params.status);
+    
+    const response = await apiClient.get(`/api/v1/manager/users/${communityId}?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  addUserToCommunity: async (communityId: string, data: { email: string; name: string; role?: string }) => {
+    const response = await apiClient.post(`/api/v1/manager/users/${communityId}/add`, data);
     return response.data;
   }
 };

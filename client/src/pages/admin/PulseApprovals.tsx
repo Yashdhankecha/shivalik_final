@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { adminApi } from '../../apis/admin';
 import { communityApi } from '../../apis/community';
 import { showMessage } from '../../utils/Constant';
+import { getImageUrl } from '../../utils/imageUtils';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent } from '../../components/ui/card';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
@@ -238,7 +239,7 @@ const PulseApprovals = () => {
                     {pulse.attachment ? (
                       <div className="w-full sm:w-24 h-48 sm:h-24 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
                         <img 
-                          src={pulse.attachment} 
+                          src={getImageUrl(pulse.attachment)} 
                           alt={pulse.title} 
                           className="w-full h-full object-cover"
                           onError={(e) => {
