@@ -22,8 +22,10 @@ export const managerApi = {
     return response.data;
   },
 
-  approveCommunityJoinRequest: async (communityId: string, requestId: string) => {
-    const response = await apiClient.put(`/api/v1/manager/community-join-requests/${communityId}/${requestId}/approve`);
+  approveCommunityJoinRequest: async (communityId: string, requestId: string, comment?: string) => {
+    const response = await apiClient.put(`/api/v1/manager/community-join-requests/${communityId}/${requestId}/approve`, {
+      comment
+    });
     return response.data;
   },
 
@@ -104,13 +106,17 @@ export const managerApi = {
     return response.data;
   },
 
-  approveCommunityPost: async (communityId: string, postId: string) => {
-    const response = await apiClient.put(`/api/v1/manager/posts/${communityId}/${postId}/approve`);
+  approveCommunityPost: async (communityId: string, postId: string, comment?: string) => {
+    const response = await apiClient.put(`/api/v1/manager/posts/${communityId}/${postId}/approve`, {
+      comment
+    });
     return response.data;
   },
 
-  rejectCommunityPost: async (communityId: string, postId: string) => {
-    const response = await apiClient.put(`/api/v1/manager/posts/${communityId}/${postId}/reject`);
+  rejectCommunityPost: async (communityId: string, postId: string, comment?: string) => {
+    const response = await apiClient.put(`/api/v1/manager/posts/${communityId}/${postId}/reject`, {
+      comment
+    });
     return response.data;
   },
 
@@ -140,6 +146,48 @@ export const managerApi = {
     if (params.type) queryParams.append('type', params.type);
     
     const response = await apiClient.get(`/api/v1/manager/reports/${communityId}?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  // Marketplace Listings
+  getMarketplaceListings: async (communityId: string, params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  } = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+    if (params.status) queryParams.append('status', params.status);
+    
+    const response = await apiClient.get(`/api/v1/manager/marketplace/listings/${communityId}?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  approveMarketplaceListing: async (communityId: string, listingId: string, comment?: string) => {
+    const response = await apiClient.put(`/api/v1/manager/marketplace/listings/${communityId}/${listingId}/approve`, {
+      comment
+    });
+    return response.data;
+  },
+
+  rejectMarketplaceListing: async (communityId: string, listingId: string, comment: string) => {
+    const response = await apiClient.put(`/api/v1/manager/marketplace/listings/${communityId}/${listingId}/reject`, {
+      comment
+    });
+    return response.data;
+  },
+
+  getMarketplaceListingStats: async (communityId: string) => {
+    const response = await apiClient.get(`/api/v1/manager/marketplace/listings/${communityId}/stats`);
+    return response.data;
+  },
+
+  // Moderation Dashboard
+  getModerationDashboard: async (communityId: string) => {
+    const response = await apiClient.get(`/api/v1/manager/moderation-dashboard/${communityId}`);
     return response.data;
   }
 };

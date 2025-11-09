@@ -35,6 +35,7 @@ import ManagerJoinRequests from '../pages/manager/ManagerJoinRequests';
 import ManagerMembers from '../pages/manager/ManagerMembers';
 import ManagerEvents from '../pages/manager/ManagerEvents';
 import ManagerPosts from '../pages/manager/ManagerPosts';
+import ModerationDashboard from '../pages/manager/ModerationDashboard';
 
 /* current user roles */
 const getUserRoles = (): string[] => {
@@ -96,6 +97,8 @@ export const AppRoutes = () => {
         <Route index element={<ManagerDashboard />} />
         <Route path="dashboard" element={<ManagerDashboard />} />
         <Route path=":communityId/dashboard" element={<ManagerDashboard />} />
+        <Route path="moderation" element={<ModerationDashboard />} />
+        <Route path=":communityId/moderation" element={<ModerationDashboard />} />
         <Route path="join-requests" element={<ManagerJoinRequests />} />
         <Route path=":communityId/join-requests" element={<ManagerJoinRequests />} />
         <Route path="members" element={<ManagerMembers />} />
