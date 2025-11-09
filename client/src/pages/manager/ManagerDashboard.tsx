@@ -184,7 +184,7 @@ const ManagerDashboard = () => {
             <select
               value={communityId}
               onChange={handleCommunityChange}
-              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
               <option value="">Select Community</option>
               {communities.map((comm: any) => (
@@ -205,49 +205,49 @@ const ManagerDashboard = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center">
-              <Users className="h-8 w-8 text-blue-500" />
+              <Users className="h-8 w-8 text-gray-700" />
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">Total Members</p>
-                <p className="text-2xl font-bold">{loading ? '--' : stats.totalMembers}</p>
+                <p className="text-sm font-medium text-gray-600">Total Members</p>
+                <p className="text-2xl font-bold text-gray-900">{loading ? '--' : stats.totalMembers}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center">
-              <CheckCircle className="h-8 w-8 text-green-500" />
+              <CheckCircle className="h-8 w-8 text-green-600" />
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">Active Members</p>
-                <p className="text-2xl font-bold">{loading ? '--' : stats.activeMembers}</p>
+                <p className="text-sm font-medium text-gray-600">Active Members</p>
+                <p className="text-2xl font-bold text-gray-900">{loading ? '--' : stats.activeMembers}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center">
-              <Clock className="h-8 w-8 text-yellow-500" />
+              <Clock className="h-8 w-8 text-yellow-600" />
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">Pending Requests</p>
-                <p className="text-2xl font-bold">{loading ? '--' : stats.pendingRequests}</p>
+                <p className="text-sm font-medium text-gray-600">Pending Requests</p>
+                <p className="text-2xl font-bold text-gray-900">{loading ? '--' : stats.pendingRequests}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center">
-              <Calendar className="h-8 w-8 text-purple-500" />
+              <Calendar className="h-8 w-8 text-gray-700" />
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">Total Events</p>
-                <p className="text-2xl font-bold">{loading ? '--' : stats.totalEvents}</p>
+                <p className="text-sm font-medium text-gray-600">Total Events</p>
+                <p className="text-2xl font-bold text-gray-900">{loading ? '--' : stats.totalEvents}</p>
               </div>
             </div>
           </CardContent>
@@ -283,8 +283,8 @@ const ManagerDashboard = () => {
                     <li key={member._id} className="py-4">
                       <div className="flex items-center">
                         <div className="flex-shrink-0">
-                          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <span className="text-blue-800 font-medium">
+                          <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
+                            <span className="text-gray-800 font-medium">
                               {member.firstName?.charAt(0)}{member.lastName?.charAt(0)}
                             </span>
                           </div>
@@ -343,7 +343,7 @@ const ManagerDashboard = () => {
                       <div className="flex items-center space-x-4">
                         <div className="flex-shrink-0">
                           {activity.type === 'join_request' ? (
-                            <UserPlus className="h-5 w-5 text-blue-500" />
+                            <UserPlus className="h-5 w-5 text-gray-700" />
                           ) : activity.type === 'event_created' ? (
                             <Calendar className="h-5 w-5 text-green-500" />
                           ) : (

@@ -177,7 +177,7 @@ const ManagerEvents = () => {
   const getStatusBadge = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'upcoming':
-        return <Badge className="bg-blue-100 text-blue-800"><Clock className="w-3 h-3 mr-1" /> Upcoming</Badge>;
+        return <Badge className="bg-gray-100 text-gray-800"><Clock className="w-3 h-3 mr-1" /> Upcoming</Badge>;
       case 'ongoing':
         return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" /> Ongoing</Badge>;
       case 'completed':
@@ -193,10 +193,10 @@ const ManagerEvents = () => {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center">
-              <Calendar className="h-8 w-8 text-blue-500" />
+              <Calendar className="h-8 w-8 text-gray-700" />
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">Total Events</p>
                 <p className="text-2xl font-bold">{stats.total}</p>
@@ -205,10 +205,10 @@ const ManagerEvents = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center">
-              <Clock className="h-8 w-8 text-blue-500" />
+              <Clock className="h-8 w-8 text-gray-700" />
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">Upcoming</p>
                 <p className="text-2xl font-bold">{stats.upcoming}</p>
@@ -217,10 +217,10 @@ const ManagerEvents = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center">
-              <CheckCircle className="h-8 w-8 text-green-500" />
+              <CheckCircle className="h-8 w-8 text-green-600" />
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">Ongoing</p>
                 <p className="text-2xl font-bold">{stats.ongoing}</p>
@@ -229,10 +229,10 @@ const ManagerEvents = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center">
-              <CheckCircle className="h-8 w-8 text-gray-500" />
+              <CheckCircle className="h-8 w-8 text-gray-600" />
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">Completed</p>
                 <p className="text-2xl font-bold">{stats.completed}</p>
@@ -243,7 +243,7 @@ const ManagerEvents = () => {
       </div>
 
       {/* Search and Actions */}
-      <Card>
+      <Card className="bg-white border border-gray-200 shadow-sm">
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex-1">
@@ -402,7 +402,7 @@ const ManagerEvents = () => {
                         variant={pagination.page === i + 1 ? "default" : "outline"}
                         className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
                           pagination.page === i + 1
-                            ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
+                            ? 'z-10 bg-gray-900 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900'
                             : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
                         }`}
                       >

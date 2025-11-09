@@ -1,227 +1,233 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Outlet, useParams } from 'react-router-dom';
+import { useNavigate, useLocation, Outlet, useParams, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useIsMobile } from '../hooks/use-mobile';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Card, CardContent, CardHeader } from '../components/ui/card';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
-import { Badge } from '../components/ui/badge';
 import {
   LayoutDashboard, Users, Building2, Calendar, FileText, Settings,
-  Search, LogOut, ChevronRight, TrendingUp, UserPlus,
-  ShieldCheck, Activity, BarChart3, Home, MessageSquare
+  LogOut, UserPlus, ShieldCheck, Menu, AlertTriangle
 } from 'lucide-react';
+import { Sheet, SheetContent } from '../components/ui/sheet';
+import { cn } from '../lib/utils';
+
+// Navigation items
+const getNavigationItems = (basePath: string) => [
+  { name: 'Dashboard', href: `${basePath}/dashboard`, icon: LayoutDashboard },
+  { name: 'Join Requests', href: `${basePath}/join-requests`, icon: UserPlus },
+  { name: 'Members', href: `${basePath}/members`, icon: Users },
+  { name: 'Events', href: `${basePath}/events`, icon: Calendar },
+  { name: 'Posts', href: `${basePath}/posts`, icon: FileText },
+  { name: 'Reports', href: `${basePath}/reports`, icon: AlertTriangle },
+  { name: 'Settings', href: `${basePath}/settings`, icon: Settings },
+];
 
 const ManagerPanel = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { communityId } = useParams<{ communityId?: string }>();
   const { user, logout } = useAuth();
+  const isMobile = useIsMobile();
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Check if user has manager privileges
   useEffect(() => {
-    // Wait until user data is loaded
-    if (user === undefined) return;
+    if (user === undefined || user === null) {
+      return;
+    }
     
-    // Check if user has manager role
     const hasManagerRole = user?.userRoles?.includes('Manager') || 
                           user?.role === 'Manager' ||
                           (Array.isArray(user?.userRoles) && user.userRoles.includes('Manager'));
     
     if (!hasManagerRole) {
-      navigate('/'); // Redirect to home if not a manager
+      navigate('/');
     }
   }, [user, navigate]);
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.user-menu-container')) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showUserMenu]);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  // Build menu items with communityId if available
-  const basePath = communityId ? `/manager/${communityId}` : '/manager';
-  const menuItems = [
-    {
-      title: 'Dashboard',
-      icon: LayoutDashboard,
-      path: `${basePath}/dashboard`,
-      exact: true
-    },
-    {
-      title: 'Join Requests',
-      icon: UserPlus,
-      path: `${basePath}/join-requests`
-    },
-    {
-      title: 'Members',
-      icon: Users,
-      path: `${basePath}/members`
-    },
-    {
-      title: 'Events',
-      icon: Calendar,
-      path: `${basePath}/events`
-    },
-    {
-      title: 'Posts',
-      icon: FileText,
-      path: `${basePath}/posts`
-    },
-    {
-      title: 'Settings',
-      icon: Settings,
-      path: `${basePath}/settings`
+  const handleNavClick = () => {
+    if (isMobile) {
+      setMobileMenuOpen(false);
     }
-  ];
-
-  const isActive = (path: string, exact = false) => {
-    if (exact) {
-      return location.pathname === path;
-    }
-    return location.pathname.startsWith(path);
   };
 
-  return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
-        <div className="flex flex-col flex-1 min-h-0 border-r border-gray-200 bg-white">
-          <div className="flex flex-col flex-1 pt-5 pb-4 overflow-y-auto">
-            <div className="flex items-center flex-shrink-0 px-4">
-              <Building2 className="h-8 w-8 text-blue-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">Community Manager</span>
-            </div>
-            <div className="mt-5 flex-1 flex flex-col">
-              <nav className="flex-1 px-2 space-y-1">
-                {menuItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.path}
-                      onClick={() => navigate(item.path)}
-                      className={`${
-                        isActive(item.path, item.exact)
-                          ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-700'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      } group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full text-left`}
-                    >
-                      <Icon
-                        className={`${
-                          isActive(item.path, item.exact)
-                            ? 'text-blue-700'
-                            : 'text-gray-400 group-hover:text-gray-500'
-                        } mr-3 flex-shrink-0 h-6 w-6`}
-                      />
-                      {item.title}
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
+  // Build menu items with communityId if available
+  const basePath = communityId ? `/manager/${communityId}` : '/manager';
+  const navigationItems = getNavigationItems(basePath);
+
+  // Sidebar Navigation Component
+  const SidebarNav = ({ onNavClick }: { onNavClick?: () => void }) => (
+    <nav className="flex flex-col h-full min-h-screen md:min-h-0 bg-white">
+      <div className="p-3 md:p-4 border-b border-gray-200 flex-shrink-0">
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="w-9 h-9 md:w-10 md:h-10 bg-black rounded-lg flex items-center justify-center shadow-sm">
+            <ShieldCheck className="w-5 h-5 md:w-6 md:h-6 text-white" />
           </div>
-          <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
-            <div className="flex-shrink-0 w-full group block">
-              <div className="flex items-center">
-                <div>
-                  <Avatar className="h-9 w-9">
-                    <AvatarFallback>
-                      {user?.name?.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                    {user?.name}
-                  </p>
-                  <p className="text-xs font-medium text-gray-500 group-hover:text-gray-700">
-                    Manager
-                  </p>
-                </div>
-              </div>
-            </div>
+          <div>
+            <h2 className="text-base md:text-lg font-bold text-gray-900">Manager Panel</h2>
+            <p className="text-xs text-gray-600 hidden md:block">Community Management</p>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="md:pl-64 flex flex-col flex-1">
-        {/* Top Navigation */}
-        <div className="sticky top-0 z-10 flex-shrink-0 flex h-16 bg-white shadow">
-          <div className="flex-1 px-4 flex justify-between">
-            <div className="flex-1 flex">
-              <div className="w-full md:max-w-lg lg:max-w-xs">
-                <label htmlFor="search" className="sr-only">
-                  Search
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <Input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="ml-4 flex items-center md:ml-6">
-              {/* Profile dropdown */}
-              <div className="ml-3 relative">
-                <div className="flex items-center space-x-4">
-                  <Badge variant="secondary" className="hidden md:inline-flex">
-                    <ShieldCheck className="h-4 w-4 mr-1" />
-                    Manager
-                  </Badge>
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="max-w-xs flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback>
-                          {user?.name?.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </button>
-                    
-                    {showUserMenu && (
-                      <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
-                        <div className="px-4 py-2 border-b border-gray-200">
-                          <p className="text-sm font-medium text-gray-900">
-                            {user?.name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Manager
-                          </p>
-                        </div>
-                        <button
-                          onClick={handleLogout}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          <LogOut className="h-4 w-4 inline mr-2" />
-                          Sign out
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div className="flex-1 overflow-y-auto py-2 md:py-4 min-h-0">
+        <ul className="space-y-0.5 md:space-y-1 px-2">
+          {navigationItems.map((item) => {
+            const isActive = location.pathname === item.href || 
+                            (item.href !== `${basePath}/dashboard` && location.pathname.startsWith(item.href));
+            return (
+              <li key={item.name}>
+                <Link
+                  to={item.href}
+                  onClick={onNavClick}
+                  className={cn(
+                    "flex items-center gap-2.5 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg transition-colors duration-200 text-sm md:text-base active:bg-gray-200 md:active:bg-transparent",
+                    isActive
+                      ? "bg-gray-900 text-white shadow-sm"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  )}
+                >
+                  <item.icon className={cn("w-4 h-4 md:w-5 md:h-5 flex-shrink-0", isActive ? "text-white" : "text-gray-600")} />
+                  <span className="font-medium">{item.name}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      {/* User Info in Sidebar */}
+      <div className="p-3 md:p-4 border-t border-gray-200 flex-shrink-0">
+        <div className="flex items-center gap-2 md:gap-3">
+          <Avatar className="w-9 h-9 md:w-10 md:h-10 border border-gray-300 flex-shrink-0">
+            <AvatarFallback className="bg-gray-800 text-white font-semibold text-xs md:text-sm">
+              {user?.name?.charAt(0) || 'M'}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs md:text-sm font-semibold text-gray-900 truncate">{user?.name || 'Manager'}</p>
+            <p className="text-xs text-gray-500 truncate hidden md:block">{user?.email || ''}</p>
           </div>
         </div>
+      </div>
+    </nav>
+  );
 
-        {/* Main Content Area */}
-        <main className="flex-1">
-          <div className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-              <Outlet />
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+      {/* Desktop Sidebar - Hidden on mobile */}
+      <aside className="hidden md:flex md:w-64 md:flex-col bg-white border-r border-gray-200">
+        <SidebarNav />
+      </aside>
+
+      {/* Mobile Sidebar Sheet */}
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <SheetContent side="left" className="w-64 p-0">
+          <div className="sr-only">Navigation Menu</div>
+          <SidebarNav onNavClick={handleNavClick} />
+        </SheetContent>
+      </Sheet>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Navigation Bar */}
+        <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
+          <div className="px-3 sm:px-4 md:px-6">
+            <div className="flex items-center justify-between h-14 md:h-16">
+              {/* Left: Hamburger Menu (Mobile) + Logo */}
+              <div className="flex items-center gap-2 md:gap-3">
+                {/* Hamburger Menu Button - Mobile Only */}
+                <button
+                  onClick={() => setMobileMenuOpen(true)}
+                  className="md:hidden p-2 -ml-1 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-500 active:bg-gray-200 transition-colors"
+                  aria-label="Open menu"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+
+                {/* Logo - Mobile */}
+                <div className="md:hidden flex items-center gap-2">
+                  <div className="w-9 h-9 bg-black rounded-lg flex items-center justify-center shadow-sm">
+                    <ShieldCheck className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-lg font-bold text-gray-900">Manager</span>
+                </div>
+
+                {/* Logo - Desktop */}
+                <div className="hidden md:flex items-center gap-2">
+                  <span className="text-xl font-bold text-gray-900">Manager Panel</span>
+                </div>
+              </div>
+
+              {/* Right: User Profile Dropdown */}
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="relative user-menu-container">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center gap-1.5 md:gap-2 hover:bg-gray-100 rounded-full p-1 md:p-1 md:pr-3 transition-colors border border-gray-300 active:bg-gray-200"
+                  >
+                    <Avatar className="w-7 h-7 md:w-8 md:h-8 border border-gray-300">
+                      <AvatarFallback className="bg-gray-800 text-white font-semibold text-xs md:text-sm">
+                        {user?.name?.charAt(0) || 'M'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="hidden md:inline text-sm md:text-base font-medium text-gray-900">
+                      {user?.name || 'Manager'}
+                    </span>
+                  </button>
+
+                  {/* User Dropdown Menu */}
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-44 md:w-48 bg-white rounded-lg shadow-lg py-2 border border-gray-200 z-50">
+                      <div className="px-4 py-2 border-b border-gray-100">
+                        <p className="text-sm md:text-base font-medium text-gray-900 truncate">{user?.name || 'Manager'}</p>
+                        <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
+        </nav>
+
+        {/* Page Content */}
+        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto">
+          <Outlet />
         </main>
       </div>
     </div>

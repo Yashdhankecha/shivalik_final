@@ -122,5 +122,24 @@ export const managerApi = {
   getCommunityPostStats: async (communityId: string) => {
     const response = await apiClient.get(`/api/v1/manager/posts/${communityId}/stats`);
     return response.data;
+  },
+
+  // Community Reports
+  getCommunityReports: async (communityId: string, params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    type?: string;
+  } = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+    if (params.status) queryParams.append('status', params.status);
+    if (params.type) queryParams.append('type', params.type);
+    
+    const response = await apiClient.get(`/api/v1/manager/reports/${communityId}?${queryParams.toString()}`);
+    return response.data;
   }
 };
