@@ -276,6 +276,32 @@ export const adminApi = {
   rejectPulse: async (pulseId: string, rejectionReason: string) => {
     const response = await apiClient.put(`/api/v1/admin/pulses/${pulseId}/reject`, { rejectionReason });
     return response.data;
+  },
+
+  // Community manager management
+  assignCommunityManager: async (data: { communityId: string; userId: string; role?: string }) => {
+    const response = await apiClient.post(`/api/v1/admin/communities/${data.communityId}/managers`, {
+      userId: data.userId,
+      role: data.role || 'Manager'
+    });
+    return response.data;
+  },
+
+  removeCommunityManager: async (communityId: string, managerId: string) => {
+    const response = await apiClient.delete(`/api/v1/admin/communities/${communityId}/managers/${managerId}`);
+    return response.data;
+  },
+
+  getCommunityManagers: async (communityId: string, params: {
+    page?: number;
+    limit?: number;
+  } = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    
+    const response = await apiClient.get(`/api/v1/admin/communities/${communityId}/managers?${queryParams.toString()}`);
+    return response.data;
   }
 };
 

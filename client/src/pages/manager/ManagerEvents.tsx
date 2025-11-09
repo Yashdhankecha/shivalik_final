@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Card, CardContent, CardHeader } from '../../components/ui/card';
@@ -12,6 +13,8 @@ import { managerApi } from '../../apis/manager';
 import { useToast } from '../../hooks/use-toast';
 
 const ManagerEvents = () => {
+  const { communityId: urlCommunityId } = useParams<{ communityId?: string }>();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,22 +30,47 @@ const ManagerEvents = () => {
     ongoing: 0,
     completed: 0
   });
-  const [communityId, setCommunityId] = useState<string>(''); // This should be set based on the selected community
+  const [communityId, setCommunityId] = useState<string>('');
   const { toast } = useToast();
 
-  // In a real implementation, you would get the communityId from:
-  // 1. URL params (if using route like /manager/:communityId/events)
-  // 2. Context or state management
-  // 3. User selection
+  // Fetch manager's communities and set communityId
+  useEffect(() => {
+    const fetchCommunities = async () => {
+      try {
+        const response = await managerApi.getManagerCommunities();
+        const data = response?.data || response?.result || response;
+        const communitiesList = data?.communities || [];
+
+        if (urlCommunityId) {
+          const community = communitiesList.find((c: any) => c._id === urlCommunityId);
+          if (community) {
+            setCommunityId(urlCommunityId);
+          } else {
+            toast({
+              title: "Error",
+              description: "Community not found or you don't have access",
+              variant: "destructive"
+            });
+            navigate('/manager');
+          }
+        } else if (communitiesList.length > 0) {
+          navigate(`/manager/${communitiesList[0]._id}/events`, { replace: true });
+        }
+      } catch (error: any) {
+        console.error('Error fetching communities:', error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to fetch communities",
+          variant: "destructive"
+        });
+      }
+    };
+
+    fetchCommunities();
+  }, [urlCommunityId, navigate, toast]);
 
   useEffect(() => {
-    // This is a placeholder - in a real app, you would get communityId from URL params or context
-    // For now, we'll use a placeholder value
-    setCommunityId('placeholder-community-id');
-  }, []);
-
-  useEffect(() => {
-    if (communityId) {
+    if (communityId && communityId !== 'placeholder-community-id') {
       fetchEvents();
       fetchStats();
     }

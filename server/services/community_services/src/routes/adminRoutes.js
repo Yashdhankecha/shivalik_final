@@ -94,4 +94,16 @@ router.put('/pulses/:pulseId/reject',
     adminController.rejectPulse
 );
 
+// Community manager management
+router.post('/communities/:communityId/managers', 
+    auth.verifyToken, 
+    auth.verifyAdmin,
+    [
+        body('userId').notEmpty().withMessage('User ID is required')
+    ],
+    adminController.assignCommunityManager
+);
+router.get('/communities/:communityId/managers', auth.verifyToken, auth.verifyAdmin, adminController.getCommunityManagers);
+router.delete('/communities/:communityId/managers/:managerId', auth.verifyToken, auth.verifyAdmin, adminController.removeCommunityManager);
+
 module.exports = router;

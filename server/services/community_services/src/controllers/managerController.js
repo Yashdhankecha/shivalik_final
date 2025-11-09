@@ -10,6 +10,49 @@ const EventsModel = require('../models/Events.js');
 const ReportsModel = require('../models/Reports.js');
 
 /**
+ * Get communities where user is a manager
+ */
+const getManagerCommunities = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        // Get all communities where user is a manager
+        const managerAssignments = await CommunityManagersModel.find({
+            userId: userId,
+            status: 'Active',
+            isDeleted: false
+        }).populate('communityId', 'name description bannerImage location status');
+
+        // Also get communities created by user (they are automatically managers)
+        const createdCommunities = await CommunitiesModel.find({
+            createdBy: userId,
+            isDeleted: false
+        }).select('name description bannerImage location status');
+
+        // Combine and deduplicate
+        const managerCommunityIds = managerAssignments.map(m => m.communityId?._id?.toString()).filter(Boolean);
+        const createdCommunityIds = createdCommunities.map(c => c._id.toString());
+        const allCommunityIds = [...new Set([...managerCommunityIds, ...createdCommunityIds])];
+
+        // Get all unique communities
+        const allCommunities = await CommunitiesModel.find({
+            _id: { $in: allCommunityIds },
+            isDeleted: false
+        }).select('name description bannerImage location status createdAt').lean();
+
+        return res.status(200).send(response.toJson(
+            messages['en'].common.detail_success,
+            { communities: allCommunities }
+        ));
+
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+/**
  * Get manager dashboard statistics for a specific community
  */
 const getDashboardStats = async (req, res) => {
@@ -885,6 +928,7 @@ const getCommunityEventStats = async (req, res) => {
 };
 
 module.exports = {
+    getManagerCommunities,
     getDashboardStats,
     getCommunityJoinRequests,
     approveCommunityJoinRequest,
