@@ -504,8 +504,21 @@ const getReports = async (req, res) => {
  */
 const createCommunity = async (req, res) => {
     try {
-        console.log('Create community request body:', req.body);
-        console.log('Create community file:', req.file);
+        console.log('=== Create Community Request ===');
+        console.log('Request body:', req.body);
+        console.log('Request files:', req.files);
+        console.log('Has files:', !!req.files);
+        if (req.files) {
+            console.log('Files keys:', Object.keys(req.files));
+            if (req.files.bannerImage) {
+                console.log('Banner image file:', {
+                    name: req.files.bannerImage.name,
+                    size: req.files.bannerImage.size,
+                    mimetype: req.files.bannerImage.mimetype
+                });
+            }
+        }
+        console.log('===============================');
         
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -542,13 +555,99 @@ const createCommunity = async (req, res) => {
         let bannerImage = null;
         if (req.files && req.files.bannerImage) {
             const file = req.files.bannerImage;
-            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-            const filename = 'bannerImage-' + uniqueSuffix + '.' + file.name.split('.').pop();
-            const uploadPath = path.join(__dirname, '../uploads/', filename);
             
-            // Save file
-            await file.mv(uploadPath);
-            bannerImage = `/uploads/${filename}`;
+            // Ensure uploads directory exists
+            const uploadsDir = path.join(__dirname, '../uploads');
+            const fs = require('fs');
+            if (!fs.existsSync(uploadsDir)) {
+                fs.mkdirSync(uploadsDir, { recursive: true });
+                console.log('✅ Created uploads directory:', uploadsDir);
+            }
+            
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            const fileExtension = file.name.split('.').pop() || 'jpg';
+            const filename = `bannerImage-${uniqueSuffix}.${fileExtension}`;
+            const uploadPath = path.join(uploadsDir, filename);
+            
+            console.log('💾 Saving banner image...');
+            console.log('   Original name:', file.name);
+            console.log('   File size:', file.size, 'bytes');
+            console.log('   MIME type:', file.mimetype);
+            console.log('   Save path:', uploadPath);
+            console.log('   File object keys:', Object.keys(file));
+            console.log('   Has .data property:', !!file.data);
+            console.log('   Has .mv method:', typeof file.mv === 'function');
+            
+            // Save file - try multiple methods
+            try {
+                let fileSaved = false;
+                
+                // Method 1: Try file.mv() first (express-fileupload method)
+                if (typeof file.mv === 'function') {
+                    console.log('   Attempting to save using file.mv()...');
+                    try {
+                        await file.mv(uploadPath);
+                        fileSaved = true;
+                        console.log('   ✅ file.mv() completed');
+                    } catch (mvError) {
+                        console.log('   ⚠️  file.mv() failed:', mvError.message);
+                    }
+                }
+                
+                // Method 2: Use fs.writeFileSync if file.mv() doesn't exist or failed
+                if (!fileSaved && file.data) {
+                    console.log('   Attempting to save using fs.writeFileSync()...');
+                    try {
+                        // file.data is a Buffer when useTempFiles is false
+                        fs.writeFileSync(uploadPath, file.data);
+                        fileSaved = true;
+                        console.log('   ✅ fs.writeFileSync() completed');
+                    } catch (writeError) {
+                        console.log('   ⚠️  fs.writeFileSync() failed:', writeError.message);
+                    }
+                }
+                
+                if (!fileSaved) {
+                    throw new Error('All file save methods failed. File object structure: ' + JSON.stringify(Object.keys(file)));
+                }
+                
+                // Verify file was saved
+                if (fs.existsSync(uploadPath)) {
+                    const stats = fs.statSync(uploadPath);
+                    console.log('✅ Banner image saved successfully!');
+                    console.log('   Saved size:', stats.size, 'bytes');
+                    console.log('   Original size:', file.size, 'bytes');
+                    console.log('   File exists:', fs.existsSync(uploadPath));
+                    console.log('   Full path:', uploadPath);
+                    
+                    if (stats.size === 0) {
+                        console.error('   ⚠️  WARNING: Saved file is 0 bytes!');
+                    }
+                } else {
+                    console.error('❌ File was not saved! Path does not exist:', uploadPath);
+                    console.error('   Uploads directory exists:', fs.existsSync(uploadsDir));
+                    console.error('   Uploads directory path:', uploadsDir);
+                    console.error('   Current working directory:', process.cwd());
+                    console.error('   __dirname:', __dirname);
+                    throw new Error('File was not saved to disk');
+                }
+                
+                bannerImage = `/uploads/${filename}`;
+                console.log('   URL path:', bannerImage);
+            } catch (saveError) {
+                console.error('❌ Error saving file:', saveError);
+                console.error('   Error message:', saveError.message);
+                console.error('   Error stack:', saveError.stack);
+                throw new Error('Failed to save banner image: ' + saveError.message);
+            }
+        } else {
+            console.log('⚠️  No banner image file received');
+            if (req.files) {
+                console.log('   Available files:', Object.keys(req.files));
+                console.log('   Files object:', JSON.stringify(Object.keys(req.files), null, 2));
+            } else {
+                console.log('   req.files is null or undefined');
+            }
         }
 
         // Check if community with this name already exists
@@ -1062,12 +1161,20 @@ const createCommunityEvent = async (req, res) => {
         // Handle file upload using fileUpload middleware pattern
         let images = [];
         if (req.files && req.files.images) {
+            const fs = require('fs');
+            const uploadsDir = path.join(__dirname, '../uploads');
+            
+            // Ensure uploads directory exists
+            if (!fs.existsSync(uploadsDir)) {
+                fs.mkdirSync(uploadsDir, { recursive: true });
+            }
+            
             const files = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
             
             for (const file of files) {
                 const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
                 const filename = 'event-' + uniqueSuffix + '.' + file.name.split('.').pop();
-                const uploadPath = path.join(__dirname, '../uploads/', filename);
+                const uploadPath = path.join(uploadsDir, filename);
                 
                 // Save file
                 await file.mv(uploadPath);

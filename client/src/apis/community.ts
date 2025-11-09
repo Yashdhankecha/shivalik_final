@@ -127,9 +127,8 @@ export const communityApi = {
 
     // ========== PULSES MODULE ==========
     createPulse: async (data: FormData) => {
-        const response = await apiClient.post('/api/v1/community/pulses/create', data, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        // Don't set Content-Type - let browser set it with boundary
+        const response = await apiClient.post('/api/v1/community/pulses/create', data);
         return response.data;
     },
 
@@ -166,9 +165,8 @@ export const communityApi = {
 
     // ========== EVENTS MODULE ==========
     createEvent: async (data: FormData) => {
-        const response = await apiClient.post('/api/v1/community/events/create', data, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        // Don't set Content-Type - let browser set it with boundary
+        const response = await apiClient.post('/api/v1/community/events/create', data);
         return response.data;
     },
 
@@ -218,9 +216,8 @@ export const communityApi = {
 
     // ========== MARKETPLACE MODULE ==========
     createListing: async (data: FormData) => {
-        const response = await apiClient.post('/api/v1/community/marketplace/listing/create', data, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        // Don't set Content-Type - let browser set it with boundary
+        const response = await apiClient.post('/api/v1/community/marketplace/listing/create', data);
         return response.data;
     },
 

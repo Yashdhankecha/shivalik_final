@@ -45,12 +45,47 @@ const createEvent = async (req, res) => {
         // Handle file uploads
         let images = [];
         if (req.files && req.files.images) {
+            const fs = require('fs');
+            const path = require('path');
+            const uploadsDir = path.join(__dirname, '../uploads');
+            
+            // Ensure uploads directory exists
+            if (!fs.existsSync(uploadsDir)) {
+                fs.mkdirSync(uploadsDir, { recursive: true });
+                console.log('✅ Created uploads directory:', uploadsDir);
+            }
+            
             const files = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
             for (const file of files) {
                 const fileName = `event-${Date.now()}-${file.name}`;
-                const uploadPath = `${__dirname}/../uploads/${fileName}`;
-                await file.mv(uploadPath);
-                images.push(`/uploads/${fileName}`);
+                const uploadPath = path.join(uploadsDir, fileName);
+                
+                // Save file with fallback methods
+                let fileSaved = false;
+                if (typeof file.mv === 'function') {
+                    try {
+                        await file.mv(uploadPath);
+                        fileSaved = true;
+                    } catch (mvError) {
+                        console.log('⚠️  file.mv() failed, trying fs.writeFileSync...');
+                    }
+                }
+                
+                if (!fileSaved && file.data) {
+                    try {
+                        fs.writeFileSync(uploadPath, file.data);
+                        fileSaved = true;
+                    } catch (writeError) {
+                        console.error('❌ Failed to save event image:', writeError.message);
+                    }
+                }
+                
+                if (fileSaved && fs.existsSync(uploadPath)) {
+                    images.push(`/uploads/${fileName}`);
+                    console.log('✅ Event image saved:', fileName);
+                } else {
+                    console.error('❌ Failed to save event image:', fileName);
+                }
             }
         }
 
