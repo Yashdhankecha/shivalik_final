@@ -358,13 +358,20 @@ const login = async (req, res) => {
         await user.save();
 
         // Prepare response data with redirect info
+        let redirectTo = '/dashboard';
+        if (user.role === 'Admin' || user.role === 'SuperAdmin') {
+            redirectTo = '/admin/dashboard';
+        } else if (user.role === 'Manager') {
+            redirectTo = '/manager'; // Will redirect to first community's dashboard
+        }
+
         const responseData = {
             user: user.toJSON(),
             accessToken,
             refreshToken,
             tokenExpiry: CommonConfig.JWT_VALIDITY,
             refreshTokenExpiry: CommonConfig.REFRESH_TOKEN_VALIDITY,
-            redirectTo: (user.role === 'Admin' || user.role === 'SuperAdmin') ? '/admin/dashboard' : '/dashboard'
+            redirectTo: redirectTo
         };
 
         return res.status(200).send(response.toJson(messages['en'].user.login_success, responseData));
