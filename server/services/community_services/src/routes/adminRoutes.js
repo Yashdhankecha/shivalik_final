@@ -42,6 +42,9 @@ router.get('/users', auth.verifyToken, auth.verifyAdmin, adminController.getAllU
 router.get('/communities/:communityId/events', auth.verifyToken, auth.verifyAdmin, adminController.getCommunityEvents);
 router.post('/communities/:communityId/events', auth.verifyToken, auth.verifyAdmin, adminController.createCommunityEvent);
 
+// Reports
+router.get('/reports', auth.verifyToken, auth.verifyAdmin, adminController.getReports);
+
 // Role change requests
 router.post('/role-change-requests', auth.verifyToken, auth.verifyAdmin, adminController.createRoleChangeRequest);
 router.get('/role-change-requests', auth.verifyToken, auth.verifyAdmin, adminController.getRoleChangeRequests);
@@ -79,18 +82,16 @@ router.put('/marketplace/listings/:listingId/reject',
     adminController.rejectMarketplaceListing
 );
 
-// Moderator management
-router.get('/moderators/members', auth.verifyToken, auth.verifyAdmin, adminController.getCommunityMembers);
-router.put('/moderators/:userId/assign', auth.verifyToken, auth.verifyAdmin, adminController.assignModeratorRole);
-
-// Community join requests
-router.get('/community-join-requests', auth.verifyToken, auth.verifyAdmin, adminController.getCommunityJoinRequests);
-router.put('/community-join-requests/:requestId/approve', auth.verifyToken, auth.verifyAdmin, adminController.approveCommunityJoinRequest);
-router.put('/community-join-requests/:requestId/reject', auth.verifyToken, auth.verifyAdmin, adminController.rejectCommunityJoinRequest);
-
-// Community managers
-router.post('/community-managers', auth.verifyToken, auth.verifyAdmin, adminController.assignCommunityManager);
-router.delete('/community-managers/:managerId', auth.verifyToken, auth.verifyAdmin, adminController.removeCommunityManager);
-router.get('/communities/:communityId/managers', auth.verifyToken, auth.verifyAdmin, adminController.getCommunityManagers);
+// Pulse approvals
+router.get('/pulses', auth.verifyToken, auth.verifyAdmin, adminController.getPulseApprovals);
+router.put('/pulses/:pulseId/approve', auth.verifyToken, auth.verifyAdmin, adminController.approvePulse);
+router.put('/pulses/:pulseId/reject', 
+    auth.verifyToken, 
+    auth.verifyAdmin,
+    [
+        body('rejectionReason').notEmpty().withMessage('Rejection reason is required')
+    ],
+    adminController.rejectPulse
+);
 
 module.exports = router;

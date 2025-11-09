@@ -496,10 +496,10 @@ const getCommunityPulses = async (req, res) => {
 const getCommunityMarketplaceListings = async (req, res) => {
     try {
         const { communityId } = req.params;
-        const limit = parseInt(req.query.limit) || 10;
+        const limit = parseInt(req.query.limit) || 12;
         const page = parseInt(req.query.page) || 1;
         const skip = (page - 1) * limit;
-        const type = req.query.type; // 'want' or 'offer'
+        const type = req.query.type; // 'buy' or 'sell'
 
         // Verify community exists
         const community = await CommunitiesModel.findOne({
@@ -676,6 +676,8 @@ module.exports = {
     getCommunityMembers,
     getCommunityEvents
 };
+
+
 
 
 

@@ -15,7 +15,7 @@ const createListing = async (req, res) => {
         }
 
         const { communityId, type, title, description, price } = req.body;
-        const userId = req.user.id;
+        const userId = req.user._id;
 
         // Check if community exists
         const community = await CommunitiesModel.findById(communityId);
@@ -174,7 +174,7 @@ const getListingById = async (req, res) => {
 const startChat = async (req, res) => {
     try {
         const { listingId } = req.params;
-        const userId = req.user.id;
+        const userId = req.user._id;
 
         const listing = await MarketplaceListingsModel.findById(listingId);
         if (!listing || listing.isDeleted) {
@@ -228,7 +228,7 @@ const sendMessage = async (req, res) => {
 
         const { listingId } = req.params;
         const { text } = req.body;
-        const userId = req.user.id;
+        const userId = req.user._id;
 
         const listing = await MarketplaceListingsModel.findById(listingId);
         if (!listing || listing.isDeleted) {
@@ -278,7 +278,7 @@ const sendMessage = async (req, res) => {
 const getChatMessages = async (req, res) => {
     try {
         const { listingId } = req.params;
-        const userId = req.user.id;
+        const userId = req.user._id;
 
         const listing = await MarketplaceListingsModel.findById(listingId);
         if (!listing || listing.isDeleted) {
@@ -312,7 +312,7 @@ const getChatMessages = async (req, res) => {
 // Get User's Chats
 const getUserChats = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user._id;
 
         const chats = await MarketplaceChatsModel.find({
             participants: userId,
@@ -347,7 +347,7 @@ const updateListingStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        const userId = req.user.id;
+        const userId = req.user._id;
 
         if (!['pending', 'approved', 'rejected', 'sold', 'closed'].includes(status)) {
             return res.status(400).send(response.toJson('Invalid status'));
@@ -390,7 +390,7 @@ const updateListingStatus = async (req, res) => {
 const deleteListing = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user.id;
+        const userId = req.user._id;
 
         const listing = await MarketplaceListingsModel.findById(id);
         if (!listing || listing.isDeleted) {
@@ -433,4 +433,6 @@ module.exports = {
     updateListingStatus,
     deleteListing
 };
+
+
 

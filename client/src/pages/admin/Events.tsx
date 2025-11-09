@@ -73,20 +73,63 @@ const Events = () => {
   };
 
   const fetchEvents = async () => {
-    if (!selectedCommunity) return;
+    // If no community selected and not "all", return
+    if (!selectedCommunity && selectedCommunity !== 'all') return;
     
     try {
       setLoading(true);
-      const response = await adminApi.getCommunityEvents(selectedCommunity, {
-        page: pagination.page,
-        limit: pagination.limit,
-        search: searchTerm
-      });
       
-      // Handle response structure
-      const data = response.result || response.data || response;
-      setEvents(data.events || data || []);
-      setPagination(data.pagination || pagination);
+      // If "all" is selected, fetch events from all communities
+      if (selectedCommunity === 'all') {
+        // Fetch events from all communities
+        let allEvents: any[] = [];
+        let totalEvents = 0;
+        
+        // Fetch events from each community
+        for (const community of communities) {
+          try {
+            const response = await adminApi.getCommunityEvents(community._id, {
+              page: 1,
+              limit: 100, // Get more events per community
+              search: searchTerm
+            });
+            
+            const data = response.result || response.data || response;
+            const events = data.events || data || [];
+            allEvents = [...allEvents, ...events];
+            totalEvents += events.length;
+          } catch (error) {
+            console.error(`Error fetching events for community ${community._id}:`, error);
+          }
+        }
+        
+        // Sort events by date
+        allEvents.sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime());
+        
+        // Apply pagination manually
+        const startIndex = (pagination.page - 1) * pagination.limit;
+        const endIndex = startIndex + pagination.limit;
+        const paginatedEvents = allEvents.slice(startIndex, endIndex);
+        
+        setEvents(paginatedEvents);
+        setPagination({
+          ...pagination,
+          total: allEvents.length,
+          totalPages: Math.ceil(allEvents.length / pagination.limit)
+        });
+      } else {
+        // Fetch events for specific community
+        const response = await adminApi.getCommunityEvents(selectedCommunity, {
+          page: pagination.page,
+          limit: pagination.limit,
+          search: searchTerm
+        });
+        
+        // Handle response structure
+        const data = response.result || response.data || response;
+        setEvents(data.events || data || []);
+        setPagination(data.pagination || pagination);
+      }
     } catch (error) {
       console.error('Error fetching events:', error);
       toast({
@@ -289,6 +332,7 @@ const Events = () => {
               className="border border-gray-400 rounded-md px-3 py-2 text-black text-sm md:text-base w-full md:w-auto"
             >
               <option value="">Select Community</option>
+              <option value="all">All Communities</option>
               {communities.map((community: any) => (
                 <option key={community._id} value={community._id}>
                   {community.name}

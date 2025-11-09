@@ -5,8 +5,8 @@ import { useIsMobile } from '../hooks/use-mobile';
 import { Button } from '../components/ui/button';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import {
-  LayoutDashboard, Users, Building2, Calendar,
-  LogOut, ChevronRight, ShieldCheck, Menu, UserCog, ShoppingBag, Shield
+  LayoutDashboard, Users, Building2, Calendar, FileText,
+  LogOut, ChevronRight, ShieldCheck, Menu, UserCog, ShoppingBag, TrendingUp
 } from 'lucide-react';
 import { Sheet, SheetContent } from '../components/ui/sheet';
 import { cn } from '../lib/utils';
@@ -16,11 +16,10 @@ const navigationItems = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Communities', href: '/admin/communities', icon: Building2 },
-  { name: 'Add Moderators', href: '/admin/moderators', icon: Shield },
   { name: 'Join Requests', href: '/admin/join-requests', icon: UserCog },
   { name: 'Product Approvals', href: '/admin/marketplace-approvals', icon: ShoppingBag },
+  { name: 'Pulse Approvals', href: '/admin/pulse-approvals', icon: TrendingUp },
   { name: 'Events', href: '/admin/events', icon: Calendar },
-  { name: 'Event Registrations', href: '/admin/event-registrations', icon: Calendar },
 ];
 
 const AdminPanel = () => {
@@ -33,44 +32,22 @@ const AdminPanel = () => {
 
   // Check if user has admin privileges
   useEffect(() => {
-    // Check localStorage first for immediate redirect on page refresh
-    const authToken = localStorage.getItem('auth_token');
-    const userInfo = localStorage.getItem('userInfo');
-    
-    if (authToken && userInfo) {
-      try {
-        const parsedUser = JSON.parse(userInfo);
-        const userRole = parsedUser.role;
-        
-        // If user is not admin and trying to access admin panel, redirect
-        if (userRole !== 'Admin' && userRole !== 'SuperAdmin') {
-          navigate('/login');
-          return;
-        }
-      } catch (error) {
-        console.error('Error parsing user info:', error);
-      }
+    // Wait until user data is loaded
+    if (user === undefined || user === null) {
+      return;
     }
     
-    // Also check user state when it's loaded
-    if (user !== undefined && user !== null) {
-      const userRole = user?.role;
-      if (userRole !== 'Admin' && userRole !== 'SuperAdmin') {
-        navigate('/login');
-      }
-    } else if (user === null && !authToken) {
-      // If no user and no token, redirect to login
+    const userRole = user?.role;
+    if (userRole !== 'Admin' && userRole !== 'SuperAdmin') {
+      // Redirect to login if user doesn't have admin privileges
       navigate('/login');
     }
   }, [user, navigate]);
-
 
   // Close mobile menu when route changes
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
-
-
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -81,13 +58,11 @@ const AdminPanel = () => {
       }
     };
 
-
     if (showUserMenu) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [showUserMenu]);
-
 
   const handleLogout = () => {
     logout();

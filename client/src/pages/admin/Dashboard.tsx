@@ -66,17 +66,25 @@ const AdminDashboard = () => {
             ? usersData 
             : (usersData?.users || usersData?.data || []);
           
-          // Format users for display
-          const formattedUsers = users.slice(0, 5).map((user: any) => ({
-            name: user.name || user.username || 'Unknown User',
-            email: user.email || 'No email',
-            role: user.role || 'User',
-            status: user.status || 'Pending',
-            joinDate: user.createdAt || user.created_at || user.joinedAt
-              ? new Date(user.createdAt || user.created_at || user.joinedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-              : 'N/A',
-            _id: user._id || user.id || Math.random().toString()
-          }));
+          // Format users for display and filter out CM user
+          const formattedUsers = users
+            .filter((user: any) => {
+              // Filter out Community Manager with email manager@community.com
+              const email = (user.email || '').toLowerCase();
+              const name = (user.name || '').toLowerCase();
+              return !(email === 'manager@community.com' || name.includes('community manager') || name === 'cm');
+            })
+            .slice(0, 5)
+            .map((user: any) => ({
+              name: user.name || user.username || 'Unknown User',
+              email: user.email || 'No email',
+              role: user.role || 'User',
+              status: user.status || 'Pending',
+              joinDate: user.createdAt || user.created_at || user.joinedAt
+                ? new Date(user.createdAt || user.created_at || user.joinedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                : 'N/A',
+              _id: user._id || user.id || Math.random().toString()
+            }));
           setRecentUsers(formattedUsers);
         } catch (error) {
           console.error('Error fetching recent users:', error);

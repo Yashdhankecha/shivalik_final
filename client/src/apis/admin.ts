@@ -4,14 +4,8 @@ import apiClient from './apiService';
 export const adminApi = {
   // Dashboard stats
   getDashboardStats: async () => {
-    try {
-      const response = await apiClient.get('/api/v1/admin/dashboard/stats');
-      console.log('Dashboard stats raw response:', response);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-      throw error;
-    }
+    const response = await apiClient.get('/api/v1/admin/dashboard/stats');
+    return response.data;
   },
 
   // Get communities created by current admin
@@ -61,14 +55,8 @@ export const adminApi = {
     if (params.search) queryParams.append('search', params.search);
     if (params.status) queryParams.append('status', params.status);
     
-    try {
-      const response = await apiClient.get(`/api/v1/admin/users?${queryParams.toString()}`);
-      console.log('Get all users raw response:', response);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching all users:', error);
-      throw error;
-    }
+    const response = await apiClient.get(`/api/v1/admin/users?${queryParams.toString()}`);
+    return response.data;
   },
 
   // Get events in communities created by current admin
@@ -85,6 +73,25 @@ export const adminApi = {
     if (params.status) queryParams.append('status', params.status);
     
     const response = await apiClient.get(`/api/v1/admin/communities/${communityId}/events?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  // Get reports
+  getReports: async (params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    type?: string;
+  } = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+    if (params.status) queryParams.append('status', params.status);
+    if (params.type) queryParams.append('type', params.type);
+    
+    const response = await apiClient.get(`/api/v1/admin/reports?${queryParams.toString()}`);
     return response.data;
   },
 
@@ -133,60 +140,6 @@ export const adminApi = {
     return response.data;
   },
 
-  // Community join requests
-  getCommunityJoinRequests: async (params: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    status?: string;
-  } = {}) => {
-    const queryParams = new URLSearchParams();
-    if (params.page) queryParams.append('page', params.page.toString());
-    if (params.limit) queryParams.append('limit', params.limit.toString());
-    if (params.search) queryParams.append('search', params.search);
-    if (params.status) queryParams.append('status', params.status);
-    
-    const response = await apiClient.get(`/api/v1/admin/community-join-requests?${queryParams.toString()}`);
-    return response.data;
-  },
-
-  approveCommunityJoinRequest: async (requestId: string) => {
-    const response = await apiClient.put(`/api/v1/admin/community-join-requests/${requestId}/approve`);
-    return response.data;
-  },
-
-  rejectCommunityJoinRequest: async (requestId: string, rejectionReason: string) => {
-    const response = await apiClient.put(`/api/v1/admin/community-join-requests/${requestId}/reject`, { rejectionReason });
-    return response.data;
-  },
-
-  // Community managers
-  assignCommunityManager: async (data: {
-    communityId: string;
-    userId: string;
-    role?: 'Manager';
-  }) => {
-    const response = await apiClient.post('/api/v1/admin/community-managers', data);
-    return response.data;
-  },
-
-  removeCommunityManager: async (managerId: string) => {
-    const response = await apiClient.delete(`/api/v1/admin/community-managers/${managerId}`);
-    return response.data;
-  },
-
-  getCommunityManagers: async (communityId: string, params: {
-    page?: number;
-    limit?: number;
-  } = {}) => {
-    const queryParams = new URLSearchParams();
-    if (params.page) queryParams.append('page', params.page.toString());
-    if (params.limit) queryParams.append('limit', params.limit.toString());
-    
-    const response = await apiClient.get(`/api/v1/admin/communities/${communityId}/managers?${queryParams.toString()}`);
-    return response.data;
-  },
-
   // Get recent activities for admin dashboard
   getRecentActivities: async (params: {
     limit?: number;
@@ -194,14 +147,8 @@ export const adminApi = {
     const queryParams = new URLSearchParams();
     if (params.limit) queryParams.append('limit', params.limit.toString());
     
-    try {
-      const response = await apiClient.get(`/api/v1/admin/dashboard/activities?${queryParams.toString()}`);
-      console.log('Recent activities raw response:', response);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching recent activities:', error);
-      throw error;
-    }
+    const response = await apiClient.get(`/api/v1/admin/dashboard/activities?${queryParams.toString()}`);
+    return response.data;
   },
 
   approveRoleChangeRequest: async (requestId: string) => {
@@ -304,25 +251,30 @@ export const adminApi = {
     return response.data;
   },
 
-  // Moderator management
-  getCommunityMembers: async (params: {
+  // Pulse approvals
+  getPulseApprovals: async (params: {
     page?: number;
     limit?: number;
     search?: string;
-    communityId?: string;
+    status?: string;
   } = {}) => {
     const queryParams = new URLSearchParams();
     if (params.page) queryParams.append('page', params.page.toString());
     if (params.limit) queryParams.append('limit', params.limit.toString());
     if (params.search) queryParams.append('search', params.search);
-    if (params.communityId) queryParams.append('communityId', params.communityId);
+    if (params.status) queryParams.append('status', params.status);
     
-    const response = await apiClient.get(`/api/v1/admin/moderators/members?${queryParams.toString()}`);
+    const response = await apiClient.get(`/api/v1/admin/pulses?${queryParams.toString()}`);
     return response.data;
   },
 
-  assignModeratorRole: async (userId: string, communityId: string) => {
-    const response = await apiClient.put(`/api/v1/admin/moderators/${userId}/assign`, { communityId });
+  approvePulse: async (pulseId: string) => {
+    const response = await apiClient.put(`/api/v1/admin/pulses/${pulseId}/approve`);
+    return response.data;
+  },
+
+  rejectPulse: async (pulseId: string, rejectionReason: string) => {
+    const response = await apiClient.put(`/api/v1/admin/pulses/${pulseId}/reject`, { rejectionReason });
     return response.data;
   }
 };

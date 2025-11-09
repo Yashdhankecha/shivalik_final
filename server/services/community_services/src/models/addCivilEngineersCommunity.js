@@ -170,7 +170,7 @@ async function addCivilEngineersCommunity() {
 
         // Create marketplace listings
         const listing1 = await MarketplaceListingsModel.create({
-            type: 'offer',
+            type: 'sell',
             title: 'Engineering Books Collection for Sale',
             description: 'Selling my complete collection of civil engineering books including RCC Design, Structural Analysis, Surveying, and more. All books in excellent condition. Perfect for students and professionals.',
             price: 5000,
@@ -181,7 +181,7 @@ async function addCivilEngineersCommunity() {
         });
 
         const listing2 = await MarketplaceListingsModel.create({
-            type: 'want',
+            type: 'buy',
             title: 'Looking for AutoCAD Drafter for Project',
             description: 'Need an experienced AutoCAD drafter for a residential building project. Part-time work, flexible hours. Good pay. Contact for details.',
             price: 15000,

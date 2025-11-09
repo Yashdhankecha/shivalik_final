@@ -119,7 +119,7 @@ app.get("/", (req, res) => {
     res.json({ message: `Welcome to FIRST application. Hello : ${envFile}` });
 });
 
-app.use(express.static(__dirname + '/uploads/'));
+app.use(express.static(__dirname + '/../uploads/'));
 
 const PORT = process.env.PORT || 11001;
 

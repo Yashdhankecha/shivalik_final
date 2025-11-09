@@ -531,7 +531,7 @@ async function insertDummyData() {
 
             // Marketplace Listings
             const listing1 = await MarketplaceListingsModel.create({
-                type: 'offer',
+                type: 'sell',
                 title: 'Furniture for Sale - Complete Living Room Set',
                 description: 'Moving out sale - Premium 3-seater sofa set, center table, dining table with 6 chairs in excellent condition. Barely used for 1 year. Original price ₹80,000.',
                 price: 25000,
@@ -542,7 +542,7 @@ async function insertDummyData() {
             });
 
             const listing2 = await MarketplaceListingsModel.create({
-                type: 'want',
+                type: 'buy',
                 title: 'Looking for Carpool to IT Park',
                 description: 'Need carpool partner from Sunrise Valley to IT Park Sahastradhara. Office timings 9 AM to 6 PM. Can share fuel costs.',
                 price: 0,
@@ -552,7 +552,7 @@ async function insertDummyData() {
             });
 
             const listing3 = await MarketplaceListingsModel.create({
-                type: 'offer',
+                type: 'sell',
                 title: 'Kids Bicycle for Sale',
                 description: 'Selling kids bicycle (age 5-8 years) in good condition. Hero brand with training wheels included.',
                 price: 3500,
@@ -563,7 +563,7 @@ async function insertDummyData() {
             });
 
             const listing4 = await MarketplaceListingsModel.create({
-                type: 'want',
+                type: 'buy',
                 title: 'Looking for Tutor for Class 10 Math',
                 description: 'Need experienced tutor for CBSE Class 10 Mathematics. Prefer female tutor. Budget ₹500 per hour.',
                 price: 500,
@@ -573,7 +573,7 @@ async function insertDummyData() {
             });
 
             const listing5 = await MarketplaceListingsModel.create({
-                type: 'offer',
+                type: 'sell',
                 title: 'Washing Machine - Samsung 6.5kg',
                 description: 'Samsung fully automatic washing machine. 3 years old, working perfectly. Selling due to upgrade.',
                 price: 8000,
@@ -602,7 +602,7 @@ async function insertDummyData() {
             // Marketplace listings for Civil Engineers Group Ahmedabad
             if (civilEngineersCommunity) {
                 const listing6 = await MarketplaceListingsModel.create({
-                    type: 'offer',
+                    type: 'sell',
                     title: 'Engineering Books Collection for Sale',
                     description: 'Selling my complete collection of civil engineering books including RCC Design, Structural Analysis, Surveying, and more. All books in excellent condition. Perfect for students and professionals.',
                     price: 5000,
@@ -613,7 +613,7 @@ async function insertDummyData() {
                 });
 
                 const listing7 = await MarketplaceListingsModel.create({
-                    type: 'want',
+                    type: 'buy',
                     title: 'Looking for AutoCAD Drafter for Project',
                     description: 'Need an experienced AutoCAD drafter for a residential building project. Part-time work, flexible hours. Good pay. Contact for details.',
                     price: 15000,

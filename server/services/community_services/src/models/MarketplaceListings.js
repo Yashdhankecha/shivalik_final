@@ -5,7 +5,7 @@ const { DBConnect } = require('./index.js');
 const MarketplaceListingsSchema = new Schema({
     type: {
         type: String,
-        enum: ['want', 'offer'],
+        enum: ['buy', 'sell'],
         required: true
     },
     title: {
@@ -75,4 +75,3 @@ MarketplaceListingsModel.syncIndexes().then(() => {
 });
 
 module.exports = MarketplaceListingsModel;
-

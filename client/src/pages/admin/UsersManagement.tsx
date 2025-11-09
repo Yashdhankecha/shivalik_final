@@ -4,9 +4,16 @@ import { Input } from '../../components/ui/input';
 import { Card, CardContent, CardHeader } from '../../components/ui/card';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Badge } from '../../components/ui/badge';
-import { Users, Search, Edit, Trash2, Eye, UserPlus, X } from 'lucide-react';
+import { Users, Search, Edit, Trash2, Eye, UserPlus, X, Building2 } from 'lucide-react';
 import { adminApi } from '../../apis/admin';
+import { communityApi } from '../../apis/community';
 import { useToast } from '../../hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog';
 
 const UsersManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,7 +30,12 @@ const UsersManagement = () => {
   const [showRoleChangeModal, setShowRoleChangeModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [requestedRole, setRequestedRole] = useState('Manager');
+  const [selectedModeratorCommunity, setSelectedModeratorCommunity] = useState('');
+  const [userCommunities, setUserCommunities] = useState<any[]>([]);
   const [reason, setReason] = useState('');
+  const [showViewCommunitiesModal, setShowViewCommunitiesModal] = useState(false);
+  const [viewingUser, setViewingUser] = useState<any>(null);
+  const [viewingUserCommunities, setViewingUserCommunities] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -186,11 +198,53 @@ const UsersManagement = () => {
     }
   };
 
-  const openRoleChangeModal = (user: any) => {
+  const openRoleChangeModal = async (user: any) => {
     setSelectedUser(user);
     setRequestedRole('Manager');
+    setSelectedModeratorCommunity('');
     setReason('');
+    
+    // Fetch user's participated communities
+    if (user._id) {
+      try {
+        const response = await adminApi.getUserCommunities(user._id);
+        const data = response.result || response.data || response;
+        const userComms = data.communities || [];
+        
+        // Filter to only show communities that admin manages
+        const adminCommunityIds = communities.map((c: any) => c._id);
+        const filteredComms = userComms.filter((comm: any) => 
+          adminCommunityIds.includes(comm._id)
+        );
+        
+        setUserCommunities(filteredComms);
+      } catch (error) {
+        console.error('Error fetching user communities:', error);
+        setUserCommunities([]);
+      }
+    }
+    
     setShowRoleChangeModal(true);
+  };
+
+  const handleViewCommunities = async (user: any) => {
+    setViewingUser(user);
+    try {
+      const response = await adminApi.getUserCommunities(user._id);
+      const data = response.result || response.data || response;
+      const userComms = data.communities || [];
+      
+      setViewingUserCommunities(userComms);
+      setShowViewCommunitiesModal(true);
+    } catch (error) {
+      console.error('Error fetching user communities:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch user's communities",
+        variant: "destructive"
+      });
+      setViewingUserCommunities([]);
+    }
   };
 
   const handleRoleChangeRequest = async () => {
@@ -203,11 +257,25 @@ const UsersManagement = () => {
       return;
     }
 
+    // If Moderator role is selected, community is required
+    if (requestedRole === 'Moderator' && !selectedModeratorCommunity) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a community for moderator role",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
+      const communityId = requestedRole === 'Moderator' 
+        ? selectedModeratorCommunity 
+        : (selectedUser.communityId?._id || selectedUser.communityId || '');
+
       await adminApi.createRoleChangeRequest({
         userId: selectedUser._id,
-        requestedRole,
-        communityId: selectedUser.communityId,
+        requestedRole: requestedRole === 'Moderator' ? 'Manager' : requestedRole, // Use Manager role for Moderator
+        communityId: communityId,
         reason
       });
 
@@ -219,7 +287,9 @@ const UsersManagement = () => {
       setShowRoleChangeModal(false);
       setSelectedUser(null);
       setRequestedRole('Manager');
+      setSelectedModeratorCommunity('');
       setReason('');
+      setUserCommunities([]);
       
       // Refresh users list
       fetchUsers();
@@ -327,7 +397,6 @@ const UsersManagement = () => {
                 <tr>
                   <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-black uppercase">User</th>
                   <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-black uppercase hidden sm:table-cell">Role</th>
-                  <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-black uppercase hidden md:table-cell">Community</th>
                   <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-black uppercase hidden sm:table-cell">Status</th>
                   <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-black uppercase hidden lg:table-cell">Join Date</th>
                   <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-black uppercase">Actions</th>
@@ -357,9 +426,6 @@ const UsersManagement = () => {
                     <td className="px-3 md:px-6 py-3 md:py-4 hidden sm:table-cell">
                       {getRoleBadge(user.role)}
                     </td>
-                    <td className="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm text-gray-600 hidden md:table-cell">
-                      {user.communityId?.name || (typeof user.communityId === 'string' ? `Community ID: ${user.communityId}` : 'Not assigned')}
-                    </td>
                     <td className="px-3 md:px-6 py-3 md:py-4 hidden sm:table-cell">
                       {getStatusBadge(user.status)}
                     </td>
@@ -368,7 +434,12 @@ const UsersManagement = () => {
                     </td>
                     <td className="px-3 md:px-6 py-3 md:py-4">
                       <div className="flex items-center gap-1 md:gap-2">
-                        <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100 p-1 md:p-2 h-7 md:h-8 w-7 md:w-8">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-black hover:bg-gray-100 p-1 md:p-2 h-7 md:h-8 w-7 md:w-8"
+                          onClick={() => handleViewCommunities(user)}
+                        >
                           <Eye className="w-3 h-3 md:w-4 md:h-4" />
                         </Button>
                         <Button 
@@ -389,62 +460,7 @@ const UsersManagement = () => {
 
                     </td>
                   </tr>
-                ) : (
-                  users.map((user: any) => (
-                    <tr key={user._id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="w-10 h-10">
-                            <AvatarFallback className="bg-gray-800 text-white font-semibold">
-                              {user.name ? user.name.split(' ').map(n => n[0]).join('') : 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-semibold text-sm text-black">{user.name || 'Unknown User'}</p>
-                            <p className="text-xs text-gray-600">{user.email || 'No email'}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        {getRoleBadge(user.role || 'User')}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {user.communityId ? (
-                          communities.find(c => c._id === user.communityId)?.name || `Community ID: ${user.communityId}`
-                        ) : (
-                          'Not assigned'
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        {getStatusBadge(user.status || 'Pending')}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="text-blue-600 hover:bg-blue-50"
-                            onClick={() => openRoleChangeModal(user)}
-                          >
-                            <UserPlus className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
           </div>
@@ -502,14 +518,47 @@ const UsersManagement = () => {
                   </label>
                   <select
                     value={requestedRole}
-                    onChange={(e) => setRequestedRole(e.target.value)}
+                    onChange={(e) => {
+                      setRequestedRole(e.target.value);
+                      if (e.target.value !== 'Moderator') {
+                        setSelectedModeratorCommunity('');
+                      }
+                    }}
                     className="w-full border border-gray-300 rounded-md p-2"
                   >
                     <option value="Manager">Manager</option>
+                    <option value="Moderator">Moderator</option>
                     <option value="Admin">Admin</option>
                     <option value="User">Resident</option>
                   </select>
                 </div>
+
+                {requestedRole === 'Moderator' && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Community *
+                    </label>
+                    {userCommunities.length > 0 ? (
+                      <select
+                        value={selectedModeratorCommunity}
+                        onChange={(e) => setSelectedModeratorCommunity(e.target.value)}
+                        className="w-full border border-gray-300 rounded-md p-2"
+                        required
+                      >
+                        <option value="">Select a community</option>
+                        {userCommunities.map((community: any) => (
+                          <option key={community._id} value={community._id}>
+                            {community.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        User has no participated communities. User must join a community first.
+                      </p>
+                    )}
+                  </div>
+                )}
                 
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Reason for change *
@@ -609,6 +658,52 @@ const UsersManagement = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* View Communities Modal */}
+      <Dialog open={showViewCommunitiesModal} onOpenChange={setShowViewCommunitiesModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {viewingUser?.name || 'User'}'s Participated Communities
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {viewingUserCommunities.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">
+                This user has not joined any communities yet.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {viewingUserCommunities.map((community: any) => (
+                  <Card key={community._id} className="border border-gray-300">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Building2 className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-black">{community.name}</h4>
+                          {community.location && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              {community.location.city && `${community.location.city}, `}
+                              {community.location.state}
+                            </p>
+                          )}
+                          {community.joinedAt && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Joined: {new Date(community.joinedAt).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
