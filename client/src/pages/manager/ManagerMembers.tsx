@@ -191,10 +191,10 @@ const ManagerMembers = () => {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center">
-              <Users className="h-8 w-8 text-blue-500" />
+              <Users className="h-8 w-8 text-gray-700" />
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">Total Members</p>
                 <p className="text-2xl font-bold">{stats.total}</p>
@@ -203,10 +203,10 @@ const ManagerMembers = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center">
-              <CheckCircle className="h-8 w-8 text-green-500" />
+              <CheckCircle className="h-8 w-8 text-green-600" />
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">Active</p>
                 <p className="text-2xl font-bold">{stats.active}</p>
@@ -227,10 +227,10 @@ const ManagerMembers = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center">
-              <XCircle className="h-8 w-8 text-red-500" />
+              <XCircle className="h-8 w-8 text-red-600" />
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">Rejected</p>
                 <p className="text-2xl font-bold">{stats.rejected}</p>
@@ -241,7 +241,7 @@ const ManagerMembers = () => {
       </div>
 
       {/* Search and Actions */}
-      <Card>
+      <Card className="bg-white border border-gray-200 shadow-sm">
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex-1">
@@ -266,7 +266,7 @@ const ManagerMembers = () => {
       </Card>
 
       {/* Members Table */}
-      <Card>
+      <Card className="bg-white border border-gray-200 shadow-sm">
         <CardHeader>
           <h3 className="text-lg font-semibold">Community Members</h3>
         </CardHeader>
@@ -391,7 +391,7 @@ const ManagerMembers = () => {
                         variant={pagination.page === i + 1 ? "default" : "outline"}
                         className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
                           pagination.page === i + 1
-                            ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
+                            ? 'z-10 bg-gray-900 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900'
                             : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
                         }`}
                       >
