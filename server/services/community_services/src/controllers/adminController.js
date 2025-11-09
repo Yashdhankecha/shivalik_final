@@ -1998,6 +1998,56 @@ const getCommunityManagers = async (req, res) => {
     }
 };
 
+// Remove user from community
+const removeUserFromCommunity = async (req, res) => {
+    try {
+        const { communityId, userId } = req.params;
+        
+        // Verify community exists and was created by current admin
+        const community = await CommunitiesModel.findOne({
+            _id: communityId,
+            createdBy: req.user._id,
+            isDeleted: false
+        });
+
+        if (!community) {
+            return res.status(404).send(response.toJson('Community not found or you do not have permission to modify it'));
+        }
+
+        // Check if user is the manager
+        if (community.managerId && community.managerId.toString() === userId) {
+            return res.status(400).send(response.toJson('Cannot remove manager from community. Please assign a new manager first.'));
+        }
+
+        // Check if user is a member
+        const isMember = community.members.some(
+            memberId => memberId.toString() === userId
+        );
+
+        if (!isMember) {
+            return res.status(400).send(response.toJson('User is not a member of this community'));
+        }
+
+        // Remove user from members array
+        community.members = community.members.filter(
+            memberId => memberId.toString() !== userId
+        );
+
+        // Save updated community
+        await community.save();
+
+        return res.status(200).send(response.toJson(
+            'User removed from community successfully'
+        ));
+
+    } catch (err) {
+        console.error('Error removing user from community:', err);
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
 module.exports = {
     getDashboardStats,
     getRecentActivities,
@@ -2025,7 +2075,8 @@ module.exports = {
     rejectPulse,
     assignCommunityManager,
     removeCommunityManager,
-    getCommunityManagers
+    getCommunityManagers,
+    removeUserFromCommunity
 };
 
 

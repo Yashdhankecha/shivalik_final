@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../../apis/admin';
 import { useToast } from '../../hooks/use-toast';
+import { formatDateToDDMMYYYY } from '../../utils/dateUtils';
 
 interface MarketplaceListing {
   _id: string;
@@ -286,7 +287,8 @@ const MarketplaceApprovals = () => {
                     </p>
                     {listing.reviewedBy && (
                       <p className="text-xs text-gray-600 mt-1">
-                        Reviewed by: {listing.reviewedBy.name} on {new Date(listing.reviewedAt || '').toLocaleDateString()}
+                        Reviewed by: {listing.reviewedBy.name} on {formatDateToDDMMYYYY(listing.reviewedAt || '')}
+
                       </p>
                     )}
                   </div>
@@ -296,7 +298,8 @@ const MarketplaceApprovals = () => {
                 {listing.status === 'approved' && listing.reviewedBy && (
                   <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
                     <p className="text-sm text-gray-700">
-                      Approved by: {listing.reviewedBy.name} on {new Date(listing.reviewedAt || '').toLocaleDateString()}
+                      Approved by: {listing.reviewedBy.name} on {formatDateToDDMMYYYY(listing.reviewedAt || '')}
+
                     </p>
                   </div>
                 )}
@@ -420,6 +423,7 @@ const MarketplaceApprovals = () => {
 };
 
 export default MarketplaceApprovals;
+
 
 
 

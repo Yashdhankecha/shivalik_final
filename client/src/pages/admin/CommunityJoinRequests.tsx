@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../../apis/admin';
 import { useToast } from '../../hooks/use-toast';
+import { formatDateToDDMMYYYY } from '../../utils/dateUtils';
 
 const CommunityJoinRequests = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,7 +33,7 @@ const CommunityJoinRequests = () => {
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      const response = await adminApi.getCommunityJoinRequests({
+      const response = await adminApi.getJoinRequests({
         page: pagination.page,
         limit: pagination.limit,
         search: searchTerm
@@ -110,7 +111,7 @@ const CommunityJoinRequests = () => {
 
   const handleApprove = async (requestId: string) => {
     try {
-      await adminApi.approveCommunityJoinRequest(requestId);
+      await adminApi.approveJoinRequest(requestId);
       toast({
         title: "Success",
         description: "Join request approved successfully"
@@ -137,7 +138,7 @@ const CommunityJoinRequests = () => {
     }
 
     try {
-      await adminApi.rejectCommunityJoinRequest(requestId, rejectionReason);
+      await adminApi.rejectJoinRequest(requestId, rejectionReason);
       toast({
         title: "Success",
         description: "Join request rejected successfully"
@@ -232,8 +233,8 @@ const CommunityJoinRequests = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <Avatar className="w-10 h-10">
-                            <AvatarFallback className="bg-gray-800 text-white font-semibold">
-                              {request.userId?.name ? request.userId.name.split(' ').map(n => n[0]).join('') : 'U'}
+                            <AvatarFallback className="bg-gray-800 text-white">
+                              {request.userId?.name?.substring(0, 2).toUpperCase() || 'U'}
                             </AvatarFallback>
                           </Avatar>
                           <div>
@@ -242,18 +243,26 @@ const CommunityJoinRequests = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {request.communityId?.name || 'Unknown Community'}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
-                        {request.message || 'No message'}
+                      <td className="px-6 py-4">
+                        <div>
+                          <p className="font-semibold text-sm text-black">{request.communityId?.name || 'Unknown Community'}</p>
+                          <p className="text-xs text-gray-600">{request.communityId?.location?.city || 'Location not specified'}</p>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        {getStatusBadge(request.status || 'Pending')}
+                        <p className="text-sm text-gray-700 max-w-xs truncate">
+                          {request.message || 'No message provided'}
+                        </p>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {request.createdAt ? new Date(request.createdAt).toLocaleDateString() : 'N/A'}
+                      <td className="px-6 py-4">
+                        {getStatusBadge(request.status)}
                       </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-500">
+                          {request.createdAt ? formatDateToDDMMYYYY(request.createdAt) : 'N/A'}
+                        </span>
+                      </td>
+
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           {request.status === 'Pending' ? (

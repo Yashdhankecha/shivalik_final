@@ -16,6 +16,7 @@ interface AuthContextType {
   login: (userData: User, token: string) => void;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
+  addUserRole?: (role: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -113,8 +114,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Add a method to add a role to the user
+  const addUserRole = (role: string) => {
+    if (user) {
+      const updatedUser = { ...user };
+      if (!updatedUser.userRoles) {
+        updatedUser.userRoles = [];
+      }
+      if (!updatedUser.userRoles.includes(role)) {
+        updatedUser.userRoles.push(role);
+      }
+      // Update the role field for backward compatibility if it's not already an admin role
+      if (role === 'Manager' && updatedUser.role !== 'Admin' && updatedUser.role !== 'SuperAdmin') {
+        updatedUser.role = 'Manager';
+      }
+      setUser(updatedUser);
+      localStorage.setItem('userInfo', JSON.stringify(updatedUser));
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateUser, addUserRole }}>
       {children}
     </AuthContext.Provider>
   );

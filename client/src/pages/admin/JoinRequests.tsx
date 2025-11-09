@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../../apis/admin';
 import { useToast } from '../../hooks/use-toast';
+import { formatDateToDDMMYYYY } from '../../utils/dateUtils';
 
 interface JoinRequest {
   _id: string;
@@ -291,7 +292,8 @@ const JoinRequests = () => {
                     </p>
                     {request.reviewedBy && (
                       <p className="text-xs text-red-600 mt-1">
-                        Reviewed by: {request.reviewedBy.name} on {new Date(request.reviewedAt || '').toLocaleDateString()}
+                        Reviewed by: {request.reviewedBy.name} on {formatDateToDDMMYYYY(request.reviewedAt || '')}
+
                       </p>
                     )}
                   </div>
@@ -301,7 +303,8 @@ const JoinRequests = () => {
                 {request.status === 'Approved' && request.reviewedBy && (
                   <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
                     <p className="text-sm text-green-700">
-                      Approved by: {request.reviewedBy.name} on {new Date(request.reviewedAt || '').toLocaleDateString()}
+                      Approved by: {request.reviewedBy.name} on {formatDateToDDMMYYYY(request.reviewedAt || '')}
+
                     </p>
                   </div>
                 )}

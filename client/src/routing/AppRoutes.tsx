@@ -35,8 +35,6 @@ import ManagerJoinRequests from '../pages/manager/ManagerJoinRequests';
 import ManagerMembers from '../pages/manager/ManagerMembers';
 import ManagerEvents from '../pages/manager/ManagerEvents';
 import ManagerPosts from '../pages/manager/ManagerPosts';
-import ManagerReports from '../pages/manager/ManagerReports';
-import ManagerSettings from '../pages/manager/ManagerSettings';
 
 /* current user roles */
 const getUserRoles = (): string[] => {
@@ -59,6 +57,7 @@ const getUserRoles = (): string[] => {
 const ROLE_DEFAULTS: Record<string, string> = {
   SuperAdmin: '/admin/users',
   Admin: '/admin/dashboard',
+  Manager: '/manager/dashboard'
 };
 
 /* ────── Main router ────── */
@@ -105,10 +104,6 @@ export const AppRoutes = () => {
         <Route path=":communityId/events" element={<ManagerEvents />} />
         <Route path="posts" element={<ManagerPosts />} />
         <Route path=":communityId/posts" element={<ManagerPosts />} />
-        <Route path="reports" element={<ManagerReports />} />
-        <Route path=":communityId/reports" element={<ManagerReports />} />
-        <Route path="settings" element={<ManagerSettings />} />
-        <Route path=":communityId/settings" element={<ManagerSettings />} />
       </Route>
 
       {/* PUBLIC COMMUNITY EVENTS PAGE */}

@@ -1,4 +1,5 @@
 import { Event } from '../../types/CommunityTypes';
+import { formatDateToDDMMYYYY } from '../../utils/dateUtils';
 
 interface RecentEventsProps {
     events: Event[];
@@ -8,12 +9,7 @@ interface RecentEventsProps {
 
 const RecentEvents = ({ events, loading, onViewAll }: RecentEventsProps) => {
     const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric', 
-            year: 'numeric' 
-        });
+        return formatDateToDDMMYYYY(dateString);
     };
 
     if (loading) {

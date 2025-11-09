@@ -38,11 +38,18 @@ const ManagerPanel = () => {
       return;
     }
     
-    const hasManagerRole = user?.userRoles?.includes('Manager') || 
+    // Check for direct manager role or admin role
+    const hasDirectManagerRole = user?.userRoles?.includes('Manager') || 
                           user?.role === 'Manager' ||
                           (Array.isArray(user?.userRoles) && user.userRoles.includes('Manager'));
     
-    if (!hasManagerRole) {
+    const isAdminRole = user?.userRoles?.includes('Admin') || 
+                       user?.role === 'Admin' ||
+                       user?.userRoles?.includes('SuperAdmin') ||
+                       user?.role === 'SuperAdmin';
+    
+    // Allow access if user has direct manager role or admin role
+    if (!hasDirectManagerRole && !isAdminRole) {
       navigate('/');
     }
   }, [user, navigate]);

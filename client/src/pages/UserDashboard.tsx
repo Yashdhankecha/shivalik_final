@@ -33,6 +33,7 @@ const UserDashboard = () => {
   const [myCommunities, setMyCommunities] = useState<CommunityType[]>([]);
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [nonMemberCommunities, setNonMemberCommunities] = useState<CommunityType[]>([]);
 
   // Prevent admin users from accessing user dashboard
   useEffect(() => {
@@ -50,11 +51,33 @@ const UserDashboard = () => {
 
   useEffect(() => {
     fetchCommunities();
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated && allCommunities.length > 0) {
       fetchJoinRequests();
+      // Update non-member communities when auth status changes
+      const updateNonMemberCommunities = async () => {
+        const nonMemberComms = [];
+        for (const community of allCommunities) {
+          try {
+            const membershipResponse = await communityApi.checkCommunityMembership(community._id);
+            const isMember = membershipResponse.result?.isMember || false;
+            if (!isMember) {
+              nonMemberComms.push(community);
+            }
+          } catch (error) {
+            // If there's an error checking membership, include the community by default
+            console.error(`Error checking membership for community ${community._id}:`, error);
+            nonMemberComms.push(community);
+          }
+        }
+        setNonMemberCommunities(nonMemberComms);
+      };
+      updateNonMemberCommunities();
+    } else if (!isAuthenticated) {
+      // For non-authenticated users, show all communities
+      setNonMemberCommunities(allCommunities);
     }
   }, [isAuthenticated, allCommunities]);
 
@@ -99,6 +122,28 @@ const UserDashboard = () => {
       
       console.log(`Fetched ${allCommunitiesData.length} communities`);
       setAllCommunities(allCommunitiesData);
+      
+      // Filter out communities the user is already a member of
+      if (isAuthenticated) {
+        const nonMemberComms = [];
+        for (const community of allCommunitiesData) {
+          try {
+            const membershipResponse = await communityApi.checkCommunityMembership(community._id);
+            const isMember = membershipResponse.result?.isMember || false;
+            if (!isMember) {
+              nonMemberComms.push(community);
+            }
+          } catch (error) {
+            // If there's an error checking membership, include the community by default
+            console.error(`Error checking membership for community ${community._id}:`, error);
+            nonMemberComms.push(community);
+          }
+        }
+        setNonMemberCommunities(nonMemberComms);
+      } else {
+        // For non-authenticated users, show all communities
+        setNonMemberCommunities(allCommunitiesData);
+      }
     } catch (error: any) {
       console.error('Error fetching communities:', error);
       showMessage(error.message || 'Failed to load communities', 'error');
@@ -181,7 +226,7 @@ const UserDashboard = () => {
     return colors[index % colors.length];
   };
 
-  const filteredCommunities = allCommunities.filter(community =>
+  const filteredCommunities = nonMemberCommunities.filter(community =>
     community.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     community.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );

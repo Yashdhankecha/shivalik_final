@@ -106,4 +106,7 @@ router.post('/communities/:communityId/managers',
 router.get('/communities/:communityId/managers', auth.verifyToken, auth.verifyAdmin, adminController.getCommunityManagers);
 router.delete('/communities/:communityId/managers/:managerId', auth.verifyToken, auth.verifyAdmin, adminController.removeCommunityManager);
 
+// Remove user from community
+router.delete('/communities/:communityId/members/:userId', auth.verifyToken, auth.verifyAdmin, adminController.removeUserFromCommunity);
+
 module.exports = router;

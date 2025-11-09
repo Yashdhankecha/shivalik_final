@@ -18,6 +18,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import { Plus, MessageCircle, ShoppingBag, Upload, X, Send, TrendingUp } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
+import { formatDateToDDMMYYYY } from '../../../utils/dateUtils';
 
 interface Listing {
   _id: string;
@@ -202,9 +203,9 @@ const MarketplaceTab = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-black">Product Marketplace</h2>
+    <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Product Marketplace</h2>
         {user && (
           <Dialog open={showDialog} onOpenChange={setShowDialog}>
             <DialogTrigger asChild>
@@ -289,12 +290,12 @@ const MarketplaceTab = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'buyer' | 'seller')}>
-        <TabsList className="grid w-full max-w-md grid-cols-2 bg-gray-100">
-          <TabsTrigger value="buyer" className="data-[state=active]:bg-black data-[state=active]:text-white">
+        <TabsList className="grid w-full max-w-md grid-cols-2 bg-gray-100 rounded-lg p-1">
+          <TabsTrigger value="buyer" className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-md transition-all">
             <ShoppingBag className="w-4 h-4 mr-2" />
             Buy ({buyListings.length})
           </TabsTrigger>
-          <TabsTrigger value="seller" className="data-[state=active]:bg-black data-[state=active]:text-white">
+          <TabsTrigger value="seller" className="data-[state=active]:bg-gray-900 data-[state=active]:text-white rounded-md transition-all">
             <TrendingUp className="w-4 h-4 mr-2" />
             Sell ({sellerListings.length})
           </TabsTrigger>
@@ -302,41 +303,42 @@ const MarketplaceTab = () => {
 
         <TabsContent value="buyer" className="mt-6">
           {buyListings.length === 0 ? (
-            <Card className="p-12 text-center bg-gray-50 border-2 border-gray-200">
-              <ShoppingBag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-black mb-2">No Products Available</h3>
+            <Card className="p-8 sm:p-12 text-center bg-gray-50 border-2 border-gray-200 rounded-xl">
+              <ShoppingBag className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No Products Available</h3>
               <p className="text-gray-600">No products are currently listed in this community</p>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {buyListings.map((listing) => (
-                <Card key={listing._id} className="hover:shadow-xl transition-all duration-300 border-2 hover:border-gray-300 overflow-hidden">
+                <Card key={listing._id} className="hover:shadow-xl transition-all duration-300 border border-gray-200 rounded-xl overflow-hidden group bg-white">
                   {listing.attachment && (
-                    <div className="relative h-48 overflow-hidden">
-                      <img src={listing.attachment} alt={listing.title} className="w-full h-full object-cover" />
-                      <Badge className="absolute top-2 right-2 bg-black text-white">For Sale</Badge>
+                    <div className="relative h-48 sm:h-56 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+                      <img src={listing.attachment} alt={listing.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                      <Badge className="absolute top-3 right-3 bg-gray-900 text-white border-0 shadow-lg">For Sale</Badge>
                     </div>
                   )}
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="text-lg font-bold text-black line-clamp-1 flex-1">{listing.title}</h3>
-                      <span className="text-xl font-bold text-black ml-2">₹{listing.price.toLocaleString()}</span>
+                  <CardContent className="p-5 sm:p-6">
+                    <div className="flex items-start justify-between mb-3 gap-2">
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 line-clamp-2 flex-1 min-h-[3rem]">{listing.title}</h3>
+                      <span className="text-xl sm:text-2xl font-bold text-gray-900 whitespace-nowrap">₹{listing.price.toLocaleString()}</span>
                     </div>
-                    <p className="text-gray-700 text-sm mb-4 line-clamp-2">{listing.description}</p>
-                    <div className="flex items-center justify-between pt-3 border-t">
+                    <p className="text-sm sm:text-base text-gray-700 mb-4 line-clamp-2 min-h-[2.5rem]">{listing.description}</p>
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                       <div className="flex items-center gap-2">
-                        <Avatar className="w-8 h-8">
-                          <AvatarFallback className="bg-black text-white">{listing.userId.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                        <Avatar className="w-8 h-8 border border-gray-200">
+                          <AvatarFallback className="bg-gray-900 text-white text-xs">{listing.userId.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <span className="text-sm text-gray-600">{listing.userId.name}</span>
+                        <span className="text-sm text-gray-600 font-medium">{listing.userId.name}</span>
                       </div>
                       {user && listing.userId._id !== user.id && (
                         <Button
                           size="sm"
                           onClick={() => handleStartChat(listing)}
-                          className="bg-black hover:bg-gray-800 text-white"
+                          className="bg-gray-900 hover:bg-gray-800 text-white"
                         >
-                          <MessageCircle className="w-4 h-4 mr-1" />
+                          <MessageCircle className="w-4 h-4 mr-1.5" />
                           Chat
                         </Button>
                       )}
@@ -350,47 +352,48 @@ const MarketplaceTab = () => {
 
         <TabsContent value="seller" className="mt-6">
           {sellerListings.length === 0 ? (
-            <Card className="p-12 text-center bg-gray-50 border-2 border-gray-200">
-              <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-black mb-2">No Products Listed</h3>
+            <Card className="p-8 sm:p-12 text-center bg-gray-50 border-2 border-gray-200 rounded-xl">
+              <TrendingUp className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No Products Listed</h3>
               <p className="text-gray-600 mb-4">Create your first product listing to start selling</p>
               {user && (
-                <Button onClick={() => setShowDialog(true)} className="bg-black hover:bg-gray-800">
+                <Button onClick={() => setShowDialog(true)} className="bg-gray-900 hover:bg-gray-800 text-white">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Product Listing
                 </Button>
               )}
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {sellerListings.map((listing) => (
-                <Card key={listing._id} className="hover:shadow-xl transition-all duration-300 border-2 hover:border-gray-300 overflow-hidden">
+                <Card key={listing._id} className="hover:shadow-xl transition-all duration-300 border border-gray-200 rounded-xl overflow-hidden group bg-white">
                   {listing.attachment && (
-                    <div className="relative h-48 overflow-hidden">
-                      <img src={listing.attachment} alt={listing.title} className="w-full h-full object-cover" />
-                      <Badge className="absolute top-2 right-2 bg-black text-white">For Sale</Badge>
+                    <div className="relative h-48 sm:h-56 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+                      <img src={listing.attachment} alt={listing.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                      <Badge className="absolute top-3 right-3 bg-gray-900 text-white border-0 shadow-lg">For Sale</Badge>
                     </div>
                   )}
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="text-lg font-bold text-black line-clamp-1 flex-1">{listing.title}</h3>
-                      <span className="text-xl font-bold text-black ml-2">₹{listing.price.toLocaleString()}</span>
+                  <CardContent className="p-5 sm:p-6">
+                    <div className="flex items-start justify-between mb-3 gap-2">
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 line-clamp-2 flex-1 min-h-[3rem]">{listing.title}</h3>
+                      <span className="text-xl sm:text-2xl font-bold text-gray-900 whitespace-nowrap">₹{listing.price.toLocaleString()}</span>
                     </div>
-                    <p className="text-gray-700 text-sm mb-4 line-clamp-2">{listing.description}</p>
-                    <div className="flex items-center justify-between pt-3 border-t">
+                    <p className="text-sm sm:text-base text-gray-700 mb-4 line-clamp-2 min-h-[2.5rem]">{listing.description}</p>
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                       <div className="flex items-center gap-2">
-                        <Avatar className="w-8 h-8">
-                          <AvatarFallback className="bg-black text-white">{listing.userId.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                        <Avatar className="w-8 h-8 border border-gray-200">
+                          <AvatarFallback className="bg-gray-900 text-white text-xs">{listing.userId.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <span className="text-sm text-gray-600">{listing.userId.name}</span>
+                        <span className="text-sm text-gray-600 font-medium">{listing.userId.name}</span>
                       </div>
                       {user && listing.userId._id !== user.id && (
                         <Button
                           size="sm"
                           onClick={() => handleStartChat(listing)}
-                          className="bg-black hover:bg-gray-800 text-white"
+                          className="bg-gray-900 hover:bg-gray-800 text-white"
                         >
-                          <MessageCircle className="w-4 h-4 mr-1" />
+                          <MessageCircle className="w-4 h-4 mr-1.5" />
                           Chat
                         </Button>
                       )}
@@ -405,52 +408,86 @@ const MarketplaceTab = () => {
 
       {/* Chat Dialog */}
       <Dialog open={showChatDialog} onOpenChange={setShowChatDialog}>
-        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <MessageCircle className="w-5 h-5" />
-              Chat - {selectedListing?.title}
+        <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col p-0">
+          <DialogHeader className="px-6 py-4 border-b border-gray-200">
+            <DialogTitle className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center">
+                <MessageCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-gray-900">{selectedListing?.title}</p>
+                <p className="text-sm text-gray-600 font-normal">Chat with seller</p>
+              </div>
             </DialogTitle>
           </DialogHeader>
           {chat && (
-            <div className="flex-1 overflow-y-auto space-y-4 mb-4 p-4 bg-gray-50 rounded-lg">
+            <div className="flex-1 overflow-y-auto space-y-4 mb-4 p-6 bg-gray-50 min-h-[400px]">
               {chat.messages.length === 0 ? (
-                <p className="text-center text-gray-500">No messages yet. Start the conversation!</p>
+                <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                  <MessageCircle className="w-12 h-12 text-gray-400 mb-3" />
+                  <p className="text-gray-500 font-medium">No messages yet</p>
+                  <p className="text-sm text-gray-400 mt-1">Start the conversation!</p>
+                </div>
               ) : (
                 chat.messages.map((msg, idx) => (
                   <div
                     key={idx}
                     className={`flex ${msg.senderId._id === user?.id ? 'justify-end' : 'justify-start'}`}
                   >
-                    <div
-                      className={`max-w-[70%] rounded-lg p-3 ${
-                        msg.senderId._id === user?.id
-                          ? 'bg-black text-white'
-                          : 'bg-white text-black border border-gray-200'
-                      }`}
-                    >
-                      <p className="text-sm font-semibold mb-1">{msg.senderId.name}</p>
-                      <p>{msg.text}</p>
-                      <p className="text-xs opacity-70 mt-1">
-                        {new Date(msg.timestamp).toLocaleTimeString()}
-                      </p>
+                    <div className="flex items-end gap-2 max-w-[75%]">
+                      {msg.senderId._id !== user?.id && (
+                        <Avatar className="w-8 h-8 flex-shrink-0 border border-gray-200">
+                          <AvatarFallback className="bg-gray-900 text-white text-xs">
+                            {msg.senderId.name.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      <div
+                        className={`rounded-2xl px-4 py-3 shadow-sm ${
+                          msg.senderId._id === user?.id
+                            ? 'bg-gray-900 text-white rounded-br-sm'
+                            : 'bg-white text-gray-900 border border-gray-200 rounded-bl-sm'
+                        }`}
+                      >
+                        {msg.senderId._id !== user?.id && (
+                          <p className="text-xs font-semibold mb-1.5 opacity-90">{msg.senderId.name}</p>
+                        )}
+                        <p className="text-sm leading-relaxed">{msg.text}</p>
+                        <p className={`text-xs mt-1.5 ${msg.senderId._id === user?.id ? 'text-gray-300' : 'text-gray-500'}`}>
+                          {new Date(msg.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      {msg.senderId._id === user?.id && (
+                        <Avatar className="w-8 h-8 flex-shrink-0 border border-gray-200">
+                          <AvatarFallback className="bg-gray-900 text-white text-xs">
+                            {msg.senderId.name.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
                     </div>
                   </div>
                 ))
               )}
             </div>
           )}
-          <div className="flex gap-2">
-            <Input
-              value={messageText}
-              onChange={(e) => setMessageText(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder="Type a message..."
-              className="flex-1"
-            />
-            <Button onClick={handleSendMessage} className="bg-black hover:bg-gray-800">
-              <Send className="w-4 h-4" />
-            </Button>
+          <div className="px-6 py-4 border-t border-gray-200 bg-white rounded-b-lg">
+            <div className="flex gap-3">
+              <Input
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                placeholder="Type your message..."
+                className="flex-1 border-gray-300 focus:border-gray-900 focus:ring-gray-900"
+              />
+              <Button 
+                onClick={handleSendMessage} 
+                disabled={!messageText.trim()}
+                className="bg-gray-900 hover:bg-gray-800 text-white px-6"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Send
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

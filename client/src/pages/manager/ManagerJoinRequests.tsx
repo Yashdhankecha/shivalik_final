@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { managerApi } from '../../apis/manager';
 import { useToast } from '../../hooks/use-toast';
+import { formatDateToDDMMYYYY } from '../../utils/dateUtils';
 
 const ManagerJoinRequests = () => {
   const { communityId: urlCommunityId } = useParams<{ communityId?: string }>();
@@ -355,7 +356,8 @@ const ManagerJoinRequests = () => {
                         {getStatusBadge(request.status)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(request.createdAt).toLocaleDateString()}
+                        {formatDateToDDMMYYYY(request.createdAt)}
+
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
                         <div className="max-w-xs truncate">

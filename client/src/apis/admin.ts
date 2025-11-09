@@ -302,6 +302,12 @@ export const adminApi = {
     
     const response = await apiClient.get(`/api/v1/admin/communities/${communityId}/managers?${queryParams.toString()}`);
     return response.data;
+  },
+
+  // Remove user from community
+  removeUserFromCommunity: async (communityId: string, userId: string) => {
+    const response = await apiClient.delete(`/api/v1/admin/communities/${communityId}/members/${userId}`);
+    return response.data;
   }
 };
 

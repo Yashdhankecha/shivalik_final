@@ -18,7 +18,7 @@ export const PrivateRoute = ({ children, requiredRole }: PrivateRouteProps) => {
   const authToken = localStorage.getItem('auth_token');
   const isAdminToken = authToken && authToken.startsWith('admin-token');
   const isAdminUser = user?.role === 'Admin' || user?.role === 'SuperAdmin' || isAdminToken;
-  const isManagerUser = user?.role === 'Manager';
+  const isManagerUser = user?.role === 'Manager' || (Array.isArray(user?.userRoles) && user.userRoles.includes('Manager'));
   
   // Allow admin users to access admin routes
   if (requiredRole && requiredRole === 'admin' && isAdminUser) {

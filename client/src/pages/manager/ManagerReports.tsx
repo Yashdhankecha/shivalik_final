@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { managerApi } from '../../apis/manager';
 import { useToast } from '../../hooks/use-toast';
+import { formatDateToDDMMYYYY } from '../../utils/dateUtils';
 
 const ManagerReports = () => {
   const { communityId: urlCommunityId } = useParams<{ communityId?: string }>();
@@ -252,7 +253,8 @@ const ManagerReports = () => {
                             {report.createdBy?.name || 'Unknown User'}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {new Date(report.createdAt).toLocaleDateString()}
+                            {formatDateToDDMMYYYY(report.createdAt)}
+
                           </p>
                         </div>
                       </div>

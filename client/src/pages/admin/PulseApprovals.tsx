@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from '../../components/ui/dialog';
 import {
   Select,
@@ -33,6 +34,7 @@ import {
   Mail,
   Building2
 } from 'lucide-react';
+import { formatDateToDDMMYYYY } from '../../utils/dateUtils';
 
 interface Pulse {
   _id: string;
@@ -101,7 +103,7 @@ const PulseApprovals = () => {
         page: pagination.page,
         limit: pagination.limit,
         search: searchTerm,
-        status: statusFilter
+        status: statusFilter === 'all' ? '' : statusFilter
       });
       
       const pulsesData = response.result?.pulses || response.data?.pulses || [];
@@ -209,7 +211,7 @@ const PulseApprovals = () => {
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="approved">Approved</SelectItem>
               <SelectItem value="rejected">Rejected</SelectItem>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -221,7 +223,7 @@ const PulseApprovals = () => {
           <Clock className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-gray-900 mb-2">No Pulses Found</h3>
           <p className="text-gray-600">
-            {searchTerm || statusFilter !== 'pending' 
+            {searchTerm || (statusFilter !== 'pending' && statusFilter !== 'all')
               ? 'No pulses match your search criteria' 
               : 'No pulses are currently pending approval'}
           </p>
@@ -281,7 +283,8 @@ const PulseApprovals = () => {
                 {pulse.status !== 'pending' && (
                   <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
                     <p className="text-sm text-gray-700">
-                      {pulse.status === 'approved' ? 'Approved' : 'Rejected'} on {new Date(pulse.createdAt).toLocaleDateString()}
+                      {pulse.status === 'approved' ? 'Approved' : 'Rejected'} on {formatDateToDDMMYYYY(pulse.createdAt)}
+
                     </p>
                   </div>
                 )}
@@ -291,15 +294,14 @@ const PulseApprovals = () => {
                   <div className="mt-4 flex flex-col sm:flex-row gap-3">
                     <Button
                       onClick={() => handleApprove(pulse._id)}
-                      className="bg-black hover:bg-gray-800 text-white flex-1"
+                      className="bg-green-600 hover:bg-green-700 text-white flex-1"
                     >
                       <Check className="w-4 h-4 mr-2" />
-                      Approve
+                      Accept
                     </Button>
                     <Button
                       onClick={() => openRejectModal(pulse)}
-                      variant="outline"
-                      className="flex-1 border-gray-300"
+                      className="bg-red-600 hover:bg-red-700 text-white flex-1"
                     >
                       <X className="w-4 h-4 mr-2" />
                       Reject
@@ -344,6 +346,9 @@ const PulseApprovals = () => {
         <DialogContent className="max-w-lg sm:max-w-xl">
           <DialogHeader>
             <DialogTitle className="text-xl">Reject Pulse</DialogTitle>
+            <DialogDescription className="sr-only">
+              Reject pulse form with reason
+            </DialogDescription>
           </DialogHeader>
           {selectedPulse && (
             <div className="space-y-4 mt-4">

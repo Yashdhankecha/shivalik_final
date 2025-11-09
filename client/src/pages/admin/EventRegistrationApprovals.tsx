@@ -6,6 +6,7 @@ import { Badge } from '../../components/ui/badge';
 import { Search, CheckCircle, XCircle, Clock, Calendar, User, MapPin } from 'lucide-react';
 import { adminApi } from '../../apis/admin';
 import { useToast } from '../../hooks/use-toast';
+import { formatDateToDDMMYYYY } from '../../utils/dateUtils';
 
 const EventRegistrationApprovals = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -193,8 +194,9 @@ const EventRegistrationApprovals = () => {
                               <Calendar className="w-4 h-4" />
                               <span>
                                 {registration.eventId?.eventDate 
-                                  ? new Date(registration.eventId.eventDate).toLocaleDateString() 
-                                  : 'Date not set'}
+                                  ? formatDateToDDMMYYYY(registration.eventId.eventDate) 
+                                  : 'N/A'}
+
                               </span>
                             </div>
                             <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">

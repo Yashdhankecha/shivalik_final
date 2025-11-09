@@ -22,8 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../ui/select';
-import { Plus, Heart, MessageCircle, Share2, Upload, X, TrendingUp, Clock, Image as ImageIcon, Copy, Check } from 'lucide-react';
+import { Plus, Heart, Share2, Upload, X, TrendingUp, Clock, Image as ImageIcon, Copy, Check } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
+import { formatDateToDDMMYYYY } from '../../../utils/dateUtils';
 
 interface Pulse {
   _id: string;
@@ -54,7 +55,6 @@ const PulsesTab = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [likedPulses, setLikedPulses] = useState<Set<string>>(new Set());
   const [copiedPulseId, setCopiedPulseId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
@@ -71,18 +71,6 @@ const PulsesTab = () => {
     }
   }, [communityId, page]);
 
-  useEffect(() => {
-    // Initialize liked pulses
-    if (user && pulses.length > 0) {
-      const liked = new Set<string>();
-      pulses.forEach(pulse => {
-        if (pulse.likes.includes(user.id)) {
-          liked.add(pulse._id);
-        }
-      });
-      setLikedPulses(liked);
-    }
-  }, [pulses, user]);
 
   const fetchPulses = async () => {
     try {
@@ -139,19 +127,6 @@ const PulsesTab = () => {
     }
   };
 
-  const handleLike = async (pulseId: string) => {
-    if (!user) {
-      showMessage('Please login to like pulses', 'error');
-      return;
-    }
-    
-    try {
-      await communityApi.toggleLikePulse(pulseId);
-      fetchPulses();
-    } catch (error: any) {
-      showMessage(error.message || 'Failed to like pulse', 'error');
-    }
-  };
 
   const handleShare = async (pulse: Pulse) => {
     const pulseUrl = `${window.location.origin}/community/${communityId}?pulse=${pulse._id}`;
@@ -208,94 +183,6 @@ const PulsesTab = () => {
     <div className="space-y-6 p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h2 className="text-2xl font-bold text-gray-900">Community Pulses</h2>
-        {user && (
-          <Dialog open={showDialog} onOpenChange={setShowDialog}>
-            <DialogTrigger asChild>
-              <Button className="bg-black hover:bg-gray-800 text-white shadow-sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Pulse
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-xl">Create New Pulse</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 mt-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Pulse Title *</label>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="What's happening in your community?"
-                    className="py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Description *</label>
-                  <Textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Share details about what's happening..."
-                    rows={4}
-                    className="resize-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Territory</label>
-                  <Select value={formData.territory} onValueChange={(value) => setFormData({ ...formData, territory: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select territory" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="general">General</SelectItem>
-                      <SelectItem value="news">News</SelectItem>
-                      <SelectItem value="discussion">Discussion</SelectItem>
-                      <SelectItem value="announcement">Announcement</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Image</label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                    {preview ? (
-                      <div className="relative">
-                        <img src={preview} alt="Preview" className="max-h-48 mx-auto rounded-lg" />
-                        <button
-                          onClick={() => {
-                            setPreview(null);
-                            setFormData({ ...formData, attachment: null });
-                          }}
-                          className="absolute top-2 right-2 bg-black text-white rounded-full p-1 hover:bg-gray-800"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="cursor-pointer">
-                        <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                        <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                          className="hidden"
-                        />
-                      </label>
-                    )}
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row justify-end gap-3">
-                  <Button variant="outline" onClick={() => setShowDialog(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleCreatePulse} className="bg-black hover:bg-gray-800">
-                    Post Pulse
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
       </div>
 
       {pulses.length === 0 ? (
@@ -303,12 +190,6 @@ const PulsesTab = () => {
           <TrendingUp className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-gray-900 mb-2">No Pulses Yet</h3>
           <p className="text-gray-600 mb-4">Be the first to share what's happening in your community!</p>
-          {user && (
-            <Button onClick={() => setShowDialog(true)} className="bg-black hover:bg-gray-800">
-              <Plus className="w-4 h-4 mr-2" />
-              Create Your First Pulse
-            </Button>
-          )}
         </Card>
       ) : (
         <div className="space-y-4">
@@ -325,7 +206,7 @@ const PulsesTab = () => {
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-2">
                       <h3 className="font-bold text-gray-900">{pulse.userId.name}</h3>
                       <span className="text-xs text-gray-500">
-                        {new Date(pulse.createdAt).toLocaleDateString()}
+                        {formatDateToDDMMYYYY(pulse.createdAt)}
                       </span>
                       {pulse.status !== 'approved' && (
                         <Badge variant="secondary" className="text-xs">
@@ -351,35 +232,20 @@ const PulsesTab = () => {
                       </div>
                     )}
                     
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <button
-                          onClick={() => handleLike(pulse._id)}
-                          className={`flex items-center gap-1 text-sm ${
-                            likedPulses.has(pulse._id) 
-                              ? 'text-red-500' 
-                              : 'text-gray-500 hover:text-red-500'
-                          }`}
-                        >
-                          <Heart 
-                            className={`w-4 h-4 ${likedPulses.has(pulse._id) ? 'fill-current' : ''}`} 
-                          />
-                          <span>{pulse.likes.length}</span>
-                        </button>
-                        <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-blue-500">
-                          <MessageCircle className="w-4 h-4" />
-                          <span>{pulse.comments.length}</span>
-                        </button>
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-1 text-sm text-gray-600">
+                        <Heart className="w-4 h-4 text-red-500" />
+                        <span className="font-medium">{pulse.likes?.length || 0} likes</span>
                       </div>
                       
                       <button
                         onClick={() => handleShare(pulse)}
-                        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+                        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
                       >
                         {copiedPulseId === pulse._id ? (
                           <>
-                            <Check className="w-4 h-4" />
-                            <span>Copied!</span>
+                            <Check className="w-4 h-4 text-green-600" />
+                            <span className="text-green-600">Copied!</span>
                           </>
                         ) : (
                           <>

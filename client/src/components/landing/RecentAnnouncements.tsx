@@ -1,4 +1,5 @@
 import { Announcement } from '../../types/CommunityTypes';
+import { formatDateToDDMMYYYY } from '../../utils/dateUtils';
 
 interface RecentAnnouncementsProps {
     announcements: Announcement[];
@@ -7,12 +8,7 @@ interface RecentAnnouncementsProps {
 
 const RecentAnnouncements = ({ announcements, loading }: RecentAnnouncementsProps) => {
     const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric', 
-            year: 'numeric' 
-        });
+        return formatDateToDDMMYYYY(dateString);
     };
 
     const getPriorityColor = (priority: string) => {

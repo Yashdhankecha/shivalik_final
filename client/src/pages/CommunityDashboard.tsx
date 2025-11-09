@@ -33,6 +33,7 @@ import PulsesTab from '../components/community/Pulses/PulsesTab';
 import EventsTab from '../components/community/Events/EventsTab';
 import MarketplaceTab from '../components/community/Marketplace/MarketplaceTab';
 import DirectoryTab from '../components/community/Directory/DirectoryTab';
+import { formatDateToDDMMYYYY } from '../utils/dateUtils';
 
 interface Pulse {
   _id: string;
@@ -232,6 +233,8 @@ const CommunityDashboard = () => {
       await communityApi.leaveCommunity(communityId!);
       showMessage('You have left the community', 'success');
       setJoinStatus('not-joined');
+      // Refresh community data to update member count
+      fetchCommunityData();
     } catch (error: any) {
       showMessage(error.message || 'Failed to leave community', 'error');
     }
@@ -277,8 +280,8 @@ const CommunityDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      {/* Top Navigation Bar */}
+      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
@@ -286,30 +289,10 @@ const CommunityDashboard = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => navigate('/')}
-                className="p-2"
+                className="p-2 hover:bg-gray-100"
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <div className="flex items-center gap-3">
-                {community.logo ? (
-                  <img 
-                    src={community.logo} 
-                    alt={community.name} 
-                    className="w-10 h-10 rounded-lg object-cover border border-gray-200"
-                  />
-                ) : (
-                  <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 rounded-lg flex items-center justify-center">
-                    <Building2 className="w-5 h-5 text-white" />
-                  </div>
-                )}
-                <div>
-                  <h1 className="text-lg font-bold text-gray-900">{community.name}</h1>
-                  <p className="text-xs text-gray-600 flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    {community.location?.city || 'Location not specified'}
-                  </p>
-                </div>
-              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -341,7 +324,7 @@ const CommunityDashboard = () => {
               ) : (
                 <Button 
                   onClick={handleJoinCommunity}
-                  className="bg-black hover:bg-gray-800"
+                  className="bg-black hover:bg-gray-800 text-white"
                 >
                   <Users className="w-4 h-4 mr-2" />
                   Join Community
@@ -366,27 +349,146 @@ const CommunityDashboard = () => {
         </div>
       )}
 
-      {/* Community Info Bar */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-gray-500" />
-                <span className="text-sm text-gray-600">
-                  {community.memberCount || 0} members
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-gray-500" />
-                <span className="text-sm text-gray-600">
-                  Created {new Date(community.createdAt).toLocaleDateString()}
-                </span>
+      {/* Hero Banner Section with Large Image */}
+      <div className="relative w-full">
+        {/* Banner Image */}
+        <div className="relative h-[400px] md:h-[500px] lg:h-[600px] w-full overflow-hidden bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900">
+          {community.bannerImage ? (
+            <img 
+              src={community.bannerImage} 
+              alt={community.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900 flex items-center justify-center">
+              <Building2 className="w-24 h-24 text-white opacity-50" />
+            </div>
+          )}
+          
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+          
+          {/* Content Overlay */}
+          <div className="absolute inset-0 flex items-end">
+            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 pb-8 md:pb-12">
+              <div className="flex flex-col md:flex-row md:items-end gap-6">
+                {/* Community Logo */}
+                <div className="flex-shrink-0">
+                  {community.logo ? (
+                    <div className="w-24 h-24 md:w-32 md:h-32 rounded-xl overflow-hidden border-4 border-white shadow-2xl">
+                      <img 
+                        src={community.logo} 
+                        alt={community.name} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl flex items-center justify-center border-4 border-white shadow-2xl">
+                      <Building2 className="w-12 h-12 md:w-16 md:h-16 text-white" />
+                    </div>
+                  )}
+                </div>
+                
+                {/* Community Info */}
+                <div className="flex-1 text-white">
+                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 drop-shadow-lg">
+                    {community.name}
+                  </h1>
+                  
+                  {/* Location - Large and Prominent */}
+                  <div className="flex items-center gap-2 mb-4">
+                    <MapPin className="w-5 h-5 md:w-6 md:h-6 text-white flex-shrink-0" />
+                    <div className="flex flex-col">
+                      <p className="text-lg md:text-xl lg:text-2xl font-semibold text-white drop-shadow-md">
+                        {community.location?.city && community.location?.state 
+                          ? `${community.location.city}, ${community.location.state}`
+                          : community.location?.city 
+                          ? community.location.city
+                          : community.location?.state
+                          ? community.location.state
+                          : 'Location not specified'}
+                      </p>
+                      {community.location?.address && (
+                        <p className="text-sm md:text-base text-gray-200 mt-1">
+                          {community.location.address}
+                        </p>
+                      )}
+                      {community.location?.zipCode && (
+                        <p className="text-sm md:text-base text-gray-200">
+                          ZIP: {community.location.zipCode}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Description */}
+                  {community.description && (
+                    <p className="text-base md:text-lg text-gray-100 max-w-3xl leading-relaxed drop-shadow-md">
+                      {community.description}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
-            <p className="text-sm text-gray-700 max-w-2xl">
-              {community.description}
-            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Community Stats Bar */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-wrap items-center justify-between gap-6 py-6">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <Users className="w-5 h-5 text-gray-700" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Members</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {community.members ? community.members.length + 1 : 1}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <Calendar className="w-5 h-5 text-gray-700" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Established</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {formatDateToDDMMYYYY(community.createdAt)}
+                </p>
+              </div>
+            </div>
+            
+            {community.status && (
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-gray-700" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Status</p>
+                  <Badge className="bg-black text-white mt-1">
+                    {community.status}
+                  </Badge>
+                </div>
+              </div>
+            )}
+            
+            {community.territory && (
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <Building2 className="w-5 h-5 text-gray-700" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Territory</p>
+                  <p className="text-lg font-bold text-gray-900">
+                    {community.territory}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -395,61 +497,61 @@ const CommunityDashboard = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {/* Tab Navigation */}
         <div className="mb-6">
-          <div className="flex flex-wrap gap-1 border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
             <button
               onClick={() => setActiveTab('pulses')}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+              className={`flex-1 px-4 sm:px-6 py-3 sm:py-3.5 text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 ${
                 activeTab === 'pulses'
-                  ? 'bg-white text-gray-900 border border-gray-200 border-b-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20 transform scale-[1.02]'
+                  : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center justify-center gap-2 sm:gap-3">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                Pulses
+                <span>Pulses</span>
               </div>
             </button>
             <button
               onClick={() => setActiveTab('events')}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+              className={`flex-1 px-4 sm:px-6 py-3 sm:py-3.5 text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 ${
                 activeTab === 'events'
-                  ? 'bg-white text-gray-900 border border-gray-200 border-b-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20 transform scale-[1.02]'
+                  : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Events
+              <div className="flex items-center justify-center gap-2 sm:gap-3">
+                <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>Events</span>
               </div>
             </button>
             <button
               onClick={() => setActiveTab('marketplace')}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+              className={`flex-1 px-4 sm:px-6 py-3 sm:py-3.5 text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 ${
                 activeTab === 'marketplace'
-                  ? 'bg-white text-gray-900 border border-gray-200 border-b-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20 transform scale-[1.02]'
+                  : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <ShoppingBag className="w-4 h-4" />
-                Marketplace
+              <div className="flex items-center justify-center gap-2 sm:gap-3">
+                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>Marketplace</span>
               </div>
             </button>
             <button
               onClick={() => setActiveTab('directory')}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+              className={`flex-1 px-4 sm:px-6 py-3 sm:py-3.5 text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 ${
                 activeTab === 'directory'
-                  ? 'bg-white text-gray-900 border border-gray-200 border-b-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20 transform scale-[1.02]'
+                  : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center justify-center gap-2 sm:gap-3">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
-                Directory
+                <span>Directory</span>
               </div>
             </button>
           </div>
@@ -458,16 +560,16 @@ const CommunityDashboard = () => {
         {/* Tab Content */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
           {activeTab === 'pulses' && (
-            <PulsesTab communityId={communityId!} />
+            <PulsesTab />
           )}
           {activeTab === 'events' && (
-            <EventsTab communityId={communityId!} />
+            <EventsTab communityId={communityId!} user={user} />
           )}
           {activeTab === 'marketplace' && (
-            <MarketplaceTab communityId={communityId!} />
+            <MarketplaceTab />
           )}
           {activeTab === 'directory' && (
-            <DirectoryTab communityId={communityId!} />
+            <DirectoryTab />
           )}
         </div>
       </main>

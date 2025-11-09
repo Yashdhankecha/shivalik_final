@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { managerApi } from '../../apis/manager';
 import { useToast } from '../../hooks/use-toast';
+import { formatDateToDDMMYYYY } from '../../utils/dateUtils';
 
 const ManagerDashboard = () => {
   const { communityId: urlCommunityId } = useParams<{ communityId?: string }>();
@@ -302,7 +303,8 @@ const ManagerDashboard = () => {
                         </div>
                         <div className="ml-4">
                           <p className="text-sm text-gray-500">
-                            {new Date(member.createdAt).toLocaleDateString()}
+                            {formatDateToDDMMYYYY(member.createdAt)}
+
                           </p>
                         </div>
                       </div>
@@ -360,7 +362,8 @@ const ManagerDashboard = () => {
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">
-                            {new Date(activity.createdAt).toLocaleDateString()}
+                            {formatDateToDDMMYYYY(activity.createdAt)}
+
                           </p>
                         </div>
                       </div>

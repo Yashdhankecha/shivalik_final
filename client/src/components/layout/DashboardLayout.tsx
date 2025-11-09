@@ -29,6 +29,7 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { User, Users2 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import { adminApi } from '../../apis/admin';
 
 // Navigation array
 const navigation = [
@@ -218,6 +219,7 @@ export const DashboardLayout = () => {
     }
   });
   const [logoutModal, setLogoutModal] = useState(false);
+  const [dashboardStats, setDashboardStats] = useState({ totalUsers: 0, totalCommunities: 0, activeEvents: 0, totalReports: 0 });
   const isInitialMount = useRef(true);
 
   let userInfo;
@@ -451,6 +453,28 @@ export const DashboardLayout = () => {
     );
   };
 
+  // Fetch dashboard stats
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        const response = await adminApi.getDashboardStats();
+        const stats = response.result || response.data || response;
+        if (stats) {
+          setDashboardStats({
+            totalUsers: stats.totalUsers || 0,
+            totalCommunities: stats.totalCommunities || 0,
+            activeEvents: stats.activeEvents || 0,
+            totalReports: stats.totalReports || 0
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard stats:', error);
+      }
+    };
+
+    fetchDashboardStats();
+  }, []);
+
   return (
     <AppShell
       header={{ height: 60 }}
@@ -540,6 +564,14 @@ export const DashboardLayout = () => {
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {/* User count display */}
+            <Box style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Users2 size={20} color="#6b7280" />
+              <Text size="sm" fw={500} c="#6b7280">
+                {dashboardStats.totalUsers} users
+              </Text>
+            </Box>
+            
             <Menu shadow="md" width={200}>
               <Menu.Target>
                 <UnstyledButton>

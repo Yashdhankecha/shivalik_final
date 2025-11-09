@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../../apis/admin';
 import { useToast } from '../../hooks/use-toast';
+import { formatDateToDDMMYYYY } from '../../utils/dateUtils';
 
 const RoleChangeRequests = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -234,7 +235,8 @@ const RoleChangeRequests = () => {
                       {getStatusBadge(request.status)}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {new Date(request.createdAt).toLocaleDateString()}
+                      {formatDateToDDMMYYYY(request.createdAt)}
+
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { managerApi } from '../../apis/manager';
 import { useToast } from '../../hooks/use-toast';
+import { formatDateToDDMMYYYY } from '../../utils/dateUtils';
 
 const ManagerJoinRequests = () => {
   const navigate = useNavigate();
@@ -260,7 +261,7 @@ const ManagerJoinRequests = () => {
                         {getStatusBadge(request.status || 'Pending')}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {request.createdAt ? new Date(request.createdAt).toLocaleDateString() : 'N/A'}
+                        {request.createdAt ? formatDateToDDMMYYYY(request.createdAt) : 'N/A'}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">

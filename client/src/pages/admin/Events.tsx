@@ -6,6 +6,7 @@ import { Badge } from '../../components/ui/badge';
 import { Building2, Calendar, Search, Plus, Edit, Trash2, Eye, Clock, MapPin, Users } from 'lucide-react';
 import { adminApi } from '../../apis/admin';
 import { useToast } from '../../hooks/use-toast';
+import { formatDateToDDMMYYYY } from '../../utils/dateUtils';
 
 const Events = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -343,6 +344,222 @@ const Events = () => {
         </div>
       </div>
 
+      {/* Stats Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 lg:gap-6 mt-4 md:mt-6">
+        <Card className="bg-white border border-gray-300">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs md:text-sm text-gray-600">Total Events</p>
+                <p className="text-xl md:text-2xl font-bold text-black">1</p>
+              </div>
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-800 rounded-lg flex items-center justify-center">
+                <Calendar className="w-5 h-5 md:w-6 md:h-6 text-white" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-white border border-gray-300">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs md:text-sm text-gray-600">Published Events</p>
+                <p className="text-xl md:text-2xl font-bold text-black">0</p>
+              </div>
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-800 rounded-lg flex items-center justify-center">
+                <Calendar className="w-5 h-5 md:w-6 md:h-6 text-white" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-white border border-gray-300">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs md:text-sm text-gray-600">Upcoming Events</p>
+                <p className="text-xl md:text-2xl font-bold text-black">0</p>
+              </div>
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-500 rounded-lg flex items-center justify-center">
+                <Calendar className="w-5 h-5 md:w-6 md:h-6 text-white" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-white border border-gray-300">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs md:text-sm text-gray-600">Total Attendees</p>
+                <p className="text-xl md:text-2xl font-bold text-black">0</p>
+              </div>
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-300 rounded-lg flex items-center justify-center">
+                <Users className="w-5 h-5 md:w-6 md:h-6 text-gray-800" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Events List */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 lg:gap-6 mb-4 md:mb-6 mt-4 md:mt-6">
+        {events.map((event: any) => (
+          <Card key={event._id} className="hover:shadow-lg transition-shadow bg-white border border-gray-300">
+            <CardHeader className="border-b border-gray-300 pb-3">
+              <div className="flex items-start justify-between">
+                <h3 className="font-bold text-lg text-black">{event.title}</h3>
+                {getStatusBadge(event.status)}
+              </div>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Building2 className="w-4 h-4" />
+                  <span>{communities.find((c: any) => c._id === event.communityId)?.name || 'Unknown Community'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Calendar className="w-4 h-4" />
+                  <span>{formatDateToDDMMYYYY(event.eventDate)} at {event.startTime}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <MapPin className="w-4 h-4" />
+                  <span>{event.location || 'Not specified'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Users className="w-4 h-4" />
+                  <span>{event.registeredParticipants?.length || 0} attendees</span>
+                </div>
+              </div>
+              
+              <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border border-gray-400 text-black hover:bg-gray-100"
+                  onClick={() => handleViewEvent(event)}
+                >
+                  <Eye className="w-4 h-4 mr-1" />
+                  View
+                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="border border-gray-400 text-black hover:bg-gray-100"
+                    onClick={() => handleEditEvent(event)}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button variant="outline" size="sm" className="border border-gray-400 text-black hover:bg-gray-100">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Events Table */}
+      <Card className="bg-white border border-gray-300">
+        <CardHeader className="border-b border-gray-300">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-lg flex items-center gap-2 text-black">
+              <Calendar className="w-5 h-5" />
+              All Events
+            </h3>
+            <p className="text-sm text-gray-600">Showing {events.length} events</p>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-100 border-b border-gray-300">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Event</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Community</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Date & Time</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Location</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Attendees</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">View</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {events.map((event: any) => (
+                  <tr key={event._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="font-semibold text-sm text-black">{event.title}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {communities.find((c: any) => c._id === event.communityId)?.name || 'Unknown Community'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        <span>{formatDateToDDMMYYYY(event.eventDate)}</span>
+                      </div>
+                      <div className="flex items-center gap-1 mt-1">
+                        <Clock className="w-4 h-4" />
+                        <span>{event.startTime}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {event.location || 'Not specified'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {event.registeredParticipants?.length || 0}
+                    </td>
+                    <td className="px-6 py-4">
+                      {getStatusBadge(event.status)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-black hover:bg-gray-100"
+                        onClick={() => handleViewEvent(event)}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <div className="flex justify-between items-center mt-6">
+          <Button
+            onClick={() => handlePageChange(pagination.page - 1)}
+            disabled={pagination.page === 1}
+            variant="outline"
+            className="border border-gray-400 text-black hover:bg-gray-100"
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-gray-600">
+            Page {pagination.page} of {pagination.totalPages}
+          </span>
+          <Button
+            onClick={() => handlePageChange(pagination.page + 1)}
+            disabled={pagination.page === pagination.totalPages}
+            variant="outline"
+            className="border border-gray-400 text-black hover:bg-gray-100"
+          >
+            Next
+          </Button>
+        </div>
+      )}
+
       {/* View Event Modal */}
       {showViewModal && selectedEvent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -389,7 +606,7 @@ const Events = () => {
                   <div>
                     <p className="text-sm text-gray-600">Date</p>
                     <p className="font-medium">
-                      {selectedEvent.eventDate ? new Date(selectedEvent.eventDate).toLocaleDateString() : 'Not specified'}
+                      {selectedEvent.eventDate ? formatDateToDDMMYYYY(selectedEvent.eventDate) : 'Not specified'}
                     </p>
                   </div>
                   
@@ -827,240 +1044,6 @@ const Events = () => {
         </div>
       )}
 
-      {/* Events List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 lg:gap-6 mb-4 md:mb-6">
-        {events.map((event: any) => (
-          <Card key={event._id} className="hover:shadow-lg transition-shadow bg-white border border-gray-300">
-            <CardHeader className="border-b border-gray-300 pb-3">
-              <div className="flex items-start justify-between">
-                <h3 className="font-bold text-lg text-black">{event.title}</h3>
-                {getStatusBadge(event.status)}
-              </div>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Building2 className="w-4 h-4" />
-                  <span>{communities.find((c: any) => c._id === event.communityId)?.name || 'Unknown Community'}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar className="w-4 h-4" />
-                  <span>{new Date(event.eventDate).toLocaleDateString()} at {event.startTime}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <MapPin className="w-4 h-4" />
-                  <span>{event.location || 'Not specified'}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Users className="w-4 h-4" />
-                  <span>{event.registeredParticipants?.length || 0} attendees</span>
-                </div>
-              </div>
-              
-              <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="border border-gray-400 text-black hover:bg-gray-100"
-                  onClick={() => handleViewEvent(event)}
-                >
-                  <Eye className="w-4 h-4 mr-1" />
-                  View
-                </Button>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="border border-gray-400 text-black hover:bg-gray-100"
-                    onClick={() => handleEditEvent(event)}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button variant="outline" size="sm" className="border border-gray-400 text-black hover:bg-gray-100">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Events Table */}
-      <Card className="bg-white border border-gray-300">
-        <CardHeader className="border-b border-gray-300">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-lg flex items-center gap-2 text-black">
-              <Calendar className="w-5 h-5" />
-              All Events
-            </h3>
-            <p className="text-sm text-gray-600">Showing {events.length} events</p>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-100 border-b border-gray-300">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Event</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Community</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Date & Time</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Location</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Attendees</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {events.map((event: any) => (
-                  <tr key={event._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="font-semibold text-sm text-black">{event.title}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {communities.find((c: any) => c._id === event.communityId)?.name || 'Unknown Community'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>{new Date(event.eventDate).toLocaleDateString()}</span>
-                      </div>
-                      <div className="flex items-center gap-1 mt-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{event.startTime}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {event.location || 'Not specified'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {event.registeredParticipants?.length || 0}
-                    </td>
-                    <td className="px-6 py-4">
-                      {getStatusBadge(event.status)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-black hover:bg-gray-100"
-                          onClick={() => handleViewEvent(event)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-black hover:bg-gray-100"
-                          onClick={() => handleEditEvent(event)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Pagination */}
-      {pagination.totalPages > 1 && (
-        <div className="flex justify-between items-center mt-6">
-          <Button
-            onClick={() => handlePageChange(pagination.page - 1)}
-            disabled={pagination.page === 1}
-            variant="outline"
-            className="border border-gray-400 text-black hover:bg-gray-100"
-          >
-            Previous
-          </Button>
-          <span className="text-sm text-gray-600">
-            Page {pagination.page} of {pagination.totalPages}
-          </span>
-          <Button
-            onClick={() => handlePageChange(pagination.page + 1)}
-            disabled={pagination.page === pagination.totalPages}
-            variant="outline"
-            className="border border-gray-400 text-black hover:bg-gray-100"
-          >
-            Next
-          </Button>
-        </div>
-      )}
-
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 lg:gap-6 mt-4 md:mt-6">
-        <Card className="bg-white border border-gray-300">
-          <CardContent className="p-4 md:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs md:text-sm text-gray-600">Total Events</p>
-                <p className="text-xl md:text-2xl font-bold text-black">{pagination.total || 0}</p>
-              </div>
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-800 rounded-lg flex items-center justify-center">
-                <Calendar className="w-5 h-5 md:w-6 md:h-6 text-white" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white border border-gray-300">
-          <CardContent className="p-4 md:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs md:text-sm text-gray-600">Published Events</p>
-                <p className="text-xl md:text-2xl font-bold text-black">
-                  {events.filter(e => e.status === 'Published').length}
-                </p>
-              </div>
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-800 rounded-lg flex items-center justify-center">
-                <Calendar className="w-5 h-5 md:w-6 md:h-6 text-white" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white border border-gray-300">
-          <CardContent className="p-4 md:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs md:text-sm text-gray-600">Upcoming Events</p>
-                <p className="text-xl md:text-2xl font-bold text-black">
-                  {events.filter(e => e.status === 'Scheduled').length}
-                </p>
-              </div>
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-500 rounded-lg flex items-center justify-center">
-                <Calendar className="w-5 h-5 md:w-6 md:h-6 text-white" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white border border-gray-300">
-          <CardContent className="p-4 md:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs md:text-sm text-gray-600">Total Attendees</p>
-                <p className="text-xl md:text-2xl font-bold text-black">
-                  {events.reduce((sum, e) => sum + (e.registeredParticipants?.length || 0), 0)}
-                </p>
-              </div>
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-300 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 md:w-6 md:h-6 text-gray-800" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 };

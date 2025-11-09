@@ -4,7 +4,7 @@ import { Input } from '../../components/ui/input';
 import { Card, CardContent, CardHeader } from '../../components/ui/card';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Badge } from '../../components/ui/badge';
-import { Users, Search, Edit, Trash2, Eye, UserPlus, X, Building2 } from 'lucide-react';
+import { Users, Search, UserPlus, X, Building2 } from 'lucide-react';
 import { adminApi } from '../../apis/admin';
 import { useToast } from '../../hooks/use-toast';
 import {
@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
+import { formatDateToDDMMYYYY } from '../../utils/dateUtils';
 
 const UsersManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -363,7 +364,7 @@ const UsersManagement = () => {
                         {getStatusBadge(user.status)}
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-600 hidden lg:table-cell">
-                        {new Date(user.createdAt).toLocaleDateString()}
+                        {formatDateToDDMMYYYY(user.createdAt)}
                       </td>
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-2">
@@ -374,12 +375,6 @@ const UsersManagement = () => {
                             onClick={() => openRoleChangeModal(user)}
                           >
                             <UserPlus className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-gray-900 hover:bg-gray-100 p-2 h-8 w-8">
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-gray-900 hover:bg-gray-100 p-2 h-8 w-8">
-                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </td>

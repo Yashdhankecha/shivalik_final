@@ -33,6 +33,12 @@ export const communityApi = {
         return response.data;
     },
 
+    // Leave community
+    leaveCommunity: async (communityId: string) => {
+        const response = await apiClient.delete(`/api/v1/community/communities/${communityId}/leave`);
+        return response.data;
+    },
+
     // Get pulses for a community
     getCommunityPulses: async (communityId: string, params: {
         page?: number;
