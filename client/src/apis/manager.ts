@@ -1,6 +1,12 @@
 import apiClient from './apiService';
 
 export const managerApi = {
+  // Get communities where user is a manager
+  getManagerCommunities: async () => {
+    const response = await apiClient.get('/api/v1/manager/communities');
+    return response.data;
+  },
+
   // Community Join Requests
   getCommunityJoinRequests: async (communityId: string, params: {
     page?: number;

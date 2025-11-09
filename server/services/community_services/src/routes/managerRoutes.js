@@ -4,6 +4,13 @@ const managerController = require('../controllers/managerController');
 const auth = require('../middleware/authMiddleware.js');
 const managerMiddleware = require('../middleware/managerMiddleware.js');
 
+// Get communities where user is a manager
+router.get('/communities', 
+    auth.verifyToken, 
+    managerMiddleware.verifyManager, 
+    managerController.getManagerCommunities
+);
+
 // Manager dashboard stats
 router.get('/dashboard/stats/:communityId', 
     auth.verifyToken, 

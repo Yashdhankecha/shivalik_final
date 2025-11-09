@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -11,6 +12,8 @@ import { managerApi } from '../../apis/manager';
 import { useToast } from '../../hooks/use-toast';
 
 const ManagerDashboard = () => {
+  const { communityId: urlCommunityId } = useParams<{ communityId?: string }>();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalMembers: 0,
     activeMembers: 0,
@@ -20,22 +23,58 @@ const ManagerDashboard = () => {
     recentActivities: []
   });
   const [loading, setLoading] = useState(true);
-  const [communityId, setCommunityId] = useState<string>(''); // This should be set based on the selected community
+  const [communityId, setCommunityId] = useState<string>('');
+  const [communities, setCommunities] = useState<any[]>([]);
+  const [selectedCommunity, setSelectedCommunity] = useState<any>(null);
   const { toast } = useToast();
 
-  // In a real implementation, you would get the communityId from:
-  // 1. URL params (if using route like /manager/:communityId/dashboard)
-  // 2. Context or state management
-  // 3. User selection
+  // Fetch manager's communities
+  useEffect(() => {
+    const fetchCommunities = async () => {
+      try {
+        const response = await managerApi.getManagerCommunities();
+        const data = response?.data || response?.result || response;
+        const communitiesList = data?.communities || [];
+        setCommunities(communitiesList);
+
+        // If URL has communityId, use it; otherwise use first community
+        if (urlCommunityId) {
+          const community = communitiesList.find((c: any) => c._id === urlCommunityId);
+          if (community) {
+            setSelectedCommunity(community);
+            setCommunityId(urlCommunityId);
+          } else {
+            toast({
+              title: "Error",
+              description: "Community not found or you don't have access",
+              variant: "destructive"
+            });
+          }
+        } else if (communitiesList.length > 0) {
+          // Redirect to first community's dashboard
+          navigate(`/manager/${communitiesList[0]._id}/dashboard`, { replace: true });
+        } else {
+          toast({
+            title: "No Communities",
+            description: "You are not assigned as a manager for any communities",
+            variant: "destructive"
+          });
+        }
+      } catch (error: any) {
+        console.error('Error fetching communities:', error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to fetch communities",
+          variant: "destructive"
+        });
+      }
+    };
+
+    fetchCommunities();
+  }, [urlCommunityId, navigate, toast]);
 
   useEffect(() => {
-    // This is a placeholder - in a real app, you would get communityId from URL params or context
-    // For now, we'll use a placeholder value
-    setCommunityId('placeholder-community-id');
-  }, []);
-
-  useEffect(() => {
-    if (communityId) {
+    if (communityId && communityId !== 'placeholder-community-id') {
       fetchDashboardStats();
     }
   }, [communityId]);
@@ -108,6 +147,26 @@ const ManagerDashboard = () => {
     }
   };
 
+  const handleCommunityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCommunityId = e.target.value;
+    if (newCommunityId) {
+      navigate(`/manager/${newCommunityId}/dashboard`);
+    }
+  };
+
+  if (communities.length === 0 && !loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900">No Communities</h3>
+          <p className="mt-2 text-sm text-gray-500">
+            You are not assigned as a manager for any communities.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -115,9 +174,27 @@ const ManagerDashboard = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Manager Dashboard</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Welcome back! Here's what's happening with your community today.
+            {selectedCommunity 
+              ? `Managing: ${selectedCommunity.name}`
+              : "Welcome back! Here's what's happening with your community today."}
           </p>
         </div>
+        {communities.length > 1 && (
+          <div className="mt-4 md:mt-0">
+            <select
+              value={communityId}
+              onChange={handleCommunityChange}
+              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select Community</option>
+              {communities.map((comm: any) => (
+                <option key={comm._id} value={comm._id}>
+                  {comm.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="mt-4 flex md:mt-0 md:ml-4">
           <Button onClick={fetchDashboardStats}>
             <RefreshCw className="h-4 w-4 mr-2" />

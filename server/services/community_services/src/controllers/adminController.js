@@ -9,6 +9,7 @@ const RoleChangeRequestsModel = require('../models/RoleChangeRequests.js');
 const CommunityJoinRequestsModel = require('../models/CommunityJoinRequests.js');
 const MarketplaceListingsModel = require('../models/MarketplaceListings.js');
 const PulsesModel = require('../models/Pulses.js');
+const CommunityManagersModel = require('../models/CommunityManagers.js');
 const mongoose = require('mongoose');
 const path = require('path');
 
@@ -1781,6 +1782,222 @@ const rejectPulse = async (req, res) => {
     }
 };
 
+/**
+ * Assign a manager to a community
+ */
+const assignCommunityManager = async (req, res) => {
+    try {
+        const { communityId } = req.params;
+        const { userId, role = 'Manager' } = req.body;
+
+        // Validate inputs
+        if (!communityId || !userId) {
+            return res.status(400).send(response.toJson('Community ID and User ID are required'));
+        }
+
+        // Validate ObjectIds
+        if (!mongoose.Types.ObjectId.isValid(communityId) || !mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).send(response.toJson('Invalid Community ID or User ID'));
+        }
+
+        // Verify community exists and was created by current admin
+        const community = await CommunitiesModel.findOne({
+            _id: communityId,
+            createdBy: req.user._id,
+            isDeleted: false
+        });
+
+        if (!community) {
+            return res.status(404).send(response.toJson('Community not found or you do not have permission'));
+        }
+
+        // Verify user exists
+        const user = await UsersModel.findOne({
+            _id: userId,
+            isDeleted: false
+        });
+
+        if (!user) {
+            return res.status(404).send(response.toJson('User not found'));
+        }
+
+        // Check if manager already assigned
+        const existingManager = await CommunityManagersModel.findOne({
+            userId: userId,
+            communityId: communityId,
+            isDeleted: false
+        });
+
+        if (existingManager) {
+            // If exists but inactive, activate it
+            if (existingManager.status === 'Inactive') {
+                existingManager.status = 'Active';
+                existingManager.assignedBy = req.user._id;
+                existingManager.assignedAt = new Date();
+                existingManager.updatedAt = new Date();
+                await existingManager.save();
+                
+                await existingManager.populate('userId', 'name email');
+                return res.status(200).send(response.toJson(
+                    'Manager reactivated successfully',
+                    existingManager
+                ));
+            }
+            return res.status(400).send(response.toJson('Manager is already assigned to this community'));
+        }
+
+        // Create new manager assignment
+        const managerAssignment = new CommunityManagersModel({
+            userId: userId,
+            communityId: communityId,
+            role: role,
+            assignedBy: req.user._id,
+            status: 'Active',
+            permissions: {
+                canApproveJoinRequests: true,
+                canManagePosts: true,
+                canManageUsers: true,
+                canCreateEvents: true,
+                canManageReports: true
+            }
+        });
+
+        await managerAssignment.save();
+        await managerAssignment.populate('userId', 'name email');
+        await managerAssignment.populate('communityId', 'name');
+
+        return res.status(200).send(response.toJson(
+            'Manager assigned successfully',
+            managerAssignment
+        ));
+
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+/**
+ * Remove a manager from a community
+ */
+const removeCommunityManager = async (req, res) => {
+    try {
+        const { communityId, managerId } = req.params;
+
+        // Validate inputs
+        if (!communityId || !managerId) {
+            return res.status(400).send(response.toJson('Community ID and Manager ID are required'));
+        }
+
+        // Validate ObjectIds
+        if (!mongoose.Types.ObjectId.isValid(communityId) || !mongoose.Types.ObjectId.isValid(managerId)) {
+            return res.status(400).send(response.toJson('Invalid Community ID or Manager ID'));
+        }
+
+        // Verify community exists and was created by current admin
+        const community = await CommunitiesModel.findOne({
+            _id: communityId,
+            createdBy: req.user._id,
+            isDeleted: false
+        });
+
+        if (!community) {
+            return res.status(404).send(response.toJson('Community not found or you do not have permission'));
+        }
+
+        // Find and remove manager assignment
+        const managerAssignment = await CommunityManagersModel.findOne({
+            _id: managerId,
+            communityId: communityId,
+            isDeleted: false
+        });
+
+        if (!managerAssignment) {
+            return res.status(404).send(response.toJson('Manager assignment not found'));
+        }
+
+        // Soft delete the manager assignment
+        managerAssignment.isDeleted = true;
+        managerAssignment.deletedAt = new Date();
+        managerAssignment.status = 'Inactive';
+        managerAssignment.updatedAt = new Date();
+        await managerAssignment.save();
+
+        return res.status(200).send(response.toJson(
+            'Manager removed successfully'
+        ));
+
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+/**
+ * Get managers for a community
+ */
+const getCommunityManagers = async (req, res) => {
+    try {
+        const { communityId } = req.params;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        // Validate communityId
+        if (!mongoose.Types.ObjectId.isValid(communityId)) {
+            return res.status(400).send(response.toJson('Invalid Community ID'));
+        }
+
+        // Verify community exists and was created by current admin
+        const community = await CommunitiesModel.findOne({
+            _id: communityId,
+            createdBy: req.user._id,
+            isDeleted: false
+        });
+
+        if (!community) {
+            return res.status(404).send(response.toJson('Community not found or you do not have permission'));
+        }
+
+        // Get managers for this community
+        const managers = await CommunityManagersModel.find({
+            communityId: communityId,
+            isDeleted: false
+        })
+            .populate('userId', 'name email role')
+            .populate('assignedBy', 'name email')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        const total = await CommunityManagersModel.countDocuments({
+            communityId: communityId,
+            isDeleted: false
+        });
+
+        return res.status(200).send(response.toJson(
+            messages['en'].common.detail_success,
+            {
+                managers,
+                pagination: {
+                    total,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(total / limit)
+                }
+            }
+        ));
+
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
 module.exports = {
     getDashboardStats,
     getRecentActivities,
@@ -1805,7 +2022,10 @@ module.exports = {
     rejectMarketplaceListing,
     getPulseApprovals,
     approvePulse,
-    rejectPulse
+    rejectPulse,
+    assignCommunityManager,
+    removeCommunityManager,
+    getCommunityManagers
 };
 
 

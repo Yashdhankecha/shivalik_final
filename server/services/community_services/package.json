@@ -8,6 +8,7 @@
     "seed:landing": "node src/console/seedLandingData.js",
     "seed:community": "node src/models/seedData.js",
     "verify:community": "node src/models/verifyData.js",
+    "add:manager": "node src/scripts/addManagerUser.js",
     "test": "jest",
     "start:dev": "nodemon src/index.js --env=dev"
   },

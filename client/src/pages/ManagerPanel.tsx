@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { useNavigate, useLocation, Outlet, useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -15,6 +15,7 @@ import {
 const ManagerPanel = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { communityId } = useParams<{ communityId?: string }>();
   const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,37 +40,39 @@ const ManagerPanel = () => {
     navigate('/login');
   };
 
+  // Build menu items with communityId if available
+  const basePath = communityId ? `/manager/${communityId}` : '/manager';
   const menuItems = [
     {
       title: 'Dashboard',
       icon: LayoutDashboard,
-      path: '/manager/dashboard',
+      path: `${basePath}/dashboard`,
       exact: true
     },
     {
       title: 'Join Requests',
       icon: UserPlus,
-      path: '/manager/join-requests'
+      path: `${basePath}/join-requests`
     },
     {
       title: 'Members',
       icon: Users,
-      path: '/manager/members'
+      path: `${basePath}/members`
     },
     {
       title: 'Events',
       icon: Calendar,
-      path: '/manager/events'
+      path: `${basePath}/events`
     },
     {
       title: 'Posts',
       icon: FileText,
-      path: '/manager/posts'
+      path: `${basePath}/posts`
     },
     {
       title: 'Settings',
       icon: Settings,
-      path: '/manager/settings'
+      path: `${basePath}/settings`
     }
   ];
 
