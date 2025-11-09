@@ -107,38 +107,117 @@ const getEventsByCommunity = async (req, res) => {
             filter.status = { $in: [status, status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()] };
         }
 
+        // Get all events first, then filter out past events
         const events = await EventsModel.find(filter)
             .populate('createdBy', 'name email')
             .populate('registeredParticipants', 'name email')
             .sort({ eventDate: 1, createdAt: -1 })
             .skip(skip)
-            .limit(limit)
+            .limit(limit * 2) // Get more events to account for filtering
             .lean();
 
-        // Get registration counts for each event
-        for (const event of events) {
+        // Filter out events that have completely ended
+        const now = new Date();
+        const filteredEvents = events.filter(event => {
+            const eventDate = new Date(event.eventDate);
+            
+            // If event date is in the future, include it
+            if (eventDate > now) {
+                return true;
+            }
+            
+            // If event date is today or past, check if it has ended
+            if (event.endTime) {
+                try {
+                    const [hours, minutes] = event.endTime.split(':').map(Number);
+                    const endDateTime = new Date(eventDate);
+                    endDateTime.setHours(hours, minutes);
+                    // Only include if event hasn't ended yet
+                    return now <= endDateTime;
+                } catch (e) {
+                    // If parsing fails, exclude if date has passed
+                    return false;
+                }
+            }
+            
+            // If no end time and date has passed, exclude it
+            return false;
+        }).slice(0, limit); // Limit to requested number after filtering
+
+        // Get registration counts for each event and populate registered participants
+        for (const event of filteredEvents) {
+            // Get count from EventRegistrations collection (more accurate)
             const registrationCount = await EventRegistrationsModel.countDocuments({
                 eventId: event._id,
                 status: { $in: ['registered', 'attended'] },
                 isDeleted: false
             });
+            
+            // Also ensure event.registeredParticipants is populated and synced
+            // Get actual registered user IDs from EventRegistrations
+            const registeredUserIds = await EventRegistrationsModel.find({
+                eventId: event._id,
+                status: { $in: ['registered', 'attended'] },
+                isDeleted: false
+            }).distinct('userId');
+            
+            // Update event's registeredParticipants array to keep it in sync
+            if (registeredUserIds.length > 0) {
+                const eventDoc = await EventsModel.findById(event._id);
+                if (eventDoc) {
+                    // Convert to strings for comparison, but keep as ObjectIds in array
+                    const currentIds = (eventDoc.registeredParticipants || []).map(id => id.toString());
+                    const newIds = registeredUserIds.map(id => id.toString());
+                    const uniqueNewIds = [...new Set(newIds)];
+                    
+                    // Only update if there's a difference
+                    if (currentIds.length !== uniqueNewIds.length || 
+                        !uniqueNewIds.every(id => currentIds.includes(id))) {
+                        eventDoc.registeredParticipants = registeredUserIds;
+                        await eventDoc.save();
+                    }
+                }
+            }
+            
             event.registrationCount = registrationCount;
             event.availableSlots = event.maxParticipants 
-                ? event.maxParticipants - registrationCount 
+                ? Math.max(0, event.maxParticipants - registrationCount)
                 : null;
+            
+            // Populate registered participants info for display
+            if (event.registeredParticipants && event.registeredParticipants.length > 0) {
+                const UsersModel = require('../models/Users');
+                const participantIds = event.registeredParticipants.slice(0, 5); // Get first 5 for preview
+                const participants = await UsersModel.find({
+                    _id: { $in: participantIds },
+                    isDeleted: false
+                }).select('name email').lean();
+                event.registeredParticipantsPreview = participants;
+            }
         }
 
-        const total = await EventsModel.countDocuments(filter);
+        // Recalculate total after filtering - count only non-past events
+        const totalFiltered = await EventsModel.countDocuments({
+            communityId,
+            isDeleted: false,
+            $or: [
+                { eventDate: { $gte: new Date() } },
+                {
+                    eventDate: { $lt: new Date() },
+                    endTime: { $exists: true, $ne: null }
+                }
+            ]
+        });
 
         return res.status(200).send(response.toJson(
             messages['en'].common.detail_success,
             {
-                events,
+                events: filteredEvents,
                 pagination: {
-                    total,
+                    total: totalFiltered,
                     page,
                     limit,
-                    totalPages: Math.ceil(total / limit)
+                    totalPages: Math.ceil(totalFiltered / limit)
                 }
             }
         ));
@@ -153,8 +232,27 @@ const getEventsByCommunity = async (req, res) => {
 const registerForEvent = async (req, res) => {
     try {
         const { eventId } = req.params;
-        // Fix: Use req.user._id instead of req.user.id
-        const userId = req.user._id;
+        
+        // Get userId from req.user._id or req.userId (fallback)
+        const userId = req.user?._id || req.userId;
+        
+        console.log('Registration attempt:', {
+            eventId,
+            userId: userId?.toString(),
+            hasUser: !!req.user,
+            userIdFromReq: req.userId
+        });
+        
+        if (!userId) {
+            console.error('Registration error: User ID not found in request');
+            return res.status(401).send(response.toJson('User authentication required'));
+        }
+
+        // Validate eventId
+        if (!eventId || !mongoose.Types.ObjectId.isValid(eventId)) {
+            console.error('Invalid event ID:', eventId);
+            return res.status(400).send(response.toJson('Invalid event ID'));
+        }
 
         const event = await EventsModel.findById(eventId);
         if (!event || event.isDeleted) {
@@ -169,6 +267,7 @@ const registerForEvent = async (req, res) => {
         });
 
         if (existingRegistration) {
+            console.log('User already registered:', { eventId, userId: userId.toString() });
             return res.status(400).send(response.toJson('You are already registered for this event'));
         }
 
@@ -206,8 +305,13 @@ const registerForEvent = async (req, res) => {
 
         await registration.save();
 
-        // Add to event's registered participants
-        if (!event.registeredParticipants.includes(userId)) {
+        // Add to event's registered participants array
+        const userIdString = userId.toString();
+        // Ensure registeredParticipants is an array
+        if (!Array.isArray(event.registeredParticipants)) {
+            event.registeredParticipants = [];
+        }
+        if (!event.registeredParticipants.some(id => id.toString() === userIdString)) {
             event.registeredParticipants.push(userId);
             await event.save();
         }
@@ -222,7 +326,12 @@ const registerForEvent = async (req, res) => {
     } catch (err) {
         const statusCode = err.statusCode || 500;
         const errMess = err.message || err;
-        console.error('Error in registerForEvent:', err); // Add logging for debugging
+        console.error('Error in registerForEvent:', {
+            error: errMess,
+            eventId: req.params.eventId,
+            userId: req.user?._id || req.userId,
+            stack: err.stack
+        });
         return res.status(statusCode).send(response.toJson(errMess));
     }
 };
@@ -231,7 +340,11 @@ const registerForEvent = async (req, res) => {
 const getUserRegistration = async (req, res) => {
     try {
         const { eventId } = req.params;
-        const userId = req.user.id;
+        const userId = req.user?._id || req.userId;
+        
+        if (!userId) {
+            return res.status(401).send(response.toJson('User authentication required'));
+        }
 
         const registration = await EventRegistrationsModel.findOne({
             eventId,

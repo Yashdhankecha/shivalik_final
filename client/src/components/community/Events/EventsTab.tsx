@@ -35,6 +35,12 @@ interface Event {
     name: string;
   };
   isRegistered?: boolean;
+  registeredParticipants?: string[];
+  registeredParticipantsPreview?: Array<{
+    _id: string;
+    name: string;
+    email: string;
+  }>;
 }
 
 const EventsTab = ({ communityId, user }: { communityId: string; user: any }) => {
@@ -43,6 +49,8 @@ const EventsTab = ({ communityId, user }: { communityId: string; user: any }) =>
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showQRDialog, setShowQRDialog] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingEventId, setPendingEventId] = useState<string | null>(null);
   const [registration, setRegistration] = useState<any>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -62,24 +70,69 @@ const EventsTab = ({ communityId, user }: { communityId: string; user: any }) =>
       setLoading(true);
       const response = await communityApi.getCommunityEvents(communityId, { page });
       const data = response.result || response.data;
-      const eventsList = data.events || [];
-      setEvents(eventsList);
+      let eventsList = data.events || [];
+      
+      // Additional client-side filtering to remove past events
+      const now = new Date();
+      eventsList = eventsList.filter((event: Event) => {
+        const eventDate = new Date(event.eventDate);
+        
+        // If event date is in the future, include it
+        if (eventDate > now) {
+          return true;
+        }
+        
+        // If event date is today or past, check if it has ended
+        if (event.endTime) {
+          const [hours, minutes] = event.endTime.split(':').map(Number);
+          const endDateTime = new Date(eventDate);
+          endDateTime.setHours(hours, minutes);
+          // Only include if event hasn't ended yet
+          return now <= endDateTime;
+        }
+        
+        // If no end time and date has passed, exclude it
+        return false;
+      });
+      
       setTotalPages(data.pagination?.totalPages || 1);
       
       // Check registration status for each event if user is logged in
       if (user && eventsList.length > 0) {
         const registeredSet = new Set<string>();
+        
+        // Check registration status for all events in parallel
         await Promise.all(
           eventsList.map(async (event: Event) => {
             try {
-              await communityApi.getUserRegistration(event._id);
-              registeredSet.add(event._id);
-            } catch (error) {
-              // User is not registered for this event
+              const regResponse = await communityApi.getUserRegistration(event._id);
+              // If we get a response, user is registered
+              if (regResponse?.result || regResponse?.data) {
+                registeredSet.add(event._id);
+              }
+            } catch (error: any) {
+              // 404 is expected for unregistered events - ignore it
+              // Only log other errors
+              if (error?.response?.status !== 404) {
+                console.warn('Error checking registration status:', error?.response?.data?.message || error?.message);
+              }
             }
           })
         );
+        
+        // Update registered events set
         setRegisteredEvents(registeredSet);
+        
+        // Mark events as registered in the events array
+        const updatedEvents = eventsList.map((e: Event) => ({
+          ...e,
+          isRegistered: registeredSet.has(e._id)
+        }));
+        setEvents(updatedEvents);
+      } else {
+        // Clear registered events if user is not logged in
+        setRegisteredEvents(new Set());
+        setEvents(eventsList);
       }
     } catch (error: any) {
       showMessage(error.message || 'Failed to load events', 'error');
@@ -92,40 +145,163 @@ const EventsTab = ({ communityId, user }: { communityId: string; user: any }) =>
     fetchEvents();
   }, [communityId, page]);
 
-  const handleRegister = async (eventId: string) => {
+  const handleRegisterClick = (eventId: string) => {
     if (!user) {
       showMessage('Please login to register for events', 'error');
       return;
     }
+    setPendingEventId(eventId);
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmRegister = async () => {
+    if (!pendingEventId) return;
 
     try {
-      const response = await communityApi.registerForEvent(eventId);
-      setRegistration(response.result || response.data);
-      const event = events.find(e => e._id === eventId);
-      if (event) {
-        setSelectedEvent(event);
-        setShowQRDialog(true);
+      const response = await communityApi.registerForEvent(pendingEventId);
+      
+      // Check if response indicates success
+      if (response?.result || response?.data) {
+        setRegistration(response.result || response.data);
+        const event = events.find(e => e._id === pendingEventId);
+        if (event) {
+          setSelectedEvent(event);
+          setShowQRDialog(true);
+        }
+        showMessage('Successfully registered for event!', 'success');
+      } else {
+        throw new Error(response?.message || 'Registration failed');
       }
-      showMessage('Successfully registered for event!', 'success');
-      setRegisteredEvents(prev => new Set(prev).add(eventId));
-      fetchEvents();
+      
+      // Immediately add to registered events set - this ensures button shows immediately
+      setRegisteredEvents(prev => {
+        const newSet = new Set(prev);
+        newSet.add(pendingEventId);
+        return newSet;
+      });
+      
+      // Update the event's registration count locally
+      setEvents(prevEvents => 
+        prevEvents.map(e => 
+          e._id === pendingEventId 
+            ? { 
+                ...e, 
+                registrationCount: (e.registrationCount || 0) + 1,
+                availableSlots: e.maxParticipants ? Math.max(0, (e.availableSlots ?? e.maxParticipants) - 1) : null,
+                isRegistered: true
+              }
+            : e
+        )
+      );
+      
+      setShowConfirmDialog(false);
+      setPendingEventId(null);
+      
+      // Refresh events after a delay to get updated participant data, but preserve registration status
+      setTimeout(() => {
+        fetchEvents();
+      }, 1000);
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to register for event';
-      showMessage(errorMsg, 'error');
+      console.error('Registration error:', error);
+      console.error('Error response:', error.response?.data);
+      
+      // Extract error message from response
+      let errorMsg = 'Failed to register for event';
+      if (error.response?.data) {
+        // Check different possible response formats
+        errorMsg = error.response.data.message || 
+                   error.response.data.error || 
+                   error.message || 
+                   'Failed to register for event';
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
+      // If user is already registered, update the UI to show "View Ticket" button
+      if (errorMsg.includes('already registered') || errorMsg.includes('already registered for this event')) {
+        // Mark event as registered
+        setRegisteredEvents(prev => {
+          const newSet = new Set(prev);
+          if (pendingEventId) {
+            newSet.add(pendingEventId);
+          }
+          return newSet;
+        });
+        
+        // Update event object
+        setEvents(prevEvents => 
+          prevEvents.map(e => 
+            e._id === pendingEventId 
+              ? { ...e, isRegistered: true }
+              : e
+          )
+        );
+        
+        // Try to fetch the registration to show QR code
+        if (pendingEventId) {
+          try {
+            const regResponse = await communityApi.getUserRegistration(pendingEventId);
+            setRegistration(regResponse.result || regResponse.data);
+            const event = events.find(e => e._id === pendingEventId);
+            if (event) {
+              setSelectedEvent(event);
+              setShowQRDialog(true);
+            }
+          } catch (regError) {
+            console.error('Error fetching existing registration:', regError);
+          }
+        }
+        
+        showMessage('You are already registered for this event. Showing your ticket.', 'info');
+      } else {
+        showMessage(errorMsg, 'error');
+      }
+      
+      setShowConfirmDialog(false);
+      setPendingEventId(null);
     }
   };
 
   const handleViewQR = async (eventId: string) => {
     try {
       const response = await communityApi.getUserRegistration(eventId);
-      setRegistration(response.result || response.data);
+      const registrationData = response.result || response.data;
+      
+      if (!registrationData) {
+        showMessage('Registration not found', 'error');
+        return;
+      }
+      
+      setRegistration(registrationData);
       const event = events.find(e => e._id === eventId);
       if (event) {
         setSelectedEvent(event);
         setShowQRDialog(true);
+      } else {
+        // If event is not in current list (e.g., past event), use registration data
+        if (registrationData.eventId) {
+          setSelectedEvent({
+            _id: eventId,
+            title: registrationData.eventId?.title || 'Event',
+            description: registrationData.eventId?.description || '',
+            eventDate: registrationData.eventId?.eventDate || '',
+            startTime: registrationData.eventId?.startTime || '',
+            endTime: registrationData.eventId?.endTime || '',
+            location: registrationData.eventId?.location || '',
+            maxParticipants: 0,
+            registrationCount: 0,
+            availableSlots: 0,
+            banner: '',
+            createdBy: { name: registrationData.userId?.name || '' }
+          } as Event);
+          setShowQRDialog(true);
+        } else {
+          showMessage('Event information not available', 'error');
+        }
       }
     } catch (error: any) {
-      showMessage(error.message || 'Failed to load registration', 'error');
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to load registration';
+      showMessage(errorMsg, 'error');
     }
   };
 
@@ -182,7 +358,8 @@ const EventsTab = ({ communityId, user }: { communityId: string; user: any }) =>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {events.map((event) => {
             const eventStatus = getEventStatus(event);
-            const isRegistered = registeredEvents.has(event._id);
+            // Check both registeredEvents set and event.isRegistered flag
+            const isRegistered = registeredEvents.has(event._id) || event.isRegistered === true;
             const isFull = event.maxParticipants && event.availableSlots === 0;
             
             return (
@@ -223,21 +400,42 @@ const EventsTab = ({ communityId, user }: { communityId: string; user: any }) =>
                         <span className="line-clamp-1 font-medium">{event.location}</span>
                       </div>
                     )}
-                    {event.maxParticipants && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                          <Users className="w-4 h-4 text-gray-900" />
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                        <Users className="w-4 h-4 text-gray-900" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-700 font-medium">
+                            {event.registrationCount || 0} {event.maxParticipants ? ` / ${event.maxParticipants}` : ''} participants
+                          </span>
+                          {event.availableSlots !== null && event.availableSlots !== undefined && event.maxParticipants && (
+                            <Badge variant={event.availableSlots > 0 ? "default" : "secondary"} className="ml-2">
+                              {event.availableSlots} {event.availableSlots === 1 ? 'slot' : 'slots'} left
+                            </Badge>
+                          )}
                         </div>
-                        <span className="text-gray-700 font-medium">
-                          {event.registrationCount || 0} / {event.maxParticipants} registered
-                        </span>
-                        {event.availableSlots !== null && event.availableSlots !== undefined && (
-                          <Badge variant={event.availableSlots > 0 ? "default" : "secondary"} className="ml-2">
-                            {event.availableSlots} {event.availableSlots === 1 ? 'slot' : 'slots'} left
-                          </Badge>
+                        {/* Live Participants Preview */}
+                        {event.registeredParticipantsPreview && event.registeredParticipantsPreview.length > 0 && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <div className="flex -space-x-2">
+                              {event.registeredParticipantsPreview.slice(0, 5).map((participant: any) => (
+                                <Avatar key={participant._id} className="w-6 h-6 border-2 border-white">
+                                  <AvatarFallback className="bg-gray-700 text-white text-xs">
+                                    {participant.name?.substring(0, 2).toUpperCase() || 'U'}
+                                  </AvatarFallback>
+                                </Avatar>
+                              ))}
+                            </div>
+                            {(event.registrationCount || 0) > 5 && (
+                              <span className="text-xs text-gray-500 ml-1">
+                                +{(event.registrationCount || 0) - 5} more
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-2 pt-4 border-t border-gray-100 mb-4">
@@ -268,11 +466,12 @@ const EventsTab = ({ communityId, user }: { communityId: string; user: any }) =>
                             <QrCode className="w-4 h-4 mr-1.5" />
                             View Ticket
                           </Button>
-                        ) : (
+                        ) : null}
+                        {!isRegistered && (
                           <Button
                             size="sm"
                             className="flex-1 bg-gray-900 text-white hover:bg-gray-800"
-                            onClick={() => handleRegister(event._id)}
+                            onClick={() => handleRegisterClick(event._id)}
                             disabled={isFull || eventStatus === 'completed'}
                           >
                             {isFull ? (
@@ -365,11 +564,12 @@ const EventsTab = ({ communityId, user }: { communityId: string; user: any }) =>
                         <QrCode className="w-4 h-4 mr-2" />
                         View Ticket
                       </Button>
-                    ) : (
+                    ) : null}
+                    {!registeredEvents.has(selectedEvent._id) && (
                       <Button
                         onClick={() => {
                           setShowDetailsDialog(false);
-                          handleRegister(selectedEvent._id);
+                          handleRegisterClick(selectedEvent._id);
                         }}
                         className="flex-1 bg-gray-900 hover:bg-gray-800 text-white"
                         disabled={selectedEvent.maxParticipants && selectedEvent.availableSlots === 0}
@@ -390,6 +590,59 @@ const EventsTab = ({ communityId, user }: { communityId: string; user: any }) =>
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Registration Confirmation Dialog */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Confirm Registration</DialogTitle>
+          </DialogHeader>
+          {pendingEventId && (() => {
+            const event = events.find(e => e._id === pendingEventId);
+            return event ? (
+              <div className="space-y-4 mt-4">
+                <p className="text-gray-700">
+                  Are you sure you want to register for <strong>{event.title}</strong>?
+                </p>
+                <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-600" />
+                    <span>{formatDateToDDMMYYYY(event.eventDate)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-gray-600" />
+                    <span>{event.startTime} {event.endTime && `- ${event.endTime}`}</span>
+                  </div>
+                  {event.location && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-gray-600" />
+                      <span>{event.location}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowConfirmDialog(false);
+                      setPendingEventId(null);
+                    }}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleConfirmRegister}
+                    className="flex-1 bg-gray-900 hover:bg-gray-800 text-white"
+                  >
+                    Confirm Registration
+                  </Button>
+                </div>
+              </div>
+            ) : null;
+          })()}
         </DialogContent>
       </Dialog>
 
