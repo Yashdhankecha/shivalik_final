@@ -338,6 +338,91 @@ const getAllUsers = async (req, res) => {
 };
 
 /**
+ * Get recent activities for admin dashboard
+ */
+const getRecentActivities = async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 10;
+        
+        // Get communities created by current admin
+        const communities = await CommunitiesModel.find({
+            createdBy: req.user._id,
+            isDeleted: false
+        }).select('_id');
+
+        const communityIds = communities.map(community => community._id);
+
+        // Get recent user registrations
+        const recentUsers = await UsersModel.find({
+            $or: [
+                { communityId: { $in: communityIds } },
+                { _id: { $in: communities.map(c => c.managerId) } }
+            ],
+            isDeleted: false
+        })
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .lean();
+
+        // Get recent community events
+        const recentEvents = await EventsModel.find({
+            communityId: { $in: communityIds },
+            isDeleted: false
+        })
+        .populate('communityId', 'name')
+        .populate('createdBy', 'name')
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .lean();
+
+        // Format activities
+        const userActivities = recentUsers.map(user => ({
+            type: 'user',
+            action: `New user registered: ${user.name}`,
+            user: user.name,
+            time: new Date(user.createdAt).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }),
+            timestamp: user.createdAt
+        }));
+
+        const eventActivities = recentEvents.map(event => ({
+            type: 'event',
+            action: `New event created: ${event.title}`,
+            user: event.createdBy?.name || 'Unknown',
+            community: event.communityId?.name || 'Unknown Community',
+            time: new Date(event.createdAt).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }),
+            timestamp: event.createdAt
+        }));
+
+        // Combine and sort all activities by timestamp
+        const allActivities = [...userActivities, ...eventActivities]
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            .slice(0, limit);
+
+        return res.status(200).send(response.toJson(
+            messages['en'].common.detail_success,
+            allActivities
+        ));
+
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+/**
  * Get reports for communities created by current admin
  */
 const getReports = async (req, res) => {
@@ -940,5 +1025,6 @@ module.exports = {
     getRoleChangeRequests,
     approveRoleChangeRequest,
     rejectRoleChangeRequest,
-    createCommunityEvent
+    createCommunityEvent,
+    getRecentActivities
 };

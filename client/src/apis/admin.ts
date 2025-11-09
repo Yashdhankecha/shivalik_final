@@ -140,6 +140,17 @@ export const adminApi = {
     return response.data;
   },
 
+  // Get recent activities for admin dashboard
+  getRecentActivities: async (params: {
+    limit?: number;
+  } = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    
+    const response = await apiClient.get(`/api/v1/admin/dashboard/activities?${queryParams.toString()}`);
+    return response.data;
+  },
+
   approveRoleChangeRequest: async (requestId: string) => {
     const response = await apiClient.put(`/api/v1/admin/role-change-requests/${requestId}/approve`);
     return response.data;

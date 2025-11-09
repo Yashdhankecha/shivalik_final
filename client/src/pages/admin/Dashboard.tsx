@@ -58,9 +58,9 @@ const AdminDashboard = () => {
 
         // Fetch recent activities (we'll create this endpoint)
         try {
-          const activitiesResponse = await adminApi.getRecentActivities();
+          const activitiesResponse = await adminApi.getRecentActivities({ limit: 6 });
           const activitiesData = activitiesResponse.result || activitiesResponse.data || activitiesResponse;
-          const activities = activitiesData.activities || activitiesData || [];
+          const activities = Array.isArray(activitiesData) ? activitiesData : (activitiesData.activities || []);
           setRecentActivities(activities);
         } catch (error) {
           console.error('Error fetching recent activities:', error);
@@ -81,19 +81,19 @@ const AdminDashboard = () => {
     { 
       title: 'Total Users', 
       value: stats.totalUsers.toLocaleString(), 
-      change: stats.changes?.users !== undefined ? (stats.changes.users >= 0 ? `+${stats.changes.users}` : `${stats.changes.users}`) : '0', 
+      change: '0', // Default value since backend doesn't provide changes
       icon: Users 
     },
     { 
       title: 'Communities', 
       value: stats.totalCommunities.toLocaleString(), 
-      change: stats.changes?.communities !== undefined ? (stats.changes.communities >= 0 ? `+${stats.changes.communities}` : `${stats.changes.communities}`) : '0', 
+      change: '0', // Default value since backend doesn't provide changes
       icon: Building2 
     },
     { 
       title: 'Active Events', 
       value: stats.activeEvents.toLocaleString(), 
-      change: stats.changes?.events !== undefined ? (stats.changes.events >= 0 ? `+${stats.changes.events}` : `${stats.changes.events}`) : '0', 
+      change: '0', // Default value since backend doesn't provide changes
       icon: Calendar 
     }
   ];
@@ -125,7 +125,7 @@ const AdminDashboard = () => {
                   <div className="w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center shadow-md">
                     <Icon className="w-6 h-6 text-white" />
                   </div>
-                  <Badge className={`${stat.change.startsWith('+') || (stat.change !== '0' && !stat.change.startsWith('-')) ? 'bg-gray-800 text-white' : stat.change.startsWith('-') ? 'bg-red-100 text-red-800' : 'bg-gray-300 text-gray-800'}`}>
+                  <Badge className={`bg-gray-300 text-gray-800`}>
                     {stat.change}%
                   </Badge>
                 </div>
@@ -228,7 +228,7 @@ const AdminDashboard = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-black">{activity.action}</p>
-                    <p className="text-xs text-gray-600">by {activity.user}</p>
+                    <p className="text-xs text-gray-600">{activity.user}{activity.community ? ` in ${activity.community}` : ''}</p>
                     <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
                   </div>
                 </div>

@@ -10,6 +10,7 @@ const multer = require('multer');
 
 // Admin dashboard stats
 router.get('/dashboard/stats', auth.verifyToken, auth.verifyAdmin, adminController.getDashboardStats);
+router.get('/dashboard/activities', auth.verifyToken, auth.verifyAdmin, adminController.getRecentActivities);
 
 // Admin communities
 router.get('/communities', auth.verifyToken, auth.verifyAdmin, adminController.getAdminCommunities);
