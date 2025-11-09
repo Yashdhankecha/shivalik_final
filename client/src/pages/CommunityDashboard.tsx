@@ -359,6 +359,10 @@ const CommunityDashboard = () => {
               src={getImageUrl(community.bannerImage)} 
               alt={community.name}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+              }}
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900 flex items-center justify-center">
@@ -381,6 +385,10 @@ const CommunityDashboard = () => {
                         src={community.logo} 
                         alt={community.name} 
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
                       />
                     </div>
                   ) : (

@@ -650,6 +650,10 @@ const Events = () => {
                       src={getImageUrl(selectedEvent.images?.[0])} 
                       alt="Event Banner" 
                       className="mt-2 max-w-full h-auto rounded-md"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
                     />
                   </div>
                 )}
@@ -766,6 +770,10 @@ const Events = () => {
                         src={getImageUrl(selectedEvent.images?.[0])} 
                         alt="Current Event Banner" 
                         className="mt-1 max-w-full h-24 object-cover rounded-md"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
                       />
                     </div>
                   )}

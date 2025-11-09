@@ -658,7 +658,12 @@ const EventsTab = ({ communityId, user }: { communityId: string; user: any }) =>
               <Card key={event._id} className="hover:shadow-xl transition-all duration-300 border border-gray-200 rounded-lg sm:rounded-xl overflow-hidden group bg-white">
                 {event.banner && (
                   <div className="relative h-40 sm:h-48 md:h-56 overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900">
-                    <img src={event.banner} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                    <img src={event.banner} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" 
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                     <Badge className="absolute top-3 right-3 bg-gray-900 text-white border-0 shadow-lg">
                       {eventStatus === 'upcoming' ? 'Upcoming' :
@@ -804,7 +809,12 @@ const EventsTab = ({ communityId, user }: { communityId: string; user: any }) =>
           {selectedEvent && (
             <div className="space-y-4 mt-4">
               {selectedEvent.banner && (
-                <img src={selectedEvent.banner} alt={selectedEvent.title} className="w-full h-64 object-cover rounded-lg" />
+                <img src={selectedEvent.banner} alt={selectedEvent.title} className="w-full h-64 object-cover rounded-lg" 
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
               )}
               <p className="text-gray-700">{selectedEvent.description}</p>
               <div className="grid grid-cols-2 gap-4">

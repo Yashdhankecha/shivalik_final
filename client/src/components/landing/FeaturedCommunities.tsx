@@ -74,6 +74,10 @@ const FeaturedCommunities = ({
                                         src={getImageUrl(community.bannerImage)}
                                         alt={community.name}
                                         className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                                        onError={(e) => {
+                                          const target = e.target as HTMLImageElement;
+                                          target.style.display = 'none';
+                                        }}
                                     />
                                 ) : (
                                     <img

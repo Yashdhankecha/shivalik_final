@@ -806,7 +806,8 @@ const Communities = () => {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-100 border-b border-gray-300">
                 <tr>
@@ -922,7 +923,8 @@ const Communities = () => {
                               }
                             }}
                           >
-                            Remove User
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Delete
                           </Button>
                         </div>
                       </td>
@@ -931,6 +933,119 @@ const Communities = () => {
                 )}
               </tbody>
             </table>
+          </div>
+          
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4 p-4">
+            {communities.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                No communities found. {pagination.total === 0 ? 'There are no communities yet.' : 'Try adjusting your search criteria.'}
+              </div>
+            ) : (
+              communities.map((community: any) => (
+                <Card key={community._id} className="border border-gray-200 rounded-lg shadow-sm">
+                  <CardContent className="p-4">
+                    {/* Community Info */}
+                    <div className="flex items-start gap-3 mb-4">
+                      {community.bannerImage ? (
+                        <img 
+                          src={getImageUrl(community.bannerImage)} 
+                          alt={community.name} 
+                          className="w-16 h-16 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <Building2 className="w-8 h-8 text-gray-600" />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-base text-black">{community.name}</h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {community.location?.city && community.location?.state ? (
+                            `${community.location.city}, ${community.location.state}`
+                          ) : (
+                            'Location not specified'
+                          )}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {community.members?.length || 0} members
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Managers Section */}
+                    <div className="mb-4">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2">Managers</h4>
+                      <div className="space-y-2">
+                        {communityManagers[community._id] && communityManagers[community._id].length > 0 ? (
+                          communityManagers[community._id].map((manager: any) => (
+                            <div key={manager._id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                              <div className="flex items-center gap-2">
+                                <Avatar className="w-8 h-8">
+                                  <AvatarFallback className="bg-gray-800 text-white text-xs">
+                                    {manager.userId?.name ? manager.userId.name.charAt(0) : 'M'}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm font-medium text-black">{manager.userId?.name || 'Unknown'}</span>
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className="text-red-600 hover:bg-red-50 p-1"
+                                onClick={() => handleRemoveManager(community._id, manager._id)}
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-gray-500">No managers assigned</p>
+                        )}
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-2 w-full"
+                        onClick={() => openManagerModal(community)}
+                      >
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Assign Manager
+                      </Button>
+                    </div>
+                    
+                    {/* Actions */}
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1 bg-gray-900 text-white hover:bg-gray-800 border-gray-900"
+                        onClick={() => {
+                          setViewCommunity(community);
+                          setShowViewModal(true);
+                        }}
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        View
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1 text-red-600 border-red-600 hover:bg-red-50"
+                        onClick={() => {
+                          const userId = prompt('Enter the User ID to remove from this community:');
+                          if (userId) {
+                            handleRemoveUser(community._id, userId);
+                          }
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
@@ -1037,6 +1152,10 @@ const Communities = () => {
                   src={getImageUrl(viewCommunity.bannerImage)} 
                   alt={viewCommunity.name} 
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
