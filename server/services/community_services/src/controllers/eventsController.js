@@ -268,7 +268,11 @@ const registerForEvent = async (req, res) => {
 
         if (existingRegistration) {
             console.log('User already registered:', { eventId, userId: userId.toString() });
-            return res.status(400).send(response.toJson('You are already registered for this event'));
+            // Populate registration data before returning
+            await existingRegistration.populate('eventId', 'title eventDate location startTime endTime description');
+            await existingRegistration.populate('userId', 'name email');
+            // Return 200 with the existing registration so frontend can show the ticket
+            return res.status(200).send(response.toJson('You are already registered for this event', existingRegistration.toObject()));
         }
 
         // Check if event is full
@@ -294,18 +298,19 @@ const registerForEvent = async (req, res) => {
         // Generate QR code image
         const qrCode = await QRCode.toDataURL(qrData);
 
-        // Create registration
+        // Create registration with status 'registered'
         const registration = new EventRegistrationsModel({
             eventId,
             userId,
-            status: 'registered',
+            status: 'registered', // Store booking status: 'registered', 'attended', or 'cancelled'
             qrCode: qrCode,
-            qrCodeData: qrData
+            qrCodeData: qrData,
+            registeredAt: new Date()
         });
 
         await registration.save();
 
-        // Add to event's registered participants array
+        // Add to event's registeredParticipants array to track registered users
         const userIdString = userId.toString();
         // Ensure registeredParticipants is an array
         if (!Array.isArray(event.registeredParticipants)) {
@@ -315,13 +320,23 @@ const registerForEvent = async (req, res) => {
             event.registeredParticipants.push(userId);
             await event.save();
         }
+        
+        console.log('Registration created successfully:', {
+            registrationId: registration._id,
+            eventId: eventId.toString(),
+            userId: userIdString,
+            status: registration.status
+        });
 
         await registration.populate('userId', 'name email');
-        await registration.populate('eventId', 'title eventDate location');
+        await registration.populate('eventId', 'title eventDate location startTime endTime description');
 
+        // Return registration with all necessary data including QR code
+        const registrationResponse = registration.toObject();
+        
         return res.status(201).send(response.toJson(
             'Successfully registered for event',
-            registration
+            registrationResponse
         ));
     } catch (err) {
         const statusCode = err.statusCode || 500;
@@ -342,29 +357,89 @@ const getUserRegistration = async (req, res) => {
         const { eventId } = req.params;
         const userId = req.user?._id || req.userId;
         
+        console.log('getUserRegistration called:', {
+            eventId,
+            userId: userId?.toString(),
+            hasUser: !!req.user,
+            userIdFromReq: req.userId
+        });
+        
         if (!userId) {
+            console.error('getUserRegistration: User ID not found');
             return res.status(401).send(response.toJson('User authentication required'));
         }
 
+        // Validate eventId
+        if (!eventId || !mongoose.Types.ObjectId.isValid(eventId)) {
+            console.error('getUserRegistration: Invalid event ID:', eventId);
+            return res.status(400).send(response.toJson('Invalid event ID'));
+        }
+
+        // Convert to ObjectId if needed
+        const eventObjectId = new mongoose.Types.ObjectId(eventId);
+        const userObjectId = new mongoose.Types.ObjectId(userId);
+
+        console.log('Searching for registration:', {
+            eventId: eventObjectId.toString(),
+            userId: userObjectId.toString()
+        });
+
         const registration = await EventRegistrationsModel.findOne({
-            eventId,
-            userId,
+            eventId: eventObjectId,
+            userId: userObjectId,
             isDeleted: false
         })
-        .populate('eventId', 'title eventDate location startTime endTime')
+        .populate('eventId', 'title eventDate location startTime endTime description')
         .populate('userId', 'name email');
 
         if (!registration) {
+            console.log('Registration not found:', {
+                eventId: eventObjectId.toString(),
+                userId: userObjectId.toString()
+            });
+            
+            // Check if registration exists but is deleted
+            const deletedRegistration = await EventRegistrationsModel.findOne({
+                eventId: eventObjectId,
+                userId: userObjectId,
+                isDeleted: true
+            });
+            
+            if (deletedRegistration) {
+                console.log('Registration exists but is deleted');
+            }
+            
+            // Check if event exists
+            const event = await EventsModel.findById(eventObjectId);
+            if (!event) {
+                console.log('Event not found:', eventObjectId.toString());
+            }
+            
             return res.status(404).send(response.toJson('Registration not found'));
         }
 
+        console.log('Registration found:', {
+            registrationId: registration._id.toString(),
+            hasQRCode: !!registration.qrCode
+        });
+
+        // Return registration with booking status
         return res.status(200).send(response.toJson(
             messages['en'].common.detail_success,
-            registration
+            {
+                ...registration.toObject(),
+                bookingStatus: registration.status // Explicitly include booking status
+            }
         ));
     } catch (err) {
         const statusCode = err.statusCode || 500;
         const errMess = err.message || err;
+        console.error('Error in getUserRegistration:', {
+            error: errMess,
+            eventId: req.params.eventId,
+            userId: req.user?._id || req.userId,
+            stack: err.stack
+        });
         return res.status(statusCode).send(response.toJson(errMess));
     }
 };
