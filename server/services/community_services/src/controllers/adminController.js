@@ -551,102 +551,32 @@ const createCommunity = async (req, res) => {
         const zipCode = parsedLocation?.zipCode || '';
         const country = parsedLocation?.country || 'India';
 
-        // Handle file upload using fileUpload middleware pattern
+        // Handle file upload using Cloudinary
         let bannerImage = null;
         if (req.files && req.files.bannerImage) {
             const file = req.files.bannerImage;
+            const { uploadToCloudinary } = require('../libs/cloudinary');
             
-            // Ensure uploads directory exists
-            const uploadsDir = path.join(__dirname, '../uploads');
-            const fs = require('fs');
-            if (!fs.existsSync(uploadsDir)) {
-                fs.mkdirSync(uploadsDir, { recursive: true });
-                console.log('✅ Created uploads directory:', uploadsDir);
-            }
-            
-            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-            const fileExtension = file.name.split('.').pop() || 'jpg';
-            const filename = `bannerImage-${uniqueSuffix}.${fileExtension}`;
-            const uploadPath = path.join(uploadsDir, filename);
-            
-            console.log('💾 Saving banner image...');
-            console.log('   Original name:', file.name);
-            console.log('   File size:', file.size, 'bytes');
-            console.log('   MIME type:', file.mimetype);
-            console.log('   Save path:', uploadPath);
-            console.log('   File object keys:', Object.keys(file));
-            console.log('   Has .data property:', !!file.data);
-            console.log('   Has .mv method:', typeof file.mv === 'function');
-            
-            // Save file - try multiple methods
             try {
-                let fileSaved = false;
+                console.log('☁️  Uploading banner image to Cloudinary...');
+                console.log('   Original name:', file.name);
+                console.log('   File size:', file.size, 'bytes');
+                console.log('   MIME type:', file.mimetype);
                 
-                // Method 1: Try file.mv() first (express-fileupload method)
-                if (typeof file.mv === 'function') {
-                    console.log('   Attempting to save using file.mv()...');
-                    try {
-                        await file.mv(uploadPath);
-                        fileSaved = true;
-                        console.log('   ✅ file.mv() completed');
-                    } catch (mvError) {
-                        console.log('   ⚠️  file.mv() failed:', mvError.message);
-                    }
-                }
+                const uploadResult = await uploadToCloudinary(file, 'communities/banners', 'image');
+                bannerImage = uploadResult.secure_url;
                 
-                // Method 2: Use fs.writeFileSync if file.mv() doesn't exist or failed
-                if (!fileSaved && file.data) {
-                    console.log('   Attempting to save using fs.writeFileSync()...');
-                    try {
-                        // file.data is a Buffer when useTempFiles is false
-                        fs.writeFileSync(uploadPath, file.data);
-                        fileSaved = true;
-                        console.log('   ✅ fs.writeFileSync() completed');
-                    } catch (writeError) {
-                        console.log('   ⚠️  fs.writeFileSync() failed:', writeError.message);
-                    }
-                }
-                
-                if (!fileSaved) {
-                    throw new Error('All file save methods failed. File object structure: ' + JSON.stringify(Object.keys(file)));
-                }
-                
-                // Verify file was saved
-                if (fs.existsSync(uploadPath)) {
-                    const stats = fs.statSync(uploadPath);
-                    console.log('✅ Banner image saved successfully!');
-                    console.log('   Saved size:', stats.size, 'bytes');
-                    console.log('   Original size:', file.size, 'bytes');
-                    console.log('   File exists:', fs.existsSync(uploadPath));
-                    console.log('   Full path:', uploadPath);
-                    
-                    if (stats.size === 0) {
-                        console.error('   ⚠️  WARNING: Saved file is 0 bytes!');
-                    }
-                } else {
-                    console.error('❌ File was not saved! Path does not exist:', uploadPath);
-                    console.error('   Uploads directory exists:', fs.existsSync(uploadsDir));
-                    console.error('   Uploads directory path:', uploadsDir);
-                    console.error('   Current working directory:', process.cwd());
-                    console.error('   __dirname:', __dirname);
-                    throw new Error('File was not saved to disk');
-                }
-                
-                bannerImage = `/uploads/${filename}`;
-                console.log('   URL path:', bannerImage);
-            } catch (saveError) {
-                console.error('❌ Error saving file:', saveError);
-                console.error('   Error message:', saveError.message);
-                console.error('   Error stack:', saveError.stack);
-                throw new Error('Failed to save banner image: ' + saveError.message);
+                console.log('✅ Banner image uploaded to Cloudinary successfully!');
+                console.log('   Cloudinary URL:', bannerImage);
+                console.log('   Public ID:', uploadResult.public_id);
+            } catch (uploadError) {
+                console.error('❌ Error uploading to Cloudinary:', uploadError);
+                throw new Error('Failed to upload banner image: ' + uploadError.message);
             }
         } else {
             console.log('⚠️  No banner image file received');
             if (req.files) {
                 console.log('   Available files:', Object.keys(req.files));
-                console.log('   Files object:', JSON.stringify(Object.keys(req.files), null, 2));
-            } else {
-                console.log('   req.files is null or undefined');
             }
         }
 
@@ -1158,27 +1088,23 @@ const createCommunityEvent = async (req, res) => {
             return res.status(404).send(response.toJson(messages['en'].common.not_exists));
         }
 
-        // Handle file upload using fileUpload middleware pattern
+        // Handle file upload using Cloudinary
         let images = [];
         if (req.files && req.files.images) {
-            const fs = require('fs');
-            const uploadsDir = path.join(__dirname, '../uploads');
+            const { uploadMultipleToCloudinary } = require('../libs/cloudinary');
             
-            // Ensure uploads directory exists
-            if (!fs.existsSync(uploadsDir)) {
-                fs.mkdirSync(uploadsDir, { recursive: true });
-            }
-            
-            const files = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
-            
-            for (const file of files) {
-                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-                const filename = 'event-' + uniqueSuffix + '.' + file.name.split('.').pop();
-                const uploadPath = path.join(uploadsDir, filename);
+            try {
+                console.log('☁️  Uploading event images to Cloudinary...');
+                const files = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
                 
-                // Save file
-                await file.mv(uploadPath);
-                images.push(`/uploads/${filename}`);
+                const uploadResults = await uploadMultipleToCloudinary(files, 'communities/events', 'image');
+                images = uploadResults.map(result => result.secure_url);
+                
+                console.log('✅ Event images uploaded to Cloudinary successfully!');
+                console.log('   Number of images:', images.length);
+            } catch (uploadError) {
+                console.error('❌ Error uploading event images to Cloudinary:', uploadError);
+                throw new Error('Failed to upload event images: ' + uploadError.message);
             }
         }
 

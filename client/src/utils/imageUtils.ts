@@ -1,6 +1,6 @@
 /**
  * Utility function to construct proper image URLs for uploaded images
- * Handles both relative paths (/uploads/...) and full URLs
+ * Handles Cloudinary URLs (https://res.cloudinary.com/...), relative paths (/uploads/...), and full URLs
  */
 export const getImageUrl = (imagePath: string | null | undefined): string => {
   if (!imagePath) {

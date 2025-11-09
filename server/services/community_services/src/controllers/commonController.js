@@ -121,12 +121,7 @@ async function commonLargeFileUpload(reqFiles, fileType, root) {
 		const files = Array.isArray(reqFiles) ? reqFiles : [reqFiles];
 
 		let uploadedFiles = [];
-
-		// Ensure uploads directory exists
-		const uploadsDir = path.join(__dirname, '../uploads');
-		if (!fs.existsSync(uploadsDir)) {
-			fs.mkdirSync(uploadsDir, { recursive: true });
-		}
+		const { uploadMultipleToCloudinary } = require('../libs/cloudinary');
 
 		for (const file of files) {
 			if (!allowedMimetypes.includes(file.mimetype)) {
@@ -143,24 +138,27 @@ async function commonLargeFileUpload(reqFiles, fileType, root) {
 					message: `${file.name} has an invalid file size`,
 				};
 			}
+		}
 
-			// Create directory structure if it doesn't exist
-			const fileDir = path.join(uploadsDir, root, fileType);
-			if (!fs.existsSync(fileDir)) {
-				fs.mkdirSync(fileDir, { recursive: true });
-			}
+		// Upload all files to Cloudinary
+		try {
+			console.log('☁️  Uploading large files to Cloudinary via commonLargeFileUpload...');
+			const cloudinaryFolder = `${root}/${fileType}`;
+			const uploadResults = await uploadMultipleToCloudinary(files, cloudinaryFolder, 'image');
+			
+			uploadedFiles = uploadResults.map(result => ({
+				fileName: result.original_filename || result.public_id.split('/').pop(),
+				filePath: result.secure_url,
+			}));
 
-			const fileName = `${Date.now()}_${file.name}`;
-			const filePath = path.join(fileDir, fileName);
-			const relativePath = `/uploads/${root}/${fileType}/${fileName}`;
-
-			// Save file to local storage
-			await file.mv(filePath);
-
-			uploadedFiles.push({
-				fileName: fileName,
-				filePath: relativePath,
-			});
+			console.log('✅ Large files uploaded to Cloudinary successfully!');
+			console.log('   Number of files:', uploadedFiles.length);
+		} catch (uploadError) {
+			console.error('❌ Error uploading to Cloudinary:', uploadError);
+			return {
+				isSuccess: false,
+				message: 'Failed to upload files: ' + uploadError.message,
+			};
 		}
 
 		console.log('uploadedFiles.........', uploadedFiles);
@@ -372,12 +370,7 @@ async function commonFileUpload(reqFiles, fileType, root) {
 		const files = Array.isArray(reqFiles) ? reqFiles : [reqFiles];
 
 		let uploadedFiles = [];
-
-		// Ensure uploads directory exists
-		const uploadsDir = path.join(__dirname, '../uploads');
-		if (!fs.existsSync(uploadsDir)) {
-			fs.mkdirSync(uploadsDir, { recursive: true });
-		}
+		const { uploadMultipleToCloudinary } = require('../libs/cloudinary');
 
 		for (const file of files) {
 			if (!allowedMimetypes.includes(file.mimetype)) {
@@ -394,24 +387,27 @@ async function commonFileUpload(reqFiles, fileType, root) {
 					message: `${file.name} has an invalid file size`,
 				};
 			}
+		}
 
-			// Create directory structure if it doesn't exist
-			const fileDir = path.join(uploadsDir, root, fileType);
-			if (!fs.existsSync(fileDir)) {
-				fs.mkdirSync(fileDir, { recursive: true });
-			}
+		// Upload all files to Cloudinary
+		try {
+			console.log('☁️  Uploading files to Cloudinary via commonFileUpload...');
+			const cloudinaryFolder = `${root}/${fileType}`;
+			const uploadResults = await uploadMultipleToCloudinary(files, cloudinaryFolder, 'image');
+			
+			uploadedFiles = uploadResults.map(result => ({
+				fileName: result.original_filename || result.public_id.split('/').pop(),
+				filePath: result.secure_url,
+			}));
 
-			const fileName = `${Date.now()}_${file.name}`;
-			const filePath = path.join(fileDir, fileName);
-			const relativePath = `/uploads/${root}/${fileType}/${fileName}`;
-
-			// Save file to local storage
-			await file.mv(filePath);
-
-			uploadedFiles.push({
-				fileName: fileName,
-				filePath: relativePath,
-			});
+			console.log('✅ Files uploaded to Cloudinary successfully!');
+			console.log('   Number of files:', uploadedFiles.length);
+		} catch (uploadError) {
+			console.error('❌ Error uploading to Cloudinary:', uploadError);
+			return {
+				isSuccess: false,
+				message: 'Failed to upload files: ' + uploadError.message,
+			};
 		}
 
 		console.log('uploadedFiles.........', uploadedFiles);

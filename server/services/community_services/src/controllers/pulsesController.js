@@ -52,48 +52,25 @@ const createPulse = async (req, res) => {
             return res.status(403).send(response.toJson('You must be a member of this community to create pulses'));
         }
 
-        // Handle file upload
+        // Handle file upload using Cloudinary
         let attachment = null;
         if (req.files && req.files.attachment) {
-            const fs = require('fs');
-            const path = require('path');
-            const uploadsDir = path.join(__dirname, '../uploads');
-            
-            // Ensure uploads directory exists
-            if (!fs.existsSync(uploadsDir)) {
-                fs.mkdirSync(uploadsDir, { recursive: true });
-                console.log('✅ Created uploads directory:', uploadsDir);
-            }
-            
             const file = req.files.attachment;
-            const fileName = `pulse-${Date.now()}-${file.name}`;
-            const uploadPath = path.join(uploadsDir, fileName);
+            const { uploadToCloudinary } = require('../libs/cloudinary');
             
-            // Save file with fallback methods
-            let fileSaved = false;
-            if (typeof file.mv === 'function') {
-                try {
-                    await file.mv(uploadPath);
-                    fileSaved = true;
-                } catch (mvError) {
-                    console.log('⚠️  file.mv() failed, trying fs.writeFileSync...');
-                }
-            }
-            
-            if (!fileSaved && file.data) {
-                try {
-                    fs.writeFileSync(uploadPath, file.data);
-                    fileSaved = true;
-                } catch (writeError) {
-                    console.error('❌ Failed to save pulse image:', writeError.message);
-                }
-            }
-            
-            if (fileSaved && fs.existsSync(uploadPath)) {
-                attachment = `/uploads/${fileName}`;
-                console.log('✅ Pulse image saved:', fileName);
-            } else {
-                console.error('❌ Failed to save pulse image:', fileName);
+            try {
+                console.log('☁️  Uploading pulse image to Cloudinary...');
+                console.log('   Original name:', file.name);
+                console.log('   File size:', file.size, 'bytes');
+                
+                const uploadResult = await uploadToCloudinary(file, 'communities/pulses', 'image');
+                attachment = uploadResult.secure_url;
+                
+                console.log('✅ Pulse image uploaded to Cloudinary successfully!');
+                console.log('   Cloudinary URL:', attachment);
+            } catch (uploadError) {
+                console.error('❌ Error uploading pulse image to Cloudinary:', uploadError);
+                throw new Error('Failed to upload pulse image: ' + uploadError.message);
             }
         }
 

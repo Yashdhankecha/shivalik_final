@@ -42,50 +42,23 @@ const createEvent = async (req, res) => {
             return res.status(403).send(response.toJson('Only community managers can create events'));
         }
 
-        // Handle file uploads
+        // Handle file uploads using Cloudinary
         let images = [];
         if (req.files && req.files.images) {
-            const fs = require('fs');
-            const path = require('path');
-            const uploadsDir = path.join(__dirname, '../uploads');
+            const { uploadMultipleToCloudinary } = require('../libs/cloudinary');
             
-            // Ensure uploads directory exists
-            if (!fs.existsSync(uploadsDir)) {
-                fs.mkdirSync(uploadsDir, { recursive: true });
-                console.log('✅ Created uploads directory:', uploadsDir);
-            }
-            
-            const files = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
-            for (const file of files) {
-                const fileName = `event-${Date.now()}-${file.name}`;
-                const uploadPath = path.join(uploadsDir, fileName);
+            try {
+                console.log('☁️  Uploading event images to Cloudinary...');
+                const files = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
                 
-                // Save file with fallback methods
-                let fileSaved = false;
-                if (typeof file.mv === 'function') {
-                    try {
-                        await file.mv(uploadPath);
-                        fileSaved = true;
-                    } catch (mvError) {
-                        console.log('⚠️  file.mv() failed, trying fs.writeFileSync...');
-                    }
-                }
+                const uploadResults = await uploadMultipleToCloudinary(files, 'communities/events', 'image');
+                images = uploadResults.map(result => result.secure_url);
                 
-                if (!fileSaved && file.data) {
-                    try {
-                        fs.writeFileSync(uploadPath, file.data);
-                        fileSaved = true;
-                    } catch (writeError) {
-                        console.error('❌ Failed to save event image:', writeError.message);
-                    }
-                }
-                
-                if (fileSaved && fs.existsSync(uploadPath)) {
-                    images.push(`/uploads/${fileName}`);
-                    console.log('✅ Event image saved:', fileName);
-                } else {
-                    console.error('❌ Failed to save event image:', fileName);
-                }
+                console.log('✅ Event images uploaded to Cloudinary successfully!');
+                console.log('   Number of images:', images.length);
+            } catch (uploadError) {
+                console.error('❌ Error uploading event images to Cloudinary:', uploadError);
+                throw new Error('Failed to upload event images: ' + uploadError.message);
             }
         }
 
