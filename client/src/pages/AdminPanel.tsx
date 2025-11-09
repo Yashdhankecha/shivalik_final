@@ -77,14 +77,14 @@ const AdminPanel = () => {
 
   // Sidebar Navigation Component
   const SidebarNav = ({ onNavClick }: { onNavClick?: () => void }) => (
-    <nav className="flex flex-col h-full min-h-screen md:min-h-0">
+    <nav className="flex flex-col h-full min-h-screen md:min-h-0 bg-white">
       <div className="p-4 border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center shadow-lg">
+          <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center shadow-sm">
             <ShieldCheck className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-black">Admin Panel</h2>
+            <h2 className="text-lg font-bold text-gray-900">Admin Panel</h2>
             <p className="text-xs text-gray-600">Management System</p>
           </div>
         </div>
@@ -100,10 +100,10 @@ const AdminPanel = () => {
                   to={item.href}
                   onClick={onNavClick}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200",
                     isActive
-                      ? "bg-gray-900 text-white shadow-md"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-gray-900 text-white shadow-sm"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   )}
                 >
                   <item.icon className={cn("w-5 h-5 flex-shrink-0", isActive ? "text-white" : "text-gray-600")} />
@@ -118,26 +118,15 @@ const AdminPanel = () => {
       {/* User Info in Sidebar */}
       <div className="p-4 border-t border-gray-200 flex-shrink-0">
         <div className="flex items-center gap-3 mb-3">
-          <Avatar className="w-10 h-10 border-2 border-gray-400 flex-shrink-0">
+          <Avatar className="w-10 h-10 border border-gray-300 flex-shrink-0">
             <AvatarFallback className="bg-gray-800 text-white font-semibold">
               {user?.name?.charAt(0) || 'A'}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-black truncate">{user?.name || 'Admin'}</p>
-            <p className="text-xs text-gray-600 truncate">
-              {user?.role === 'SuperAdmin' ? 'Super Admin' : 'Administrator'}
-            </p>
+            <p className="text-sm font-semibold text-gray-900 truncate">{user?.name || 'Admin'}</p>
           </div>
         </div>
-        <Button
-          onClick={handleLogout}
-          variant="outline"
-          className="w-full justify-start gap-2"
-        >
-          <LogOut className="w-4 h-4" />
-          <span>Logout</span>
-        </Button>
       </div>
     </nav>
   );
@@ -159,7 +148,7 @@ const AdminPanel = () => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Navigation Bar */}
-        <nav className="bg-white border-b border-gray-300 shadow-sm sticky top-0 z-40">
+        <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
           <div className="px-4 sm:px-6">
             <div className="flex items-center justify-between h-14 sm:h-16">
               {/* Left: Hamburger Menu (Mobile) + Logo */}
@@ -175,15 +164,15 @@ const AdminPanel = () => {
 
                 {/* Logo - Mobile */}
                 <div className="md:hidden flex items-center gap-2">
-                  <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center shadow-lg">
+                  <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center shadow-sm">
                     <ShieldCheck className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-base font-bold text-black">Admin</span>
+                  <span className="text-base font-bold text-gray-900">Admin</span>
                 </div>
 
                 {/* Logo - Desktop (if needed) */}
                 <div className="hidden md:flex items-center gap-2">
-                  <span className="text-lg font-bold text-black">Admin Panel</span>
+                  <span className="text-lg font-bold text-gray-900">Admin Panel</span>
                 </div>
               </div>
 
@@ -194,32 +183,22 @@ const AdminPanel = () => {
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center gap-1 sm:gap-2 hover:bg-gray-100 rounded-full p-1 pr-2 sm:pr-3 transition-colors border border-gray-300"
                   >
-                    <Avatar className="w-7 h-7 sm:w-9 sm:h-9 border-2 border-gray-400">
+                    <Avatar className="w-7 h-7 sm:w-9 sm:h-9 border border-gray-300">
                       <AvatarFallback className="bg-gray-800 text-white font-semibold text-xs sm:text-sm">
                         {user?.name?.charAt(0) || 'A'}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="text-left hidden sm:block">
-                      <p className="text-xs sm:text-sm font-semibold text-black">{user?.name || 'Admin'}</p>
-                      <p className="text-xs text-gray-600">{user?.role === 'SuperAdmin' ? 'Super Admin' : 'Admin'}</p>
-                    </div>
-                    <ChevronRight className={`w-3 h-3 sm:w-4 sm:h-4 text-black transition-transform ${showUserMenu ? 'rotate-90' : ''}`} />
+                    <span className="hidden sm:inline text-sm font-medium text-gray-900">
+                      {user?.name || 'Admin'}
+                    </span>
                   </button>
 
+                  {/* User Dropdown Menu */}
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-1 w-48 sm:w-56 bg-white border border-gray-300 rounded-lg shadow-xl py-2 z-50">
-                      <div className="px-3 py-2 sm:px-4 sm:py-3 border-b border-gray-200">
-                        <p className="font-semibold text-black text-sm sm:text-base">{user?.name || 'Admin User'}</p>
-                        <p className="text-xs sm:text-sm text-gray-600">{user?.email || 'admin@example.com'}</p>
-                        <p className="text-xs text-gray-500 mt-1">{user?.role === 'SuperAdmin' ? 'Super Administrator' : 'Administrator'}</p>
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border border-gray-200 z-50">
+                      <div className="px-4 py-2 border-b border-gray-100">
+                        <p className="text-sm font-medium text-gray-900">{user?.name || 'Admin'}</p>
                       </div>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full px-3 py-2 sm:px-4 sm:py-2 text-left hover:bg-gray-100 text-black flex items-center gap-2 sm:gap-3 text-sm sm:text-base"
-                      >
-                        <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
-                        <span>Logout</span>
-                      </button>
                     </div>
                   )}
                 </div>
@@ -228,8 +207,8 @@ const AdminPanel = () => {
           </div>
         </nav>
 
-        {/* Main Content */}
-        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto bg-gray-50 min-h-[calc(100vh-4rem)]">
+        {/* Page Content */}
+        <main className="flex-1 p-4 sm:p-6 overflow-auto">
           <Outlet />
         </main>
       </div>

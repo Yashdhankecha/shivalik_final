@@ -150,3 +150,6 @@ All colors MUST be HSL.
     color: #000000;
   }
 }
+
+/* Import Global Styles */
+@import './styles/global.css';

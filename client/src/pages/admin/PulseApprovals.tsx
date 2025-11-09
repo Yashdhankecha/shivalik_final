@@ -31,8 +31,7 @@ import {
   Clock,
   User,
   Mail,
-  Building2,
-  IndianRupee
+  Building2
 } from 'lucide-react';
 
 interface Pulse {
@@ -41,18 +40,40 @@ interface Pulse {
   description: string;
   territory: string;
   attachment?: string;
-  userId: {
+  userId?: {
     _id: string;
     name: string;
     email?: string;
-  };
-  communityId: {
+  } | string;
+  communityId?: {
     _id: string;
     name: string;
-  };
+  } | string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
 }
+
+// Helper functions to safely extract properties
+const getUserName = (user: Pulse['userId']) => {
+  if (typeof user === 'object' && user !== null && 'name' in user) {
+    return user.name;
+  }
+  return 'Unknown User';
+};
+
+const getUserEmail = (user: Pulse['userId']) => {
+  if (typeof user === 'object' && user !== null && 'email' in user) {
+    return user.email;
+  }
+  return undefined;
+};
+
+const getCommunityName = (community: Pulse['communityId']) => {
+  if (typeof community === 'object' && community !== null && 'name' in community) {
+    return community.name;
+  }
+  return 'Unknown Community';
+};
 
 const PulseApprovals = () => {
   const [pulses, setPulses] = useState<Pulse[]>([]);
@@ -144,12 +165,12 @@ const PulseApprovals = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
-        return <Badge className="bg-green-100 text-green-800">Approved</Badge>;
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Approved</Badge>;
       case 'rejected':
-        return <Badge className="bg-red-100 text-red-800">Rejected</Badge>;
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Rejected</Badge>;
       case 'pending':
       default:
-        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Pending</Badge>;
     }
   };
 
@@ -162,25 +183,25 @@ const PulseApprovals = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-black">Pulse Approvals</h1>
+    <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Pulse Approvals</h1>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
             placeholder="Search pulses..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 py-2"
           />
         </div>
         <div className="flex gap-2">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <Filter className="w-4 h-4 mr-2" />
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
@@ -196,9 +217,9 @@ const PulseApprovals = () => {
 
       {/* Pulses List */}
       {pulses.length === 0 ? (
-        <Card className="p-12 text-center bg-gray-50 border-2 border-gray-200">
-          <Clock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-black mb-2">No Pulses Found</h3>
+        <Card className="p-8 sm:p-12 text-center bg-gray-50 border-2 border-gray-200 rounded-xl">
+          <Clock className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-gray-900 mb-2">No Pulses Found</h3>
           <p className="text-gray-600">
             {searchTerm || statusFilter !== 'pending' 
               ? 'No pulses match your search criteria' 
@@ -208,40 +229,48 @@ const PulseApprovals = () => {
       ) : (
         <div className="space-y-4">
           {pulses.map((pulse) => (
-            <Card key={pulse._id} className="border-2 hover:border-gray-300 transition-colors">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-start gap-4 flex-1">
+            <Card key={pulse._id} className="border-2 hover:border-gray-300 transition-colors rounded-xl shadow-sm">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row gap-4 flex-1">
                     {pulse.attachment ? (
-                      <div className="w-24 h-24 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
-                        <img src={pulse.attachment} alt={pulse.title} className="w-full h-full object-cover" />
+                      <div className="w-full sm:w-24 h-48 sm:h-24 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
+                        <img 
+                          src={pulse.attachment} 
+                          alt={pulse.title} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
                       </div>
                     ) : (
-                      <div className="w-24 h-24 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <div className="w-full sm:w-24 h-48 sm:h-24 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
                         <ImageIcon className="w-8 h-8 text-gray-400" />
                       </div>
                     )}
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-bold text-lg text-black">{pulse.title}</h3>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
+                        <h3 className="text-lg font-bold text-gray-900">{pulse.title}</h3>
                         {getStatusBadge(pulse.status)}
                       </div>
-                      <p className="text-sm text-gray-700 mb-3 line-clamp-2">{pulse.description}</p>
-                      <div className="space-y-1 text-sm text-gray-600">
+                      <p className="text-sm text-gray-700 mb-4 line-clamp-2">{pulse.description}</p>
+                      <div className="space-y-2 text-sm text-gray-600">
                         <div className="flex items-center gap-2">
-                          <User className="w-4 h-4" />
-                          <span>User: {pulse.userId?.name || 'Unknown User'}</span>
-                          {pulse.userId?.email && (
+                          <User className="w-4 h-4 flex-shrink-0" />
+                          <span>User: {getUserName(pulse.userId)}</span>
+                          {getUserEmail(pulse.userId) && (
                             <>
                               <span className="text-gray-400">•</span>
-                              <Mail className="w-4 h-4" />
-                              <span>{pulse.userId.email}</span>
+                              <Mail className="w-4 h-4 flex-shrink-0" />
+                              <span>{getUserEmail(pulse.userId)}</span>
                             </>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <Building2 className="w-4 h-4" />
-                          <span>Community: {pulse.communityId?.name || 'Unknown Community'}</span>
+                          <Building2 className="w-4 h-4 flex-shrink-0" />
+                          <span>Community: {getCommunityName(pulse.communityId)}</span>
                         </div>
                       </div>
                     </div>
@@ -250,7 +279,7 @@ const PulseApprovals = () => {
 
                 {/* Approval Info (if approved or rejected) */}
                 {pulse.status !== 'pending' && (
-                  <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
                     <p className="text-sm text-gray-700">
                       {pulse.status === 'approved' ? 'Approved' : 'Rejected'} on {new Date(pulse.createdAt).toLocaleDateString()}
                     </p>
@@ -259,7 +288,7 @@ const PulseApprovals = () => {
 
                 {/* Action Buttons */}
                 {pulse.status === 'pending' && (
-                  <div className="flex gap-3">
+                  <div className="mt-4 flex flex-col sm:flex-row gap-3">
                     <Button
                       onClick={() => handleApprove(pulse._id)}
                       className="bg-black hover:bg-gray-800 text-white flex-1"
@@ -278,7 +307,6 @@ const PulseApprovals = () => {
                   </div>
                 )}
               </CardContent>
-
             </Card>
           ))}
         </div>
@@ -286,7 +314,7 @@ const PulseApprovals = () => {
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-sm text-gray-600">
             Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} pulses
           </div>
@@ -295,6 +323,7 @@ const PulseApprovals = () => {
               variant="outline"
               onClick={() => handlePageChange(pagination.page - 1)}
               disabled={pagination.page === 1}
+              className="px-3 sm:px-4"
             >
               Previous
             </Button>
@@ -302,6 +331,7 @@ const PulseApprovals = () => {
               variant="outline"
               onClick={() => handlePageChange(pagination.page + 1)}
               disabled={pagination.page === pagination.totalPages}
+              className="px-3 sm:px-4"
             >
               Next
             </Button>
@@ -311,22 +341,22 @@ const PulseApprovals = () => {
 
       {/* Reject Modal */}
       <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-lg sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Reject Pulse</DialogTitle>
+            <DialogTitle className="text-xl">Reject Pulse</DialogTitle>
           </DialogHeader>
           {selectedPulse && (
             <div className="space-y-4 mt-4">
               <div className="p-4 bg-gray-50 rounded-lg">
                 <p className="text-sm font-medium text-gray-700 mb-1">Pulse:</p>
-                <p className="text-black">{selectedPulse.title}</p>
+                <p className="text-gray-900 font-medium">{selectedPulse.title}</p>
                 <p className="text-sm font-medium text-gray-700 mb-1 mt-3">User:</p>
-                <p className="text-black">
-                  {selectedPulse.userId?.name || 'Unknown User'} 
-                  {selectedPulse.userId?.email && ` (${selectedPulse.userId.email})`}
+                <p className="text-gray-900">
+                  {getUserName(selectedPulse.userId)}
+                  {getUserEmail(selectedPulse.userId) && ` (${getUserEmail(selectedPulse.userId)})`}
                 </p>
                 <p className="text-sm font-medium text-gray-700 mb-1 mt-3">Community:</p>
-                <p className="text-black">{selectedPulse.communityId?.name || 'Unknown Community'}</p>
+                <p className="text-gray-900">{getCommunityName(selectedPulse.communityId)}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-700">
@@ -343,7 +373,7 @@ const PulseApprovals = () => {
                   This message will be sent to the user explaining why their pulse was rejected.
                 </p>
               </div>
-              <div className="flex justify-end gap-3">
+              <div className="flex flex-col sm:flex-row justify-end gap-3">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -351,12 +381,13 @@ const PulseApprovals = () => {
                     setRejectionReason('');
                     setSelectedPulse(null);
                   }}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleReject}
-                  className="bg-black hover:bg-gray-800"
+                  className="bg-black hover:bg-gray-800 w-full sm:w-auto"
                   disabled={!rejectionReason.trim()}
                 >
                   <X className="w-4 h-4 mr-2" />

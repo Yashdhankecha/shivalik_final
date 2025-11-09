@@ -47,7 +47,7 @@ const HeroSection = ({ onExplore }: HeroSectionProps) => {
     }, [displayedText, isDeleting, currentPhraseIndex]);
 
     return (
-        <div className="relative min-h-[90vh] flex items-center overflow-hidden">
+        <div className="relative min-h-[70vh] flex items-center overflow-hidden pt-0">
             {/* Animated Background */}
             <div className="absolute inset-0 bg-white">
                 {/* Grid Pattern */}
@@ -55,24 +55,24 @@ const HeroSection = ({ onExplore }: HeroSectionProps) => {
             </div>
 
             {/* Content */}
-            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                     {/* Left Column - Text Content */}
-                    <div className="text-black space-y-8">
+                    <div className="text-black space-y-6">
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full border border-gray-300">
                             <Sparkles className="w-4 h-4 text-gray-700" />
                             <span className="text-sm font-medium text-gray-800">Welcome to Shivalik Real Estate</span>
                         </div>
 
                         <div className="space-y-4">
-                            <h1 className="text-5xl md:text-7xl font-bold leading-tight">
+                            <h1 className="text-5xl md:text-6xl font-bold leading-tight">
                                 Find{' '}
                                 <span className="text-black">
                                     {displayedText}
                                     <span className="animate-pulse">|</span>
-                                </span>
+                                </span> 
                             </h1>
-                            <p className="text-xl md:text-2xl text-gray-600 max-w-2xl">
+                            <p className="text-xl text-gray-600 max-w-2xl">
                                 Discover premium real estate communities with world-class amenities, 
                                 vibrant neighborhoods, and endless possibilities.
                             </p>
@@ -90,33 +90,33 @@ const HeroSection = ({ onExplore }: HeroSectionProps) => {
                         </div>
 
                         {/* Stats */}
-                        <div className="grid grid-cols-3 gap-6 pt-8">
+                        <div className="grid grid-cols-3 gap-4 pt-6">
                             <div className="text-center">
                                 <div className="flex items-center justify-center mb-2">
                                     <Building2 className="w-6 h-6 text-gray-800" />
                                 </div>
-                                <div className="text-3xl font-bold text-black">50+</div>
+                                <div className="text-2xl font-bold text-black">50+</div>
                                 <div className="text-sm text-gray-600">Communities</div>
                             </div>
                             <div className="text-center">
                                 <div className="flex items-center justify-center mb-2">
                                     <Users className="w-6 h-6 text-gray-800" />
                                 </div>
-                                <div className="text-3xl font-bold text-black">10K+</div>
+                                <div className="text-2xl font-bold text-black">10K+</div>
                                 <div className="text-sm text-gray-600">Happy Residents</div>
                             </div>
                             <div className="text-center">
                                 <div className="flex items-center justify-center mb-2">
                                     <MapPin className="w-6 h-6 text-gray-800" />
                                 </div>
-                                <div className="text-3xl font-bold text-black">25+</div>
+                                <div className="text-2xl font-bold text-black">25+</div>
                                 <div className="text-sm text-gray-600">Cities</div>
                             </div>
                         </div>
                     </div>
 
                     {/* Right Column - Building Image */}
-                    <div className="hidden lg:block relative h-[600px]">
+                    <div className="hidden lg:block relative h-[500px]">
                         <div className="absolute inset-0 flex items-center justify-center">
                             <img 
                                 src="./image.png" alt="Modern Buildings"
@@ -127,12 +127,7 @@ const HeroSection = ({ onExplore }: HeroSectionProps) => {
                 </div>
             </div>
 
-            {/* Decorative wave */}
-            <div className="absolute bottom-0 left-0 right-0 z-20">
-                <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
-                    <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="#F9FAFB"/>
-                </svg>
-            </div>
+            
 
             {/* Add required animations to global CSS */}
             <style>{`

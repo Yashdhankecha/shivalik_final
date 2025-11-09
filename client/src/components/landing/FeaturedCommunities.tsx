@@ -39,9 +39,9 @@ const FeaturedCommunities = ({
     }
 
     return (
-        <section className="py-16 bg-white">
+        <section className="py-12 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center mb-12">
+                <div className="flex justify-between items-center mb-8">
                     <div>
                         <h2 className="text-4xl font-bold text-black mb-2">
                             Featured Communities

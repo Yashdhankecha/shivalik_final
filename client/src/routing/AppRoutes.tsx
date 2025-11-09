@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { PrivateRoute } from './PrivateRoute';
 import { PublicRoute } from './PublicRoute';
 import { GuestRoute } from './GuestRoute';
@@ -50,44 +50,12 @@ const ROLE_DEFAULTS: Record<string, string> = {
   Admin: '/admin/dashboard',
 };
 
-/* Component that decides where to redirect  */
-const RedirectByRole = () => {
-  const location = useLocation();
-  const roles = getUserRoles();
-
-  // Check if user is authenticated
-  const authToken = localStorage.getItem('auth_token');
-  
-  // If we're at the root path, determine where to redirect based on user role
-  if (location.pathname === '/' || location.pathname === '') {
-    // Special handling for admin token
-    if (authToken && authToken.startsWith('admin-token')) {
-      return <Navigate to="/admin/dashboard" replace />;
-    }
-    
-    // Find the first matching default route
-    for (const role of roles) {
-      if (ROLE_DEFAULTS[role]) {
-        return <Navigate to={ROLE_DEFAULTS[role]} replace />;
-      }
-    }
-    
-    // Fallback for all users
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  // If we are already on a page that belongs to the user – stay there
-  return null; // let the child route render
-};
-
 /* ────── Main router ────── */
-export { RedirectByRole };
-
 export const AppRoutes = () => {
   return (
     <Routes>
       {/* ROOT - Show Landing Page with Hero Section */}
-      <Route path="/" element={<RedirectByRole />} />
+      <Route path="/" element={<LandingPage />} />
       
       {/* USER DASHBOARD - Default page for authenticated users */}
       <Route path="/dashboard" element={<UserDashboard />} />
@@ -158,8 +126,8 @@ export const AppRoutes = () => {
         }
       />
 
-      {/* Global catch-all - redirect to dashboard */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      {/* Global catch-all - redirect to landing page */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };

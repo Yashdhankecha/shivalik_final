@@ -199,51 +199,35 @@ const PulsesTab = () => {
   if (loading && pulses.length === 0) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-black">Community Pulses</h2>
-          <p className="text-gray-600 mt-1">Stay updated with the latest community news and updates</p>
-        </div>
+    <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h2 className="text-2xl font-bold text-gray-900">Community Pulses</h2>
         {user && (
           <Dialog open={showDialog} onOpenChange={setShowDialog}>
             <DialogTrigger asChild>
-              <Button className="bg-black hover:bg-gray-800 text-white shadow-lg">
+              <Button className="bg-black hover:bg-gray-800 text-white shadow-sm">
                 <Plus className="w-4 h-4 mr-2" />
                 Create Pulse
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-lg sm:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-2xl">Create New Pulse</DialogTitle>
+                <DialogTitle className="text-xl">Create New Pulse</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Territory</label>
-                  <Select value={formData.territory} onValueChange={(value) => setFormData({ ...formData, territory: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="general">General</SelectItem>
-                      <SelectItem value="block-a">Block A</SelectItem>
-                      <SelectItem value="block-b">Block B</SelectItem>
-                      <SelectItem value="block-c">Block C</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Title *</label>
+                  <label className="block text-sm font-medium mb-2">Pulse Title *</label>
                   <Input
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Enter pulse title"
+                    placeholder="What's happening in your community?"
+                    className="py-2"
                   />
                 </div>
                 <div>
@@ -251,16 +235,31 @@ const PulsesTab = () => {
                   <Textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="What's on your mind?"
-                    rows={5}
+                    placeholder="Share details about what's happening..."
+                    rows={4}
+                    className="resize-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Attachment (Image)</label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                  <label className="block text-sm font-medium mb-2">Territory</label>
+                  <Select value={formData.territory} onValueChange={(value) => setFormData({ ...formData, territory: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select territory" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="general">General</SelectItem>
+                      <SelectItem value="news">News</SelectItem>
+                      <SelectItem value="discussion">Discussion</SelectItem>
+                      <SelectItem value="announcement">Announcement</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Image</label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                     {preview ? (
                       <div className="relative">
-                        <img src={preview} alt="Preview" className="max-h-64 mx-auto rounded-lg" />
+                        <img src={preview} alt="Preview" className="max-h-48 mx-auto rounded-lg" />
                         <button
                           onClick={() => {
                             setPreview(null);
@@ -273,9 +272,8 @@ const PulsesTab = () => {
                       </div>
                     ) : (
                       <label className="cursor-pointer">
-                        <ImageIcon className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                        <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                         <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
-                        <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 10MB</p>
                         <input
                           type="file"
                           accept="image/*"
@@ -286,7 +284,7 @@ const PulsesTab = () => {
                     )}
                   </div>
                 </div>
-                <div className="flex justify-end gap-3">
+                <div className="flex flex-col sm:flex-row justify-end gap-3">
                   <Button variant="outline" onClick={() => setShowDialog(false)}>
                     Cancel
                   </Button>
@@ -301,120 +299,127 @@ const PulsesTab = () => {
       </div>
 
       {pulses.length === 0 ? (
-        <Card className="p-12 text-center bg-gray-50 border-2 border-gray-200">
-          <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-black mb-2">No Pulses Yet</h3>
-          <p className="text-gray-600 mb-4">Be the first to share a pulse in this community</p>
+        <Card className="p-8 sm:p-12 text-center bg-gray-50 border-2 border-gray-200 rounded-xl">
+          <TrendingUp className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-gray-900 mb-2">No Pulses Yet</h3>
+          <p className="text-gray-600 mb-4">Be the first to share what's happening in your community!</p>
           {user && (
             <Button onClick={() => setShowDialog(true)} className="bg-black hover:bg-gray-800">
               <Plus className="w-4 h-4 mr-2" />
-              Create First Pulse
+              Create Your First Pulse
             </Button>
           )}
         </Card>
       ) : (
-        <div className="space-y-6">
-          {pulses.map((pulse) => {
-            const isLiked = likedPulses.has(pulse._id);
-            const isCopied = copiedPulseId === pulse._id;
-            
-            return (
-              <Card key={pulse._id} className="hover:shadow-xl transition-all duration-300 border-2 hover:border-gray-300">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="w-12 h-12 ring-2 ring-gray-200">
-                        <AvatarFallback className="bg-black text-white font-bold">
-                          {pulse.userId.name.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h4 className="font-semibold text-black">{pulse.userId.name}</h4>
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <Clock className="w-3 h-3" />
-                          <span>{new Date(pulse.createdAt).toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric', 
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <Badge variant="secondary" className="bg-gray-100 text-gray-700 border-gray-200">
-                      {pulse.territory}
-                    </Badge>
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-black mb-3">{pulse.title}</h3>
-                  <p className="text-gray-700 mb-4 leading-relaxed">{pulse.description}</p>
-                  
-                  {pulse.attachment && (
-                    <div className="rounded-xl overflow-hidden border border-gray-200 mb-4 shadow-md">
-                      <img src={pulse.attachment} alt="Pulse attachment" className="w-full h-auto max-h-96 object-cover" />
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center gap-6 pt-4 border-t">
-                    <button
-                      onClick={() => handleLike(pulse._id)}
-                      className={`flex items-center gap-2 transition-all ${
-                        isLiked 
-                          ? 'text-black hover:text-gray-700' 
-                          : 'text-gray-500 hover:text-black'
-                      }`}
-                    >
-                      <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-                      <span className="font-medium">{pulse.likes.length}</span>
-                    </button>
-                    <button className="flex items-center gap-2 text-gray-500 hover:text-black transition-colors">
-                      <MessageCircle className="w-5 h-5" />
-                      <span className="font-medium">{pulse.comments.length}</span>
-                    </button>
-                    <button 
-                      onClick={() => handleShare(pulse)}
-                      className="flex items-center gap-2 text-gray-500 hover:text-black transition-colors"
-                    >
-                      {isCopied ? (
-                        <>
-                          <Check className="w-5 h-5" />
-                          <span className="font-medium">Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Share2 className="w-5 h-5" />
-                          <span className="font-medium">Share</span>
-                        </>
+        <div className="space-y-4">
+          {pulses.map((pulse) => (
+            <Card key={pulse._id} className="hover:shadow-md transition-all duration-300 border border-gray-200 rounded-xl overflow-hidden">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <Avatar className="w-10 h-10 border border-gray-300 flex-shrink-0">
+                    <AvatarFallback className="bg-gray-800 text-white">
+                      {pulse.userId.name.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-2">
+                      <h3 className="font-bold text-gray-900">{pulse.userId.name}</h3>
+                      <span className="text-xs text-gray-500">
+                        {new Date(pulse.createdAt).toLocaleDateString()}
+                      </span>
+                      {pulse.status !== 'approved' && (
+                        <Badge variant="secondary" className="text-xs">
+                          {pulse.status === 'pending' ? 'Pending Approval' : 'Rejected'}
+                        </Badge>
                       )}
-                    </button>
+                    </div>
+                    
+                    <h4 className="font-semibold text-gray-900 mb-2">{pulse.title}</h4>
+                    <p className="text-gray-700 mb-4">{pulse.description}</p>
+                    
+                    {pulse.attachment && (
+                      <div className="relative mb-4 rounded-lg overflow-hidden border border-gray-200">
+                        <img 
+                          src={pulse.attachment} 
+                          alt={pulse.title} 
+                          className="w-full h-auto max-h-96 object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={() => handleLike(pulse._id)}
+                          className={`flex items-center gap-1 text-sm ${
+                            likedPulses.has(pulse._id) 
+                              ? 'text-red-500' 
+                              : 'text-gray-500 hover:text-red-500'
+                          }`}
+                        >
+                          <Heart 
+                            className={`w-4 h-4 ${likedPulses.has(pulse._id) ? 'fill-current' : ''}`} 
+                          />
+                          <span>{pulse.likes.length}</span>
+                        </button>
+                        <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-blue-500">
+                          <MessageCircle className="w-4 h-4" />
+                          <span>{pulse.comments.length}</span>
+                        </button>
+                      </div>
+                      
+                      <button
+                        onClick={() => handleShare(pulse)}
+                        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+                      >
+                        {copiedPulseId === pulse._id ? (
+                          <>
+                            <Check className="w-4 h-4" />
+                            <span>Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Share2 className="w-4 h-4" />
+                            <span>Share</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 
       {totalPages > 1 && (
-        <div className="flex justify-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
-            Previous
-          </Button>
-          <span className="flex items-center px-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-sm text-gray-600">
             Page {page} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-          >
-            Next
-          </Button>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 sm:px-4"
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-3 sm:px-4"
+            >
+              Next
+            </Button>
+          </div>
         </div>
       )}
     </div>

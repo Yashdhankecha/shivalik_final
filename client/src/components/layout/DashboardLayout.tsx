@@ -460,7 +460,7 @@ export const DashboardLayout = () => {
         collapsed: { mobile: !opened, desktop: false }
       }}
       padding="md"
-      styles={(theme) => ({
+      styles={{
         main: {
           backgroundColor: '#f9fafb',
           minHeight: 'calc(100vh - 60px)',
@@ -470,11 +470,11 @@ export const DashboardLayout = () => {
           },
         },
         navbar: {
-          [theme.fn.smallerThan('sm')]: {
+          '@media (max-width: 768px)': {
             display: opened ? 'block' : 'none',
           },
         },
-      })}
+      }}
     >
       <Modal
         opened={logoutModal}
@@ -554,22 +554,12 @@ export const DashboardLayout = () => {
                       <Text size="sm" fw={500} c="#111827">
                         {userInfo.firstName || 'User'} {userInfo.lastName || ''}
                       </Text>
-                      <Text size="xs" c="#6b7280">
-                        {effectiveRoles.join(', ') || 'No Role'}
-                      </Text>
                     </Box>
                   </Group>
                 </UnstyledButton>
               </Menu.Target>
 
               <Menu.Dropdown>
-                <Menu.Item
-                  leftSection={<IconLogout size={14} />}
-                  color="red"
-                  onClick={() => setLogoutModal(true)}
-                >
-                  Logout
-                </Menu.Item>
               </Menu.Dropdown>
             </Menu>
           </div>
@@ -624,9 +614,11 @@ export const DashboardLayout = () => {
               `}
             </style>
             <ul style={{ padding: 0, margin: 0 }}>
-              {filteredNavigation.map((item) => (
-                <NavItem key={item.name} item={item} />
-              ))}
+              {filteredNavigation
+                .filter(item => item.name !== 'Admin User' && item.name !== 'Administrator')
+                .map((item) => (
+                  <NavItem key={item.name} item={item} />
+                ))}
             </ul>
           </div>
         </AppShell.Section>
