@@ -5,6 +5,7 @@ import { Textarea } from '../../components/ui/textarea';
 import { Card, CardContent, CardHeader } from '../../components/ui/card';
 import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Badge } from '../../components/ui/badge';
+import { getImageUrl } from '../../utils/imageUtils';
 import {
   Dialog,
   DialogContent,
@@ -242,7 +243,7 @@ const MarketplaceApprovals = () => {
                   <div className="flex items-start gap-4 flex-1">
                     {listing.attachment ? (
                       <div className="w-24 h-24 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
-                        <img src={listing.attachment} alt={listing.title} className="w-full h-full object-cover" />
+                        <img src={getImageUrl(listing.attachment)} alt={listing.title} className="w-full h-full object-cover" />
                       </div>
                     ) : (
                       <div className="w-24 h-24 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">

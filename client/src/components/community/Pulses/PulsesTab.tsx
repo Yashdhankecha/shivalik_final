@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { communityApi } from '../../../apis/community';
 import { showMessage } from '../../../utils/Constant';
+import { getImageUrl } from '../../../utils/imageUtils';
 import { Button } from '../../ui/button';
 import { Card, CardContent } from '../../ui/card';
 import { Avatar, AvatarFallback } from '../../ui/avatar';
@@ -221,7 +222,7 @@ const PulsesTab = () => {
                     {pulse.attachment && (
                       <div className="relative mb-4 rounded-lg overflow-hidden border border-gray-200">
                         <img 
-                          src={pulse.attachment} 
+                          src={getImageUrl(pulse.attachment)} 
                           alt={pulse.title} 
                           className="w-full h-auto max-h-96 object-cover"
                           onError={(e) => {

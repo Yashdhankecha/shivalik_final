@@ -4,6 +4,7 @@ import { communityApi } from '../apis/community';
 import { Community } from '../types/CommunityTypes';
 import { useAuth } from '../hooks/useAuth';
 import { showMessage } from '../utils/Constant';
+import { getImageUrl } from '../utils/imageUtils';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
 import { Settings, LogOut, User, ChevronDown, Heart, Share2, Check } from 'lucide-react';
 import AuthModal from '../components/ui/AuthModal';
@@ -388,7 +389,7 @@ const LandingPage = () => {
                                         {pulse.attachment && (
                                             <div className="mb-4 rounded-xl overflow-hidden">
                                                 <img 
-                                                    src={pulse.attachment} 
+                                                    src={getImageUrl(pulse.attachment)} 
                                                     alt={pulse.title}
                                                     className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
                                                 />

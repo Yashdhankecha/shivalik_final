@@ -887,6 +887,102 @@ const approveRoleChangeRequest = async (req, res) => {
 };
 
 /**
+ * Directly update user role (bypass request system for admins)
+ */
+const updateUserRole = async (req, res) => {
+    try {
+        console.log('updateUserRole called:', {
+            userId: req.params.userId,
+            body: req.body,
+            method: req.method,
+            path: req.path,
+            url: req.url
+        });
+        
+        const { userId } = req.params;
+        const { role, communityId } = req.body;
+        
+        // Validate role
+        const validRoles = ['User', 'Manager', 'Admin', 'SuperAdmin', 'Resident'];
+        if (!role || !validRoles.includes(role)) {
+            return res.status(400).send(response.toJson('Invalid role. Must be one of: ' + validRoles.join(', ')));
+        }
+        
+        // Find user
+        const user = await UsersModel.findOne({
+            _id: userId,
+            isDeleted: false
+        });
+        
+        if (!user) {
+            return res.status(404).send(response.toJson('User not found'));
+        }
+        
+        // If communityId is provided, verify user is in that community and community belongs to admin
+        if (communityId) {
+            const community = await CommunitiesModel.findOne({
+                _id: communityId,
+                createdBy: req.user._id,
+                isDeleted: false
+            });
+            
+            if (!community) {
+                return res.status(404).send(response.toJson('Community not found or you do not have permission'));
+            }
+            
+            // Verify user is part of this community
+            if (user.communityId && user.communityId.toString() !== communityId) {
+                return res.status(400).send(response.toJson('User is not part of this community'));
+            }
+        } else {
+            // If no communityId, verify user is in one of admin's communities
+            const adminCommunities = await CommunitiesModel.find({
+                createdBy: req.user._id,
+                isDeleted: false
+            }).select('_id');
+            
+            const adminCommunityIds = adminCommunities.map(c => c._id.toString());
+            if (user.communityId && !adminCommunityIds.includes(user.communityId.toString())) {
+                return res.status(403).send(response.toJson('User is not in any of your communities'));
+            }
+        }
+        
+        // Prevent changing SuperAdmin role (only SuperAdmin can change SuperAdmin)
+        if (user.role === 'SuperAdmin' && req.user.role !== 'SuperAdmin') {
+            return res.status(403).send(response.toJson('Only SuperAdmin can change SuperAdmin role'));
+        }
+        
+        // Prevent setting SuperAdmin role (only SuperAdmin can set SuperAdmin)
+        if (role === 'SuperAdmin' && req.user.role !== 'SuperAdmin') {
+            return res.status(403).send(response.toJson('Only SuperAdmin can assign SuperAdmin role'));
+        }
+        
+        // Update user role
+        const oldRole = user.role;
+        user.role = role;
+        await user.save();
+        
+        console.log(`User role updated: ${user._id} from ${oldRole} to ${role} by admin ${req.user._id}`);
+        
+        return res.status(200).send(response.toJson(
+            'User role updated successfully',
+            {
+                userId: user._id,
+                oldRole,
+                newRole: role,
+                updatedBy: req.user._id
+            }
+        ));
+        
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        console.error('Error updating user role:', errMess);
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+/**
  * Reject a role change request
  */
 const rejectRoleChangeRequest = async (req, res) => {
@@ -2054,6 +2150,7 @@ module.exports = {
     getAdminCommunities,
     createCommunity,
     updateCommunity,
+    updateUserRole,
     deleteCommunity,
     getCommunityUsers,
     getAllUsers,

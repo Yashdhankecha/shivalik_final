@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { Building2, Search, Plus, Edit, Trash2, Eye, MapPin, Users, X, UserPlus, XCircle, Calendar } from 'lucide-react';
 import { adminApi } from '../../apis/admin';
 import { useToast } from '../../hooks/use-toast';
+import { getImageUrl } from '../../utils/imageUtils';
 
 interface CommunityFormData {
   name: string;
@@ -830,7 +831,7 @@ const Communities = () => {
                         <div className="flex items-center gap-3">
                           {community.bannerImage ? (
                             <img 
-                              src={community.bannerImage} 
+                              src={getImageUrl(community.bannerImage)} 
                               alt={community.name} 
                               className="w-12 h-12 rounded-lg object-cover"
                             />
@@ -1033,7 +1034,7 @@ const Communities = () => {
             <div className="relative w-full h-80 md:h-96 bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden">
               {viewCommunity.bannerImage ? (
                 <img 
-                  src={viewCommunity.bannerImage} 
+                  src={getImageUrl(viewCommunity.bannerImage)} 
                   alt={viewCommunity.name} 
                   className="w-full h-full object-cover"
                 />

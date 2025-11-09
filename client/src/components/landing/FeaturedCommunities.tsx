@@ -3,6 +3,7 @@ import { Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { getImageUrl } from '../../utils/imageUtils';
 
 interface FeaturedCommunitiesProps {
     communities: Community[];
@@ -70,7 +71,7 @@ const FeaturedCommunities = ({
                             <div className="h-56 bg-gray-800 relative overflow-hidden">
                                 {community.bannerImage ? (
                                     <img
-                                        src={community.bannerImage}
+                                        src={getImageUrl(community.bannerImage)}
                                         alt={community.name}
                                         className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                                     />

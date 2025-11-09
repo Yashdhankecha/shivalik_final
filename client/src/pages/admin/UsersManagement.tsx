@@ -221,25 +221,26 @@ const UsersManagement = () => {
 
   const handleRoleChangeSubmit = async () => {
     try {
-      await adminApi.createRoleChangeRequest({
-        userId: selectedUser._id,
+      // Directly update user role instead of creating a request
+      await adminApi.updateUserRole(
+        selectedUser._id,
         requestedRole,
-        communityId: selectedModeratorCommunity || undefined,
-        reason
-      });
+        selectedModeratorCommunity || undefined
+      );
       
       toast({
         title: "Success",
-        description: "Role change request submitted successfully"
+        description: `User role updated to ${requestedRole} successfully`
       });
       
       closeRoleChangeModal();
-      fetchUsers(); // Refresh the user list
+      fetchUsers(); // Refresh the user list to show updated role
     } catch (error: any) {
-      console.error('Error submitting role change request:', error);
+      console.error('Error updating user role:', error);
+      const errorMessage = error.response?.data?.message || error.message || "Failed to update user role";
       toast({
         title: "Error",
-        description: "Failed to submit role change request",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -526,11 +527,10 @@ const UsersManagement = () => {
                   >
                     Cancel
                   </Button>
-                  <Button 
-                    onClick={handleRoleChangeSubmit}
-                    className="w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10"
-                  >
-                    Submit Request
+
+                  <Button onClick={handleRoleChangeSubmit}>
+                    Update Role
+
                   </Button>
                 </div>
               </div>

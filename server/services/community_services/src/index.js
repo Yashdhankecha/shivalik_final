@@ -119,7 +119,15 @@ app.get("/", (req, res) => {
     res.json({ message: `Welcome to FIRST application. Hello : ${envFile}` });
 });
 
-app.use(express.static(__dirname + '/../uploads/'));
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    console.log('Created uploads directory:', uploadsDir);
+}
+
+// Serve static files from uploads directory (including subdirectories)
+app.use('/uploads', express.static(uploadsDir));
 
 const PORT = process.env.PORT || 11001;
 

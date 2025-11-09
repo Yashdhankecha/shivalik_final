@@ -308,6 +308,15 @@ export const adminApi = {
   removeUserFromCommunity: async (communityId: string, userId: string) => {
     const response = await apiClient.delete(`/api/v1/admin/communities/${communityId}/members/${userId}`);
     return response.data;
+  },
+
+  // Directly update user role (bypass request system)
+  updateUserRole: async (userId: string, role: string, communityId?: string) => {
+    const response = await apiClient.put(`/api/v1/admin/users/${userId}/role`, {
+      role,
+      communityId
+    });
+    return response.data;
   }
 };
 

@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { communityApi } from '../apis/community';
 import { Community } from '../types/CommunityTypes';
 import { showMessage } from '../utils/Constant';
+import { getImageUrl } from '../utils/imageUtils';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -355,7 +356,7 @@ const CommunityDashboard = () => {
         <div className="relative h-[400px] md:h-[500px] lg:h-[600px] w-full overflow-hidden bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900">
           {community.bannerImage ? (
             <img 
-              src={community.bannerImage} 
+              src={getImageUrl(community.bannerImage)} 
               alt={community.name}
               className="w-full h-full object-cover"
             />
