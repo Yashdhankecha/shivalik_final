@@ -29,13 +29,13 @@ export const LoginPage = () => {
 
         try {
             // Check for admin credentials (works offline)
-            if (loginMethod === 'email' && email === 'admin@gmail.com' && password === '321ewq') {
+            if (loginMethod === 'email' && email === 'admin@shivalik.com' && password === '321ewq') {
                 console.log('Admin credentials detected');
                 // Create user object
                 const adminUser = {
                     id: 'admin-user-id',
                     name: 'Admin User',
-                    email: 'admin@gmail.com',
+                    email: 'admin@shivalik.com',
                     phone: '',
                     role: 'Admin',
                     userRoles: ['Admin'],
@@ -82,6 +82,7 @@ export const LoginPage = () => {
                     if (userData && (userData.user || userData.accessToken)) {
                         const user = userData.user || userData;
                         const token = userData.accessToken || userData.token;
+                        const redirectTo = userData.redirectTo || '/dashboard';
                         
                         // Use the login function from useAuth to ensure state is updated
                         login(user, token);
@@ -93,7 +94,7 @@ export const LoginPage = () => {
                         showMessage('Login successful!');
                         // Use setTimeout to ensure state updates are processed before navigation
                         setTimeout(() => {
-                            navigate('/dashboard');
+                            navigate(redirectTo);
                         }, 100);
                         return;
                     }
@@ -153,7 +154,7 @@ export const LoginPage = () => {
         } catch (error: any) {
             // Check if it's a connection error and provide helpful message
             if (error.code === 'ERR_NETWORK' || error.message?.includes('ERR_CONNECTION_REFUSED')) {
-                showMessage('Backend server is not running. Use admin credentials (admin@gmail.com / 321ewq) for offline access.', 'error');
+                showMessage('Backend server is not running. Use admin credentials (admin@shivalik.com / 321ewq) for offline access.', 'error');
             } else {
                 showMessage(error.response?.data?.message || 'Login failed. Please check your credentials.', 'error');
             }

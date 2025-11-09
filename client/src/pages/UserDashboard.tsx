@@ -34,6 +34,20 @@ const UserDashboard = () => {
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Prevent admin users from accessing user dashboard
+  useEffect(() => {
+    if (user) {
+      const authToken = localStorage.getItem('auth_token');
+      const isAdminToken = authToken && authToken.startsWith('admin-token');
+      const isAdminUser = user?.role === 'Admin' || user?.role === 'SuperAdmin' || isAdminToken;
+      
+      if (isAdminUser) {
+        navigate('/admin/dashboard', { replace: true });
+        return;
+      }
+    }
+  }, [user, navigate]);
+
   useEffect(() => {
     fetchCommunities();
   }, []);

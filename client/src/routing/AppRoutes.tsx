@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { PrivateRoute } from './PrivateRoute';
 import { PublicRoute } from './PublicRoute';
 import { GuestRoute } from './GuestRoute';
+import { UserRoute } from './UserRoute';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { OtpPage } from '../pages/auth/OtpPage';
 import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage';
@@ -57,8 +58,8 @@ export const AppRoutes = () => {
       {/* ROOT - Show Landing Page with Hero Section */}
       <Route path="/" element={<LandingPage />} />
       
-      {/* USER DASHBOARD - Default page for authenticated users */}
-      <Route path="/dashboard" element={<UserDashboard />} />
+      {/* USER DASHBOARD - Default page for authenticated users (admin users cannot access) */}
+      <Route path="/dashboard" element={<UserRoute><UserDashboard /></UserRoute>} />
       
       {/* COMMUNITY DASHBOARD - Individual community view */}
       <Route path="/community/:communityId" element={<GuestRoute><CommunityDashboard /></GuestRoute>} />

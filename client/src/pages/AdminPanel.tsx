@@ -78,20 +78,20 @@ const AdminPanel = () => {
   // Sidebar Navigation Component
   const SidebarNav = ({ onNavClick }: { onNavClick?: () => void }) => (
     <nav className="flex flex-col h-full min-h-screen md:min-h-0 bg-white">
-      <div className="p-4 border-b border-gray-200 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center shadow-sm">
-            <ShieldCheck className="w-6 h-6 text-white" />
+      <div className="p-3 md:p-4 border-b border-gray-200 flex-shrink-0">
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="w-9 h-9 md:w-10 md:h-10 bg-black rounded-lg flex items-center justify-center shadow-sm">
+            <ShieldCheck className="w-5 h-5 md:w-6 md:h-6 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Admin Panel</h2>
-            <p className="text-xs text-gray-600">Management System</p>
+            <h2 className="text-base md:text-lg font-bold text-gray-900">Admin Panel</h2>
+            <p className="text-xs text-gray-600 hidden md:block">Management System</p>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-4 min-h-0">
-        <ul className="space-y-1 px-2">
+      <div className="flex-1 overflow-y-auto py-2 md:py-4 min-h-0">
+        <ul className="space-y-0.5 md:space-y-1 px-2">
           {navigationItems.map((item) => {
             const isActive = location.pathname === item.href;
             return (
@@ -100,13 +100,13 @@ const AdminPanel = () => {
                   to={item.href}
                   onClick={onNavClick}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200",
+                    "flex items-center gap-2.5 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-lg transition-colors duration-200 text-sm md:text-base active:bg-gray-200 md:active:bg-transparent",
                     isActive
                       ? "bg-gray-900 text-white shadow-sm"
                       : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                   )}
                 >
-                  <item.icon className={cn("w-5 h-5 flex-shrink-0", isActive ? "text-white" : "text-gray-600")} />
+                  <item.icon className={cn("w-4 h-4 md:w-5 md:h-5 flex-shrink-0", isActive ? "text-white" : "text-gray-600")} />
                   <span className="font-medium">{item.name}</span>
                 </Link>
               </li>
@@ -116,15 +116,16 @@ const AdminPanel = () => {
       </div>
 
       {/* User Info in Sidebar */}
-      <div className="p-4 border-t border-gray-200 flex-shrink-0">
-        <div className="flex items-center gap-3 mb-3">
-          <Avatar className="w-10 h-10 border border-gray-300 flex-shrink-0">
-            <AvatarFallback className="bg-gray-800 text-white font-semibold">
+      <div className="p-3 md:p-4 border-t border-gray-200 flex-shrink-0">
+        <div className="flex items-center gap-2 md:gap-3">
+          <Avatar className="w-9 h-9 md:w-10 md:h-10 border border-gray-300 flex-shrink-0">
+            <AvatarFallback className="bg-gray-800 text-white font-semibold text-xs md:text-sm">
               {user?.name?.charAt(0) || 'A'}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">{user?.name || 'Admin'}</p>
+            <p className="text-xs md:text-sm font-semibold text-gray-900 truncate">{user?.name || 'Admin'}</p>
+            <p className="text-xs text-gray-500 truncate hidden md:block">{user?.email || ''}</p>
           </div>
         </div>
       </div>
@@ -141,6 +142,7 @@ const AdminPanel = () => {
       {/* Mobile Sidebar Sheet */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <SheetContent side="left" className="w-64 p-0">
+          <div className="sr-only">Navigation Menu</div>
           <SidebarNav onNavClick={handleNavClick} />
         </SheetContent>
       </Sheet>
@@ -149,56 +151,64 @@ const AdminPanel = () => {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Navigation Bar */}
         <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
-          <div className="px-4 sm:px-6">
-            <div className="flex items-center justify-between h-14 sm:h-16">
+          <div className="px-3 sm:px-4 md:px-6">
+            <div className="flex items-center justify-between h-14 md:h-16">
               {/* Left: Hamburger Menu (Mobile) + Logo */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 md:gap-3">
                 {/* Hamburger Menu Button - Mobile Only */}
                 <button
                   onClick={() => setMobileMenuOpen(true)}
-                  className="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-500"
+                  className="md:hidden p-2 -ml-1 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-500 active:bg-gray-200 transition-colors"
                   aria-label="Open menu"
                 >
-                  <Menu className="h-6 w-6" />
+                  <Menu className="h-5 w-5" />
                 </button>
 
                 {/* Logo - Mobile */}
                 <div className="md:hidden flex items-center gap-2">
-                  <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center shadow-sm">
+                  <div className="w-9 h-9 bg-black rounded-lg flex items-center justify-center shadow-sm">
                     <ShieldCheck className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-base font-bold text-gray-900">Admin</span>
+                  <span className="text-lg font-bold text-gray-900">Admin</span>
                 </div>
 
-                {/* Logo - Desktop (if needed) */}
+                {/* Logo - Desktop */}
                 <div className="hidden md:flex items-center gap-2">
-                  <span className="text-lg font-bold text-gray-900">Admin Panel</span>
+                  <span className="text-xl font-bold text-gray-900">Admin Panel</span>
                 </div>
               </div>
 
               {/* Right: User Profile Dropdown */}
-              <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-2 md:gap-3">
                 <div className="relative user-menu-container">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-1 sm:gap-2 hover:bg-gray-100 rounded-full p-1 pr-2 sm:pr-3 transition-colors border border-gray-300"
+                    className="flex items-center gap-1.5 md:gap-2 hover:bg-gray-100 rounded-full p-1 md:p-1 md:pr-3 transition-colors border border-gray-300 active:bg-gray-200"
                   >
-                    <Avatar className="w-7 h-7 sm:w-9 sm:h-9 border border-gray-300">
-                      <AvatarFallback className="bg-gray-800 text-white font-semibold text-xs sm:text-sm">
+                    <Avatar className="w-7 h-7 md:w-8 md:h-8 border border-gray-300">
+                      <AvatarFallback className="bg-gray-800 text-white font-semibold text-xs md:text-sm">
                         {user?.name?.charAt(0) || 'A'}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="hidden sm:inline text-sm font-medium text-gray-900">
+                    <span className="hidden md:inline text-sm md:text-base font-medium text-gray-900">
                       {user?.name || 'Admin'}
                     </span>
                   </button>
 
                   {/* User Dropdown Menu */}
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border border-gray-200 z-50">
+                    <div className="absolute right-0 mt-2 w-44 md:w-48 bg-white rounded-lg shadow-lg py-2 border border-gray-200 z-50">
                       <div className="px-4 py-2 border-b border-gray-100">
-                        <p className="text-sm font-medium text-gray-900">{user?.name || 'Admin'}</p>
+                        <p className="text-sm md:text-base font-medium text-gray-900 truncate">{user?.name || 'Admin'}</p>
+                        <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
                       </div>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Logout
+                      </button>
                     </div>
                   )}
                 </div>
@@ -208,7 +218,7 @@ const AdminPanel = () => {
         </nav>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 overflow-auto">
+        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto">
           <Outlet />
         </main>
       </div>

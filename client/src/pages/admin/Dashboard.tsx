@@ -151,7 +151,7 @@ const AdminDashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p>Loading dashboard...</p>
+        <p className="text-lg">Loading dashboard...</p>
       </div>
     );
   }
@@ -160,26 +160,26 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="mb-4 md:mb-6">
-        <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-black mb-1 md:mb-2">Dashboard Overview</h1>
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 md:mb-2">Dashboard Overview</h1>
         <p className="text-gray-600 text-xs md:text-sm lg:text-base">Welcome back, Admin! Here's what's happening today.</p>
       </div>
 
       {/* Stats Grid - Responsive */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6 mb-4 md:mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
         {formattedStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={index} className="hover:shadow-lg transition-shadow border border-gray-300 bg-white">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex items-center justify-between mb-2 md:mb-3 lg:mb-4">
-                  <div className="w-9 h-9 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-lg bg-gray-800 flex items-center justify-center shadow-md">
-                    <Icon className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 text-white" />
+            <Card key={index} className="hover:shadow-lg transition-shadow border border-gray-200 bg-white">
+              <CardContent className="p-4 md:p-5">
+                <div className="flex items-center justify-between mb-2 md:mb-3">
+                  <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-gray-900 flex items-center justify-center shadow-md">
+                    <Icon className="w-4 h-4 md:w-5 md:h-5 text-white" />
                   </div>
-                  <Badge className={`bg-gray-300 text-gray-800 text-xs`}>
+                  <Badge className={`bg-gray-200 text-gray-800 text-xs`}>
                     {stat.change}%
                   </Badge>
                 </div>
-                <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-black mb-1">{stat.value}</h3>
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-1">{stat.value}</h3>
                 <p className="text-xs md:text-sm text-gray-600">{stat.title}</p>
               </CardContent>
             </Card>
@@ -188,67 +188,66 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main Content Grid - Responsive */}
-      <div className="grid grid-cols-1 lg:grid-cols-1 xl:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Recent Users */}
-        <Card className="xl:col-span-2 bg-white border border-gray-300">
-          <CardHeader className="border-b border-gray-300 p-3 md:p-4 lg:p-6">
+        <Card className="lg:col-span-2 bg-white border border-gray-200">
+          <CardHeader className="border-b border-gray-200 p-3 md:p-4 lg:p-5">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-base md:text-lg lg:text-xl flex items-center gap-2 text-black">
+              <h3 className="font-bold text-base md:text-lg lg:text-xl flex items-center gap-2 text-gray-900">
                 <Users className="w-4 h-4 md:w-5 md:h-5" />
                 Recent Users
               </h3>
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-100 border-b border-gray-300">
+            <div className="overflow-x-auto -mx-3 md:mx-0">
+              <table className="w-full min-w-[640px] md:min-w-0">
+                <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-black uppercase">User</th>
-                    <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-black uppercase">Role</th>
-                    <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-black uppercase">Status</th>
-                    <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-black uppercase">Joined</th>
-                    <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-black uppercase">Action</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">User</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider hidden sm:table-cell">Role</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Status</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider hidden md:table-cell">Joined</th>
+                    <th className="px-3 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {recentUsers.length === 0 ? (
                     <tr>
-
-                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                      <td colSpan={5} className="px-3 md:px-4 py-6 md:py-8 text-center text-gray-500 text-sm">
                         No recent users found. Create communities and add users to see them here.
-
                       </td>
                     </tr>
                   ) : (
                     recentUsers.map((user, index) => (
                     <tr key={user._id || index} className="hover:bg-gray-50 transition-colors">
-
-                      <td className="px-3 md:px-6 py-3 md:py-4">
+                      <td className="px-3 md:px-4 py-3 md:py-4">
                         <div className="flex items-center gap-2 md:gap-3">
-                          <Avatar className="w-8 h-8 md:w-10 md:h-10">
-                            <AvatarFallback className="bg-gray-800 text-white font-semibold text-xs md:text-sm">
+                          <Avatar className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0">
+                            <AvatarFallback className="bg-gray-900 text-white font-semibold text-xs md:text-sm">
                               {user.name.split(' ').map(n => n[0]).join('')}
-
                             </AvatarFallback>
                           </Avatar>
-                          <div>
-                            <p className="font-semibold text-xs md:text-sm text-black">{user.name}</p>
-                            <p className="text-xs text-gray-600 hidden sm:table-cell">{user.email}</p>
+                          <div className="min-w-0">
+                            <p className="font-semibold text-xs md:text-sm text-gray-900 truncate">{user.name}</p>
+                            <p className="text-xs text-gray-600 truncate hidden sm:block">{user.email}</p>
+                            <div className="sm:hidden mt-1">
+                              <Badge className="bg-gray-900 text-white text-xs mr-1">{user.role}</Badge>
+                            </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 md:px-6 py-3 md:py-4">
-                        <Badge className="bg-gray-800 text-white text-xs md:text-sm">{user.role}</Badge>
+                      <td className="px-3 md:px-4 py-3 md:py-4 hidden sm:table-cell">
+                        <Badge className="bg-gray-900 text-white text-xs">{user.role}</Badge>
                       </td>
-                      <td className="px-3 md:px-6 py-3 md:py-4">
-                        <Badge className={`text-xs md:text-sm ${user.status === 'Active' ? 'bg-gray-800 text-white' : 'bg-gray-300 text-gray-800'}`}>
+                      <td className="px-3 md:px-4 py-3 md:py-4">
+                        <Badge className={`text-xs ${user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
                           {user.status}
                         </Badge>
                       </td>
-                      <td className="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm text-gray-600">{user.joinDate}</td>
-                      <td className="px-3 md:px-6 py-3 md:py-4">
-                        <Button variant="ghost" size="sm" className="text-black hover:text-black hover:bg-gray-100 p-1 md:p-2 text-xs md:text-sm">View</Button>
+                      <td className="px-3 md:px-4 py-3 md:py-4 text-xs md:text-sm text-gray-600 hidden md:table-cell">{user.joinDate}</td>
+                      <td className="px-3 md:px-4 py-3 md:py-4">
+                        <Button variant="ghost" size="sm" className="text-gray-900 hover:text-gray-900 hover:bg-gray-100 p-1.5 md:p-2 text-xs md:text-sm h-7 md:h-8">View</Button>
                       </td>
                     </tr>
                     ))
@@ -260,33 +259,31 @@ const AdminDashboard = () => {
         </Card>
 
         {/* Recent Activities */}
-        <Card className="bg-white border border-gray-300">
-          <CardHeader className="border-b border-gray-300 p-3 md:p-4 lg:p-6">
-            <h3 className="font-bold text-base md:text-lg lg:text-xl flex items-center gap-2 text-black">
+        <Card className="bg-white border border-gray-200">
+          <CardHeader className="border-b border-gray-200 p-3 md:p-4 lg:p-5">
+            <h3 className="font-bold text-base md:text-lg lg:text-xl flex items-center gap-2 text-gray-900">
               <Activity className="w-4 h-4 md:w-5 md:h-5" />
               Recent Activities
             </h3>
           </CardHeader>
-          <CardContent className="p-3 md:p-4 lg:p-6">
+          <CardContent className="p-3 md:p-4 lg:p-5">
             <div className="space-y-3 md:space-y-4">
               {recentActivities.length === 0 ? (
-
-                <div className="text-center py-4 md:py-8 text-gray-500">
+                <div className="text-center py-6 md:py-8 text-gray-500 text-sm">
                   No recent activities found
                 </div>
               ) : (
                 recentActivities.map((activity, index) => (
-                <div key={index} className="flex gap-2 md:gap-3 pb-3 md:pb-4 border-b border-gray-200 last:border-0 last:pb-0">
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex-shrink-0 flex items-center justify-center bg-gray-800">
+                <div key={index} className="flex gap-2 md:gap-3 pb-3 md:pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex-shrink-0 flex items-center justify-center bg-gray-900">
                     {activity.type === 'user' && <Users className="w-4 h-4 md:w-5 md:h-5 text-white" />}
                     {activity.type === 'community' && <Building2 className="w-4 h-4 md:w-5 md:h-5 text-white" />}
                     {activity.type === 'event' && <Calendar className="w-4 h-4 md:w-5 md:h-5 text-white" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs md:text-sm font-semibold text-black">{activity.action}</p>
-                    <p className="text-xs text-gray-600">{activity.user}{activity.community ? ` in ${activity.community}` : ''}</p>
+                    <p className="text-xs md:text-sm font-semibold text-gray-900 break-words">{activity.action}</p>
+                    <p className="text-xs text-gray-600 break-words">{activity.user}{activity.community ? ` in ${activity.community}` : ''}</p>
                     <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-
                   </div>
                 </div>
                 ))
