@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Card, CardContent, CardHeader } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
-import { Building2, Search, Plus, Edit, Trash2, Eye, MapPin, Users, X } from 'lucide-react';
+import { Avatar, AvatarFallback } from '../../components/ui/avatar';
+import { Building2, Search, Plus, Edit, Trash2, Eye, MapPin, Users, X, UserPlus, XCircle } from 'lucide-react';
 import { adminApi } from '../../apis/admin';
 import { useToast } from '../../hooks/use-toast';
 
@@ -98,6 +100,7 @@ const INDIAN_CITIES_BY_STATE: Record<string, string[]> = {
 };
 
 const Communities = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [communities, setCommunities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -105,7 +108,7 @@ const Communities = () => {
   const [formData, setFormData] = useState<CommunityFormData>({
     name: '',
     description: '',
-    bannerImage: null, // Changed from string to File|null for image upload
+    bannerImage: null,
     territory: '',
     status: 'active',
     location: {
@@ -115,8 +118,6 @@ const Communities = () => {
       zipCode: '',
       country: 'India'
     },
-    // Removed totalUnits and occupiedUnits
-    // managerId will be set to admin ID automatically on backend
   });
   const [dynamicFields, setDynamicFields] = useState([{ key: '', value: '' }]);
   const [pagination, setPagination] = useState({
@@ -125,9 +126,22 @@ const Communities = () => {
     total: 0,
     totalPages: 0
   });
-  const [previewImage, setPreviewImage] = useState<string | null>(null); // For image preview
-  const [cities, setCities] = useState<string[]>([]); // Cities based on selected state
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [cities, setCities] = useState<string[]>([]);
   const { toast } = useToast();
+
+  // Add new state for manager assignment
+  const [showManagerModal, setShowManagerModal] = useState(false);
+  const [selectedCommunity, setSelectedCommunity] = useState<any>(null);
+  const [managerUserId, setManagerUserId] = useState('');
+  const [managerRole, setManagerRole] = useState('Manager');
+  
+  // Add state for community managers
+  const [communityManagers, setCommunityManagers] = useState<Record<string, any[]>>({});
+  
+  // Add state for delete confirmation modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteCommunity, setDeleteCommunity] = useState<any>(null);
 
   // Update cities when state changes
   useEffect(() => {
@@ -153,6 +167,22 @@ const Communities = () => {
       
       setCommunities(response.data.communities || []);
       setPagination(response.data.pagination || pagination);
+      
+      // Fetch managers for each community
+      const managersData: Record<string, any[]> = {};
+      for (const community of response.data.communities || []) {
+        try {
+          const managersResponse = await adminApi.getCommunityManagers(community._id, {
+            page: 1,
+            limit: 10
+          });
+          managersData[community._id] = managersResponse.data.managers || [];
+        } catch (error) {
+          console.error(`Error fetching managers for community ${community._id}:`, error);
+          managersData[community._id] = [];
+        }
+      }
+      setCommunityManagers(managersData);
     } catch (error) {
       console.error('Error fetching communities:', error);
       toast({
@@ -323,6 +353,101 @@ const Communities = () => {
     const newFields = [...dynamicFields];
     newFields[index][field] = value;
     setDynamicFields(newFields);
+  };
+
+  const openManagerModal = (community: any) => {
+    setSelectedCommunity(community);
+    setShowManagerModal(true);
+    setManagerUserId('');
+    setManagerRole('Manager');
+  };
+
+  const handleAssignManager = async () => {
+    if (!selectedCommunity || !managerUserId) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a user to assign as manager",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await adminApi.assignCommunityManager({
+        communityId: selectedCommunity._id,
+        userId: managerUserId,
+        role: 'Manager' // Always assign as Manager role
+      });
+
+      toast({
+        title: "Success",
+        description: "Manager assigned successfully"
+      });
+
+      setShowManagerModal(false);
+      setSelectedCommunity(null);
+      setManagerUserId('');
+      fetchCommunities(); // Refresh the list
+    } catch (error) {
+      console.error('Error assigning manager:', error);
+      toast({
+        title: "Error",
+        description: "Failed to assign manager",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRemoveManager = async (communityId: string, managerId: string) => {
+    try {
+      await adminApi.removeCommunityManager(managerId);
+      
+      toast({
+        title: "Success",
+        description: "Manager removed successfully"
+      });
+      
+      // Refresh managers for this community
+      const managersResponse = await adminApi.getCommunityManagers(communityId, {
+        page: 1,
+        limit: 10
+      });
+      setCommunityManagers(prev => ({
+        ...prev,
+        [communityId]: managersResponse.data.managers || []
+      }));
+      
+      fetchCommunities(); // Refresh the list
+    } catch (error) {
+      console.error('Error removing manager:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove manager",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const openDeleteModal = (community: any) => {
+    setDeleteCommunity(community);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteCommunity) return;
+    
+    try {
+      await handleDeleteCommunity(deleteCommunity._id);
+      setShowDeleteModal(false);
+      setDeleteCommunity(null);
+    } catch (error) {
+      console.error('Error deleting community:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete community",
+        variant: "destructive"
+      });
+    }
   };
 
   if (loading && communities.length === 0) {
@@ -535,60 +660,13 @@ const Communities = () => {
         </div>
       </div>
 
-      {/* Communities Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-        {communities.map((community) => (
-          <Card key={community._id} className="hover:shadow-lg transition-shadow bg-white border border-gray-300">
-            <CardHeader className="border-b border-gray-300 pb-3">
-              <div className="flex items-start justify-between">
-                <h3 className="font-bold text-lg text-black">{community.name}</h3>
-                {getStatusBadge(community.status)}
-              </div>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <MapPin className="w-4 h-4" />
-                  <span>{community.location?.city || 'Not specified'}, {community.location?.state || 'Not specified'}</span>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Building2 className="w-4 h-4" />
-                  <span>Manager: {community.managerId?.name || 'Not assigned'}</span>
-                </div>
-              </div>
-              
-              <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between">
-                <Button variant="outline" size="sm" className="border border-gray-400 text-black hover:bg-gray-100">
-                  <Eye className="w-4 h-4 mr-1" />
-                  View
-                </Button>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="border border-gray-400 text-black hover:bg-gray-100">
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="border border-gray-400 text-black hover:bg-gray-100"
-                    onClick={() => handleDeleteCommunity(community._id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
       {/* Communities Table */}
       <Card className="bg-white border border-gray-300">
         <CardHeader className="border-b border-gray-300">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-lg flex items-center gap-2 text-black">
               <Building2 className="w-5 h-5" />
-              All Communities
+              Communities
             </h3>
             <p className="text-sm text-gray-600">Showing {communities.length} communities</p>
           </div>
@@ -602,46 +680,125 @@ const Communities = () => {
                   <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Location</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Manager</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Members</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-black uppercase">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {communities.map((community) => (
-                  <tr key={community._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="font-semibold text-sm text-black">{community.name}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {community.location?.city || 'Not specified'}, {community.location?.state || 'Not specified'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {community.managerId?.name || 'Not assigned'}
-                    </td>
-                    <td className="px-6 py-4">
-                      {getStatusBadge(community.status)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-black hover:bg-gray-100"
-                          onClick={() => handleDeleteCommunity(community._id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+                {communities.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                      No communities found. {pagination.total === 0 ? 'There are no communities yet.' : 'Try adjusting your search criteria.'}
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  communities.map((community: any) => (
+                    <tr key={community._id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          {community.bannerImage ? (
+                            <img 
+                              src={community.bannerImage} 
+                              alt={community.name} 
+                              className="w-12 h-12 rounded-lg object-cover"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                              <Building2 className="w-6 h-6 text-gray-600" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-semibold text-sm text-black">{community.name}</p>
+                            <p className="text-xs text-gray-600 line-clamp-2">{community.description}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {community.location?.city && community.location?.state ? (
+                          `${community.location.city}, ${community.location.state}`
+                        ) : (
+                          'Not specified'
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="space-y-2">
+                          {/* Display existing managers */}
+                          {communityManagers[community._id] && communityManagers[community._id].length > 0 ? (
+                            communityManagers[community._id].map((manager: any) => (
+                              <div key={manager._id} className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="w-8 h-8">
+                                    <AvatarFallback className="bg-gray-800 text-white text-xs">
+                                      {manager.userId?.name ? manager.userId.name.charAt(0) : 'M'}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <p className="text-sm font-medium text-black">{manager.userId?.name || 'Unknown'}</p>
+                                  </div>
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="text-red-600 hover:bg-red-50"
+                                  onClick={() => handleRemoveManager(community._id, manager._id)}
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-sm text-gray-500">No managers assigned</p>
+                          )}
+                          
+                          {/* Add manager button */}
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="mt-2 w-full"
+                            onClick={() => openManagerModal(community)}
+                          >
+                            <UserPlus className="w-4 h-4 mr-2" />
+                            Assign Manager
+                          </Button>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {getStatusBadge(community.status || 'Pending')}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {community.members?.length || 0} members
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-blue-600 hover:bg-blue-50"
+                            onClick={() => openManagerModal(community)}
+                          >
+                            <UserPlus className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-black hover:bg-gray-100"
+                            onClick={() => navigate(`/admin/communities/${community._id}/edit`)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-black hover:bg-gray-100"
+                            onClick={() => openDeleteModal(community)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -670,6 +827,92 @@ const Communities = () => {
           >
             Next
           </Button>
+        </div>
+      )}
+
+      {/* Manager Assignment Modal */}
+      {showManagerModal && selectedCommunity && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">Assign Manager</h3>
+                <Button variant="ghost" onClick={() => setShowManagerModal(false)}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+              
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  Community: <span className="font-semibold">{selectedCommunity.name}</span>
+                </p>
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    User ID *
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Enter user ID"
+                    value={managerUserId}
+                    onChange={(e) => setManagerUserId(e.target.value)}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter the user ID of the person you want to assign as manager
+                  </p>
+                </div>
+                
+                {/* Hidden input to always set role as Manager */}
+                <input type="hidden" value="Manager" />
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowManagerModal(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  className="bg-black text-white hover:bg-gray-800"
+                  onClick={handleAssignManager}
+                >
+                  Assign Manager
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Community Modal */}
+      {showDeleteModal && selectedCommunity && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">Delete Community</h3>
+                <Button variant="ghost" onClick={() => setShowDeleteModal(false)}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+              
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  Are you sure you want to delete the community <span className="font-semibold">{selectedCommunity.name}</span>?
+                </p>
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowDeleteModal(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  className="bg-red-600 text-white hover:bg-red-700"
+                  onClick={confirmDelete}
+                >
+                  Delete Community
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

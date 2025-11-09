@@ -42,6 +42,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             userRoles: parsedUser.userRoles || (parsedUser.role ? [parsedUser.role] : []),
             avatar: parsedUser.avatar || ''
           };
+          
+          // Special handling for admin token
+          if (token.startsWith('admin-token')) {
+            transformedUser.role = 'Admin';
+            transformedUser.userRoles = ['Admin'];
+          }
+          
           setUser(transformedUser);
           setIsAuthenticated(true);
         } catch (error) {
@@ -76,9 +83,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = (userData: User, token: string) => {
+    // Special handling for admin token
+    const finalUserData = { ...userData };
+    if (token.startsWith('admin-token')) {
+      finalUserData.role = 'Admin';
+      finalUserData.userRoles = ['Admin'];
+    }
+    
     localStorage.setItem('auth_token', token);
-    localStorage.setItem('userInfo', JSON.stringify(userData));
-    setUser(userData);
+    localStorage.setItem('userInfo', JSON.stringify(finalUserData));
+    setUser(finalUserData);
     setIsAuthenticated(true);
   };
 

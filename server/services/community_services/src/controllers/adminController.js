@@ -15,35 +15,37 @@ const path = require('path');
  */
 const getDashboardStats = async (req, res) => {
     try {
-        // Get communities created by current admin
-        const communitiesCount = await CommunitiesModel.countDocuments({
-            createdBy: req.user._id,
-            isDeleted: false
-        });
+        let usersCount = 0;
+        let communitiesCount = 0;
+        let eventsCount = 0;
+        let reportsCount = 0;
 
-        // Get users in communities created by current admin
+        // Get communities created by current admin
         const communities = await CommunitiesModel.find({
             createdBy: req.user._id,
             isDeleted: false
         }).select('_id');
 
+        communitiesCount = communities.length;
         const communityIds = communities.map(community => community._id);
 
-        // Get all users in these communities (members + managers)
-        const usersCount = await UsersModel.countDocuments({
-            $or: [
-                { communityId: { $in: communityIds } },
-                { _id: { $in: communities.map(c => c.managerId) } }
-            ],
-            isDeleted: false
-        });
+        // If admin has communities, get stats for those communities
+        if (communityIds.length > 0) {
+            // Get all users in these communities (members + managers)
+            usersCount = await UsersModel.countDocuments({
+                $or: [
+                    { communityId: { $in: communityIds } },
+                    { _id: { $in: communities.map(c => c.managerId) } }
+                ],
+                isDeleted: false
+            });
 
-        // Get events in communities created by current admin
-        const eventsCount = await EventsModel.countDocuments({
-            communityId: { $in: communityIds },
-            isDeleted: false,
-            status: { $in: ['Upcoming', 'Ongoing', 'upcoming', 'ongoing'] }
-        });
+            // Get events in communities created by current admin
+            eventsCount = await EventsModel.countDocuments({
+                communityId: { $in: communityIds },
+                isDeleted: false,
+                status: { $in: ['Upcoming', 'Ongoing', 'upcoming', 'ongoing'] }
+            });
 
         const stats = {
             totalUsers: usersCount,
@@ -295,13 +297,18 @@ const getAllUsers = async (req, res) => {
         const communityIds = communities.map(community => community._id);
 
         // Build user filter
-        const userFilter = {
-            $or: [
+        let userFilter = { isDeleted: false };
+
+        // If admin has communities, get users from those communities
+        if (communityIds.length > 0) {
+            userFilter.$or = [
                 { communityId: { $in: communityIds } },
+
                 { _id: { $in: communities.map(c => c.managerId).filter(Boolean) } }
             ],
             isDeleted: false
         };
+
 
         // Handle status filter
         if (statusParam) {
@@ -371,28 +378,53 @@ const getRecentActivities = async (req, res) => {
 
         const communityIds = communities.map(community => community._id);
 
-        // Get recent user registrations
-        const recentUsers = await UsersModel.find({
-            $or: [
-                { communityId: { $in: communityIds } },
-                { _id: { $in: communities.map(c => c.managerId) } }
-            ],
-            isDeleted: false
-        })
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .lean();
+        let recentUsers = [];
+        let recentEvents = [];
 
-        // Get recent community events
-        const recentEvents = await EventsModel.find({
-            communityId: { $in: communityIds },
-            isDeleted: false
-        })
-        .populate('communityId', 'name')
-        .populate('createdBy', 'name')
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .lean();
+        // If admin has communities, get activities for those communities
+        if (communityIds.length > 0) {
+            // Get recent user registrations
+            recentUsers = await UsersModel.find({
+                $or: [
+                    { communityId: { $in: communityIds } },
+                    { _id: { $in: communities.map(c => c.managerId) } }
+                ],
+                isDeleted: false
+            })
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .lean();
+
+            // Get recent community events
+            recentEvents = await EventsModel.find({
+                communityId: { $in: communityIds },
+                isDeleted: false
+            })
+            .populate('communityId', 'name')
+            .populate('createdBy', 'name')
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .lean();
+        } else {
+            // If admin has no communities, check if they are an admin user
+            if (req.user.role === 'Admin' || req.user.role === 'SuperAdmin') {
+                // Admin users get all activities
+                // Get recent user registrations (all users)
+                recentUsers = await UsersModel.find({ isDeleted: false })
+                    .sort({ createdAt: -1 })
+                    .limit(limit)
+                    .lean();
+
+                // Get recent events (all events)
+                recentEvents = await EventsModel.find({ isDeleted: false })
+                    .populate('communityId', 'name')
+                    .populate('createdBy', 'name')
+                    .sort({ createdAt: -1 })
+                    .limit(limit)
+                    .lean();
+            }
+            // Regular users with no communities get empty activities (already initialized to empty arrays)
+        }
 
         // Format activities
         const userActivities = recentUsers.map(user => ({
@@ -958,15 +990,18 @@ const createCommunityEvent = async (req, res) => {
 };
 
 /**
+
  * Get all community join requests for admin's communities
  */
 const getJoinRequests = async (req, res) => {
+
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
         const search = req.query.search || '';
         const statusParam = req.query.status;
+
         
         // Get communities managed by current admin (managerId or createdBy)
         const communities = await CommunitiesModel.find({
@@ -979,6 +1014,9 @@ const getJoinRequests = async (req, res) => {
         
         const communityIds = communities.map(community => community._id);
         
+
+
+        
         if (communityIds.length === 0) {
             return res.status(200).send(response.toJson(
                 messages['en'].common.detail_success,
@@ -986,13 +1024,16 @@ const getJoinRequests = async (req, res) => {
                     requests: [],
                     pagination: {
                         total: 0,
+
                         page: 1,
                         limit: 10,
+
                         totalPages: 0
                     }
                 }
             ));
         }
+
         
         // Build request filter
         const requestFilter = {
@@ -1007,6 +1048,7 @@ const getJoinRequests = async (req, res) => {
         
         if (search) {
             // Search by user name or email
+
             const users = await UsersModel.find({
                 $or: [
                     { name: { $regex: search, $options: 'i' } },
@@ -1014,6 +1056,7 @@ const getJoinRequests = async (req, res) => {
                 ],
                 isDeleted: false
             }).select('_id');
+
             
             const userIds = users.map(user => user._id);
             requestFilter.userId = { $in: userIds };
@@ -1030,6 +1073,7 @@ const getJoinRequests = async (req, res) => {
         
         const total = await CommunityJoinRequestsModel.countDocuments(requestFilter);
         
+
         return res.status(200).send(response.toJson(
             messages['en'].common.detail_success,
             {
@@ -1042,7 +1086,7 @@ const getJoinRequests = async (req, res) => {
                 }
             }
         ));
-        
+
     } catch (err) {
         const statusCode = err.statusCode || 500;
         const errMess = err.message || err;
@@ -1053,14 +1097,17 @@ const getJoinRequests = async (req, res) => {
 /**
  * Approve a community join request
  */
+
 const approveJoinRequest = async (req, res) => {
     try {
         const { requestId } = req.params;
         
+
         // Find the join request
         const joinRequest = await CommunityJoinRequestsModel.findOne({
             _id: requestId,
             isDeleted: false
+
         }).populate('userId').populate('communityId');
         
         if (!joinRequest) {
@@ -1127,6 +1174,7 @@ const approveJoinRequest = async (req, res) => {
             joinRequest
         ));
         
+
     } catch (err) {
         const statusCode = err.statusCode || 500;
         const errMess = err.message || err;
@@ -1134,9 +1182,7 @@ const approveJoinRequest = async (req, res) => {
     }
 };
 
-/**
- * Reject a community join request
- */
+
 const rejectJoinRequest = async (req, res) => {
     try {
         const errors = validationResult(req);
@@ -1151,10 +1197,12 @@ const rejectJoinRequest = async (req, res) => {
             return res.status(400).send(response.toJson('Rejection reason is required'));
         }
         
+
         // Find the join request
         const joinRequest = await CommunityJoinRequestsModel.findOne({
             _id: requestId,
             isDeleted: false
+
         }).populate('userId').populate('communityId');
         
         if (!joinRequest) {
@@ -1194,10 +1242,12 @@ const rejectJoinRequest = async (req, res) => {
         // TODO: Send notification/email to user about rejection with reason
         // You can integrate email service here to notify the user
         
+
         return res.status(200).send(response.toJson(
             'Join request rejected successfully',
             joinRequest
         ));
+
         
     } catch (err) {
         const statusCode = err.statusCode || 500;
@@ -1685,6 +1735,7 @@ const getCommunityMembers = async (req, res) => {
             }
         ));
 
+
     } catch (err) {
         const statusCode = err.statusCode || 500;
         const errMess = err.message || err;
@@ -1693,6 +1744,7 @@ const getCommunityMembers = async (req, res) => {
 };
 
 /**
+
  * Assign moderator role to a user
  */
 const assignModeratorRole = async (req, res) => {
@@ -1710,10 +1762,12 @@ const assignModeratorRole = async (req, res) => {
         const community = await CommunitiesModel.findOne({
             _id: communityId,
             createdBy: req.user._id,
+
             isDeleted: false
         });
 
         if (!community) {
+
             return res.status(404).send(response.toJson('Community not found'));
         }
 
@@ -1736,6 +1790,7 @@ const assignModeratorRole = async (req, res) => {
         return res.status(200).send(response.toJson(
             'Moderator role assigned successfully',
             { userId, role: 'Manager' }
+
         ));
 
     } catch (err) {
@@ -1760,6 +1815,7 @@ module.exports = {
     getRoleChangeRequests,
     approveRoleChangeRequest,
     rejectRoleChangeRequest,
+
     getJoinRequests,
     approveJoinRequest,
     rejectJoinRequest,
@@ -1768,14 +1824,7 @@ module.exports = {
     rejectMarketplaceListing,
     getCommunityMembers,
     assignModeratorRole
+
 };
 
-
-
-
-
-
-
-
-
-
+     

@@ -83,4 +83,14 @@ router.put('/marketplace/listings/:listingId/reject',
 router.get('/moderators/members', auth.verifyToken, auth.verifyAdmin, adminController.getCommunityMembers);
 router.put('/moderators/:userId/assign', auth.verifyToken, auth.verifyAdmin, adminController.assignModeratorRole);
 
+// Community join requests
+router.get('/community-join-requests', auth.verifyToken, auth.verifyAdmin, adminController.getCommunityJoinRequests);
+router.put('/community-join-requests/:requestId/approve', auth.verifyToken, auth.verifyAdmin, adminController.approveCommunityJoinRequest);
+router.put('/community-join-requests/:requestId/reject', auth.verifyToken, auth.verifyAdmin, adminController.rejectCommunityJoinRequest);
+
+// Community managers
+router.post('/community-managers', auth.verifyToken, auth.verifyAdmin, adminController.assignCommunityManager);
+router.delete('/community-managers/:managerId', auth.verifyToken, auth.verifyAdmin, adminController.removeCommunityManager);
+router.get('/communities/:communityId/managers', auth.verifyToken, auth.verifyAdmin, adminController.getCommunityManagers);
+
 module.exports = router;

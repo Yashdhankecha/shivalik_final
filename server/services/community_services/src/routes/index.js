@@ -9,6 +9,7 @@ const authRoutes = require('./authRoutes');
 const userRoutes = require('./userRoutes');
 const communityRoutes = require('./communityRoutes');
 const adminRoutes = require('./adminRoutes');
+const managerRoutes = require('./managerRoutes');
 
 // Mount routes under their respective paths
 router.use('/test-users', testUserRoutes);
@@ -17,5 +18,6 @@ router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/community', communityRoutes);
 router.use('/admin', adminRoutes);
+router.use('/manager', managerRoutes);
 
 module.exports = router;

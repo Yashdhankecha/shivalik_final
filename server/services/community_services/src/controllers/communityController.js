@@ -55,11 +55,16 @@ const getFeaturedCommunities = async (req, res) => {
 // Get All Communities (with pagination and filters)
 const getAllCommunities = async (req, res) => {
     try {
+        console.log('=== getAllCommunities START ===');
+        console.log('Request query params:', req.query);
+        
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 12;
         const skip = (page - 1) * limit;
         const search = req.query.search || '';
         const statusParam = req.query.status;
+
+        console.log('Parsed params - page:', page, 'limit:', limit, 'skip:', skip, 'search:', search, 'statusParam:', statusParam);
 
         const filter = {
             isDeleted: false
@@ -80,7 +85,10 @@ const getAllCommunities = async (req, res) => {
                 { 'location.city': { $regex: search, $options: 'i' } }
             ];
         }
+        
+        console.log('Query filter:', JSON.stringify(filter, null, 2));
 
+        console.log('About to query CommunitiesModel...');
         const communities = await CommunitiesModel.find(filter)
             .populate('amenityIds', 'name icon')
             .populate('managerId', 'name email')
@@ -88,23 +96,35 @@ const getAllCommunities = async (req, res) => {
             .limit(limit)
             .sort({ isFeatured: -1, createdAt: -1 })
             .lean();
+            
+        console.log('Found communities count:', communities.length);
 
+        console.log('About to count total documents...');
         const total = await CommunitiesModel.countDocuments(filter);
+        console.log('Total communities:', total);
 
+        console.log('Sending response...');
+        const responsePayload = {
+            communities,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
+        };
+        
+        console.log('Response payload prepared');
+        console.log('=== getAllCommunities END ===');
         return res.status(200).send(response.toJson(
             messages['en'].common.detail_success,
-            {
-                communities,
-                pagination: {
-                    total,
-                    page,
-                    limit,
-                    totalPages: Math.ceil(total / limit)
-                }
-            }
+            responsePayload
         ));
 
     } catch (err) {
+        console.error('=== ERROR in getAllCommunities ===');
+        console.error('Error details:', err);
+        console.error('Error stack:', err.stack);
         const statusCode = err.statusCode || 500;
         const errMess = err.message || err;
         return res.status(statusCode).send(response.toJson(errMess));
@@ -656,3 +676,9 @@ module.exports = {
     getCommunityMembers,
     getCommunityEvents
 };
+
+
+
+
+
+

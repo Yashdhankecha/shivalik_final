@@ -64,10 +64,13 @@ const AdminPanel = () => {
     }
   }, [user, navigate]);
 
+
   // Close mobile menu when route changes
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
+
+
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -78,11 +81,13 @@ const AdminPanel = () => {
       }
     };
 
+
     if (showUserMenu) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [showUserMenu]);
+
 
   const handleLogout = () => {
     logout();
