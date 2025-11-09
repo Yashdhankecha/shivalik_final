@@ -27,16 +27,23 @@ const AdminDashboard = () => {
         console.log('Stats response:', statsResponse);
         
         // Handle different response formats
+        // Backend returns: { message: "...", result: {...} }
         let statsData;
-        if (statsResponse?.data?.result) {
-          statsData = statsResponse.data.result;
-        } else if (statsResponse?.result) {
+        if (statsResponse?.result) {
+          // Direct result object
           statsData = statsResponse.result;
+        } else if (statsResponse?.data?.result) {
+          // Nested result in data
+          statsData = statsResponse.data.result;
         } else if (statsResponse?.data) {
+          // Data object directly
           statsData = statsResponse.data;
         } else {
+          // Fallback to entire response
           statsData = statsResponse;
         }
+        
+        console.log('Parsed stats data:', statsData);
         
         setStats({
           totalUsers: statsData?.totalUsers || 0,

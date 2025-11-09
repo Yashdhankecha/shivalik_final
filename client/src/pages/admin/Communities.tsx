@@ -165,18 +165,67 @@ const Communities = () => {
         search: searchTerm
       });
       
-      setCommunities(response.data.communities || []);
-      setPagination(response.data.pagination || pagination);
+      console.log('Communities response:', response);
+      
+      // Handle different response formats
+      // Backend returns: { message: "...", result: { communities: [...], pagination: {...} } }
+      let communitiesData = [];
+      let paginationData = pagination;
+      
+      if (response?.result) {
+        // Direct result object
+        communitiesData = response.result.communities || [];
+        paginationData = response.result.pagination || pagination;
+      } else if (response?.data?.result) {
+        // Nested result in data
+        communitiesData = response.data.result.communities || [];
+        paginationData = response.data.result.pagination || pagination;
+      } else if (response?.data?.communities) {
+        // Direct data.communities
+        communitiesData = response.data.communities;
+        paginationData = response.data.pagination || pagination;
+      } else if (response?.communities) {
+        // Direct communities array
+        communitiesData = response.communities;
+        paginationData = response.pagination || pagination;
+      } else if (Array.isArray(response?.data)) {
+        // Array directly in data
+        communitiesData = response.data;
+      } else if (Array.isArray(response)) {
+        // Array directly
+        communitiesData = response;
+      }
+      
+      console.log('Parsed communities:', communitiesData);
+      console.log('Parsed pagination:', paginationData);
+      
+      setCommunities(communitiesData);
+      setPagination(paginationData);
       
       // Fetch managers for each community
       const managersData: Record<string, any[]> = {};
-      for (const community of response.data.communities || []) {
+      for (const community of communitiesData) {
         try {
           const managersResponse = await adminApi.getCommunityManagers(community._id, {
             page: 1,
             limit: 10
           });
-          managersData[community._id] = managersResponse.data.managers || [];
+          
+          // Handle managers response format
+          let managers = [];
+          if (managersResponse?.result?.managers) {
+            managers = managersResponse.result.managers;
+          } else if (managersResponse?.data?.managers) {
+            managers = managersResponse.data.managers;
+          } else if (managersResponse?.managers) {
+            managers = managersResponse.managers;
+          } else if (Array.isArray(managersResponse?.data)) {
+            managers = managersResponse.data;
+          } else if (Array.isArray(managersResponse)) {
+            managers = managersResponse;
+          }
+          
+          managersData[community._id] = managers;
         } catch (error) {
           console.error(`Error fetching managers for community ${community._id}:`, error);
           managersData[community._id] = [];

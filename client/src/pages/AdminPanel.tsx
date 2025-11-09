@@ -114,21 +114,6 @@ const AdminPanel = () => {
           })}
         </ul>
       </div>
-
-      {/* User Info in Sidebar */}
-      <div className="p-3 md:p-4 border-t border-gray-200 flex-shrink-0">
-        <div className="flex items-center gap-2 md:gap-3">
-          <Avatar className="w-9 h-9 md:w-10 md:h-10 border border-gray-300 flex-shrink-0">
-            <AvatarFallback className="bg-gray-800 text-white font-semibold text-xs md:text-sm">
-              {user?.name?.charAt(0) || 'A'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs md:text-sm font-semibold text-gray-900 truncate">{user?.name || 'Admin'}</p>
-            <p className="text-xs text-gray-500 truncate hidden md:block">{user?.email || ''}</p>
-          </div>
-        </div>
-      </div>
     </nav>
   );
 
