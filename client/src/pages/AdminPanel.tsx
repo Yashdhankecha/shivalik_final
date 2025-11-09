@@ -41,6 +41,8 @@ const AdminPanel = () => {
     if (path.includes('/admin/reports')) return 'reports';
     if (path.includes('/admin/settings')) return 'settings';
     if (path.includes('/admin/profile')) return 'profile';
+    if (path.includes('/admin/join-requests')) return 'join-requests';
+    if (path.includes('/admin/role-requests')) return 'role-requests';
     return 'dashboard';
   };
 
@@ -52,6 +54,7 @@ const AdminPanel = () => {
     { id: 'communities', label: 'Communities', icon: Building2, path: '/admin/communities' },
     { id: 'events', label: 'Events', icon: Calendar, path: '/admin/events' },
     { id: 'reports', label: 'Reports', icon: FileText, path: '/admin/reports' },
+    { id: 'join-requests', label: 'Join Requests', icon: MessageSquare, path: '/admin/join-requests' },
     { id: 'role-requests', label: 'Role Requests', icon: UserPlus, path: '/admin/role-requests' }
   ];
 

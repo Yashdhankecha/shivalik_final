@@ -1,110 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Building2, Mail, Phone, ArrowRight, Shield, Eye, EyeOff } from 'lucide-react';
@@ -183,19 +76,27 @@ export const LoginPage = () => {
                     password
                 });
 
-                if (response.data.result) {
-                    // Use the login function from useAuth to ensure state is updated
-                    login(response.data.result.user, response.data.result.accessToken);
-                    
-                    await setToLocalStorage('auth_token', response.data.result.accessToken);
-                    await setToLocalStorage('refresh_token', response.data.result.refreshToken);
-                    await setToLocalStorage('userInfo', response.data.result.user);
-                    setLoading(false);
-                    showMessage('Login successful!');
-                    // Use setTimeout to ensure state updates are processed before navigation
-                    setTimeout(() => {
-                        navigate('/dashboard');
-                    }, 100);
+                // Handle the actual response structure from the backend
+                if (response.data) {
+                    const userData = response.data.result || response.data.data || response.data;
+                    if (userData && (userData.user || userData.accessToken)) {
+                        const user = userData.user || userData;
+                        const token = userData.accessToken || userData.token;
+                        
+                        // Use the login function from useAuth to ensure state is updated
+                        login(user, token);
+                        
+                        await setToLocalStorage('auth_token', token);
+                        await setToLocalStorage('refresh_token', userData.refreshToken || '');
+                        await setToLocalStorage('userInfo', JSON.stringify(user));
+                        setLoading(false);
+                        showMessage('Login successful!');
+                        // Use setTimeout to ensure state updates are processed before navigation
+                        setTimeout(() => {
+                            navigate('/dashboard');
+                        }, 100);
+                        return;
+                    }
                 }
             } else {
                 if (!email) {
@@ -223,21 +124,32 @@ export const LoginPage = () => {
                     password
                 });
 
-                if (response.data.result) {
-                    // Use the login function from useAuth to ensure state is updated
-                    login(response.data.result.user, response.data.result.accessToken);
-                    
-                    await setToLocalStorage('auth_token', response.data.result.accessToken);
-                    await setToLocalStorage('refresh_token', response.data.result.refreshToken);
-                    await setToLocalStorage('userInfo', response.data.result.user);
-                    setLoading(false);
-                    showMessage('Login successful!');
-                    // Use setTimeout to ensure state updates are processed before navigation
-                    setTimeout(() => {
-                        navigate('/dashboard');
-                    }, 100);
+                // Handle the actual response structure from the backend
+                if (response.data) {
+                    const userData = response.data.result || response.data.data || response.data;
+                    if (userData && (userData.user || userData.accessToken)) {
+                        const user = userData.user || userData;
+                        const token = userData.accessToken || userData.token;
+                        
+                        // Use the login function from useAuth to ensure state is updated
+                        login(user, token);
+                        
+                        await setToLocalStorage('auth_token', token);
+                        await setToLocalStorage('refresh_token', userData.refreshToken || '');
+                        await setToLocalStorage('userInfo', JSON.stringify(user));
+                        setLoading(false);
+                        showMessage('Login successful!');
+                        // Use setTimeout to ensure state updates are processed before navigation
+                        setTimeout(() => {
+                            navigate('/dashboard');
+                        }, 100);
+                        return;
+                    }
                 }
             }
+            
+            // If we reach here, login failed for some reason
+            showMessage('Login failed. Please try again.', 'error');
         } catch (error: any) {
             // Check if it's a connection error and provide helpful message
             if (error.code === 'ERR_NETWORK' || error.message?.includes('ERR_CONNECTION_REFUSED')) {

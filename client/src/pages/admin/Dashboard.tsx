@@ -15,8 +15,8 @@ const AdminDashboard = () => {
     totalCommunities: 0,
     activeEvents: 0
   });
-  const [recentUsers, setRecentUsers] = useState([]);
-  const [recentActivities, setRecentActivities] = useState([]);
+  const [recentUsers, setRecentUsers] = useState<any[]>([]);
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,31 +24,58 @@ const AdminDashboard = () => {
       try {
         // Fetch dashboard stats
         const statsResponse = await adminApi.getDashboardStats();
-        // Backend returns {message, result: {stats}}
-        const statsData = statsResponse.result || statsResponse.data || statsResponse;
-        setStats(statsData || {
-          totalUsers: 0,
-          totalCommunities: 0,
-          activeEvents: 0
+        console.log('Stats response:', statsResponse);
+        
+        // Handle different response formats
+        let statsData;
+        if (statsResponse?.data?.result) {
+          statsData = statsResponse.data.result;
+        } else if (statsResponse?.result) {
+          statsData = statsResponse.result;
+        } else if (statsResponse?.data) {
+          statsData = statsResponse.data;
+        } else {
+          statsData = statsResponse;
+        }
+        
+        setStats({
+          totalUsers: statsData?.totalUsers || 0,
+          totalCommunities: statsData?.totalCommunities || 0,
+          activeEvents: statsData?.activeEvents || 0
         });
 
         // Fetch recent users
         try {
           const usersResponse = await adminApi.getAllUsers({ limit: 5, page: 1 });
-          const usersData = usersResponse.result || usersResponse.data || usersResponse;
+          console.log('Users response:', usersResponse);
+          
+          // Handle different response formats
+          let usersData;
+          if (usersResponse?.data?.result) {
+            usersData = usersResponse.data.result;
+          } else if (usersResponse?.result) {
+            usersData = usersResponse.result;
+          } else if (usersResponse?.data) {
+            usersData = usersResponse.data;
+          } else {
+            usersData = usersResponse;
+          }
+          
           // Handle both array and object with users property
-          const users = Array.isArray(usersData) ? usersData : (usersData.users || usersData.data || []);
+          const users = Array.isArray(usersData) 
+            ? usersData 
+            : (usersData?.users || usersData?.data || []);
           
           // Format users for display
           const formattedUsers = users.slice(0, 5).map((user: any) => ({
-            name: user.name || 'Unknown',
-            email: user.email || '',
+            name: user.name || user.username || 'Unknown User',
+            email: user.email || 'No email',
             role: user.role || 'User',
             status: user.status || 'Pending',
-            joinDate: user.createdAt 
-              ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            joinDate: user.createdAt || user.created_at || user.joinedAt
+              ? new Date(user.createdAt || user.created_at || user.joinedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
               : 'N/A',
-            _id: user._id
+            _id: user._id || user.id || Math.random().toString()
           }));
           setRecentUsers(formattedUsers);
         } catch (error) {
@@ -56,11 +83,26 @@ const AdminDashboard = () => {
           setRecentUsers([]);
         }
 
-        // Fetch recent activities (we'll create this endpoint)
+        // Fetch recent activities
         try {
           const activitiesResponse = await adminApi.getRecentActivities({ limit: 6 });
-          const activitiesData = activitiesResponse.result || activitiesResponse.data || activitiesResponse;
-          const activities = Array.isArray(activitiesData) ? activitiesData : (activitiesData.activities || []);
+          console.log('Activities response:', activitiesResponse);
+          
+          // Handle different response formats
+          let activitiesData;
+          if (activitiesResponse?.data?.result) {
+            activitiesData = activitiesResponse.data.result;
+          } else if (activitiesResponse?.result) {
+            activitiesData = activitiesResponse.result;
+          } else if (activitiesResponse?.data) {
+            activitiesData = activitiesResponse.data;
+          } else {
+            activitiesData = activitiesResponse;
+          }
+          
+          const activities = Array.isArray(activitiesData) 
+            ? activitiesData 
+            : (activitiesData?.activities || []);
           setRecentActivities(activities);
         } catch (error) {
           console.error('Error fetching recent activities:', error);
@@ -81,19 +123,19 @@ const AdminDashboard = () => {
     { 
       title: 'Total Users', 
       value: stats.totalUsers.toLocaleString(), 
-      change: '0', // Default value since backend doesn't provide changes
+      change: '+0', // Default value since backend doesn't provide changes
       icon: Users 
     },
     { 
       title: 'Communities', 
       value: stats.totalCommunities.toLocaleString(), 
-      change: '0', // Default value since backend doesn't provide changes
+      change: '+0', // Default value since backend doesn't provide changes
       icon: Building2 
     },
     { 
       title: 'Active Events', 
       value: stats.activeEvents.toLocaleString(), 
-      change: '0', // Default value since backend doesn't provide changes
+      change: '+0', // Default value since backend doesn't provide changes
       icon: Calendar 
     }
   ];
@@ -164,7 +206,7 @@ const AdminDashboard = () => {
                   {recentUsers.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                        No recent users found
+                        No recent users found. Create communities and add users to see them here.
                       </td>
                     </tr>
                   ) : (
@@ -174,7 +216,7 @@ const AdminDashboard = () => {
                         <div className="flex items-center gap-3">
                           <Avatar className="w-10 h-10">
                             <AvatarFallback className="bg-gray-800 text-white font-semibold">
-                              {user.name.split(' ').map(n => n[0]).join('')}
+                              {user.name ? user.name.split(' ').map(n => n[0]).join('') : 'U'}
                             </AvatarFallback>
                           </Avatar>
                           <div>
@@ -216,7 +258,7 @@ const AdminDashboard = () => {
             <div className="space-y-4">
               {recentActivities.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
-                  No recent activities found
+                  No recent activities found. Create communities and events to see activity here.
                 </div>
               ) : (
                 recentActivities.map((activity, index) => (
@@ -225,11 +267,12 @@ const AdminDashboard = () => {
                     {activity.type === 'user' && <Users className="w-5 h-5 text-white" />}
                     {activity.type === 'community' && <Building2 className="w-5 h-5 text-white" />}
                     {activity.type === 'event' && <Calendar className="w-5 h-5 text-white" />}
+                    {!activity.type && <Activity className="w-5 h-5 text-white" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-black">{activity.action}</p>
-                    <p className="text-xs text-gray-600">{activity.user}{activity.community ? ` in ${activity.community}` : ''}</p>
-                    <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                    <p className="text-sm font-semibold text-black">{activity.action || activity.description || 'Activity'}</p>
+                    <p className="text-xs text-gray-600">{activity.user || activity.userName || 'Unknown user'}{activity.community ? ` in ${activity.community}` : ''}</p>
+                    <p className="text-xs text-gray-500 mt-1">{activity.time || (activity.createdAt ? new Date(activity.createdAt).toLocaleString() : 'Just now')}</p>
                   </div>
                 </div>
                 ))
@@ -238,8 +281,6 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
-
-
     </div>
   );
 };

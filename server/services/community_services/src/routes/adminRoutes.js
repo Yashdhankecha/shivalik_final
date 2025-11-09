@@ -51,4 +51,14 @@ router.get('/role-change-requests', auth.verifyToken, auth.verifyAdmin, adminCon
 router.put('/role-change-requests/:requestId/approve', auth.verifyToken, auth.verifyAdmin, adminController.approveRoleChangeRequest);
 router.put('/role-change-requests/:requestId/reject', auth.verifyToken, auth.verifyAdmin, adminController.rejectRoleChangeRequest);
 
+// Community join requests
+router.get('/community-join-requests', auth.verifyToken, auth.verifyAdmin, adminController.getCommunityJoinRequests);
+router.put('/community-join-requests/:requestId/approve', auth.verifyToken, auth.verifyAdmin, adminController.approveCommunityJoinRequest);
+router.put('/community-join-requests/:requestId/reject', auth.verifyToken, auth.verifyAdmin, adminController.rejectCommunityJoinRequest);
+
+// Community managers
+router.post('/community-managers', auth.verifyToken, auth.verifyAdmin, adminController.assignCommunityManager);
+router.delete('/community-managers/:managerId', auth.verifyToken, auth.verifyAdmin, adminController.removeCommunityManager);
+router.get('/communities/:communityId/managers', auth.verifyToken, auth.verifyAdmin, adminController.getCommunityManagers);
+
 module.exports = router;

@@ -4,8 +4,14 @@ import apiClient from './apiService';
 export const adminApi = {
   // Dashboard stats
   getDashboardStats: async () => {
-    const response = await apiClient.get('/api/v1/admin/dashboard/stats');
-    return response.data;
+    try {
+      const response = await apiClient.get('/api/v1/admin/dashboard/stats');
+      console.log('Dashboard stats raw response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      throw error;
+    }
   },
 
   // Get communities created by current admin
@@ -55,8 +61,14 @@ export const adminApi = {
     if (params.search) queryParams.append('search', params.search);
     if (params.status) queryParams.append('status', params.status);
     
-    const response = await apiClient.get(`/api/v1/admin/users?${queryParams.toString()}`);
-    return response.data;
+    try {
+      const response = await apiClient.get(`/api/v1/admin/users?${queryParams.toString()}`);
+      console.log('Get all users raw response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching all users:', error);
+      throw error;
+    }
   },
 
   // Get events in communities created by current admin
@@ -140,6 +152,60 @@ export const adminApi = {
     return response.data;
   },
 
+  // Community join requests
+  getCommunityJoinRequests: async (params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  } = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+    if (params.status) queryParams.append('status', params.status);
+    
+    const response = await apiClient.get(`/api/v1/admin/community-join-requests?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  approveCommunityJoinRequest: async (requestId: string) => {
+    const response = await apiClient.put(`/api/v1/admin/community-join-requests/${requestId}/approve`);
+    return response.data;
+  },
+
+  rejectCommunityJoinRequest: async (requestId: string, rejectionReason: string) => {
+    const response = await apiClient.put(`/api/v1/admin/community-join-requests/${requestId}/reject`, { rejectionReason });
+    return response.data;
+  },
+
+  // Community managers
+  assignCommunityManager: async (data: {
+    communityId: string;
+    userId: string;
+    role?: 'Manager';
+  }) => {
+    const response = await apiClient.post('/api/v1/admin/community-managers', data);
+    return response.data;
+  },
+
+  removeCommunityManager: async (managerId: string) => {
+    const response = await apiClient.delete(`/api/v1/admin/community-managers/${managerId}`);
+    return response.data;
+  },
+
+  getCommunityManagers: async (communityId: string, params: {
+    page?: number;
+    limit?: number;
+  } = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    
+    const response = await apiClient.get(`/api/v1/admin/communities/${communityId}/managers?${queryParams.toString()}`);
+    return response.data;
+  },
+
   // Get recent activities for admin dashboard
   getRecentActivities: async (params: {
     limit?: number;
@@ -147,8 +213,14 @@ export const adminApi = {
     const queryParams = new URLSearchParams();
     if (params.limit) queryParams.append('limit', params.limit.toString());
     
-    const response = await apiClient.get(`/api/v1/admin/dashboard/activities?${queryParams.toString()}`);
-    return response.data;
+    try {
+      const response = await apiClient.get(`/api/v1/admin/dashboard/activities?${queryParams.toString()}`);
+      console.log('Recent activities raw response:', response);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching recent activities:', error);
+      throw error;
+    }
   },
 
   approveRoleChangeRequest: async (requestId: string) => {

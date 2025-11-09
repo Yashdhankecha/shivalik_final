@@ -14,41 +14,58 @@ const path = require('path');
  */
 const getDashboardStats = async (req, res) => {
     try {
-        // Get communities created by current admin
-        const communitiesCount = await CommunitiesModel.countDocuments({
-            createdBy: req.user._id,
-            isDeleted: false
-        });
+        let usersCount = 0;
+        let communitiesCount = 0;
+        let eventsCount = 0;
+        let reportsCount = 0;
 
-        // Get users in communities created by current admin
+        // Get communities created by current admin
         const communities = await CommunitiesModel.find({
             createdBy: req.user._id,
             isDeleted: false
         }).select('_id');
 
+        communitiesCount = communities.length;
         const communityIds = communities.map(community => community._id);
 
-        // Get all users in these communities (members + managers)
-        const usersCount = await UsersModel.countDocuments({
-            $or: [
-                { communityId: { $in: communityIds } },
-                { _id: { $in: communities.map(c => c.managerId) } }
-            ],
-            isDeleted: false
-        });
+        // If admin has communities, get stats for those communities
+        if (communityIds.length > 0) {
+            // Get all users in these communities (members + managers)
+            usersCount = await UsersModel.countDocuments({
+                $or: [
+                    { communityId: { $in: communityIds } },
+                    { _id: { $in: communities.map(c => c.managerId) } }
+                ],
+                isDeleted: false
+            });
 
-        // Get events in communities created by current admin
-        const eventsCount = await EventsModel.countDocuments({
-            communityId: { $in: communityIds },
-            isDeleted: false,
-            status: { $in: ['Upcoming', 'Ongoing', 'upcoming', 'ongoing'] }
-        });
+            // Get events in communities created by current admin
+            eventsCount = await EventsModel.countDocuments({
+                communityId: { $in: communityIds },
+                isDeleted: false,
+                status: { $in: ['Upcoming', 'Ongoing', 'upcoming', 'ongoing'] }
+            });
 
-        // Get reports count
-        const reportsCount = await ReportsModel.countDocuments({
-            communityId: { $in: communityIds },
-            isDeleted: false
-        });
+            // Get reports count
+            reportsCount = await ReportsModel.countDocuments({
+                communityId: { $in: communityIds },
+                isDeleted: false
+            });
+        } else {
+            // If admin has no communities, check if they are an admin user
+            if (req.user.role === 'Admin' || req.user.role === 'SuperAdmin') {
+                // Admin users get overall stats
+                usersCount = await UsersModel.countDocuments({ isDeleted: false });
+                eventsCount = await EventsModel.countDocuments({ 
+                    isDeleted: false,
+                    status: { $in: ['Upcoming', 'Ongoing', 'upcoming', 'ongoing'] }
+                });
+                reportsCount = await ReportsModel.countDocuments({ isDeleted: false });
+                // Get total communities (not just those created by this admin)
+                communitiesCount = await CommunitiesModel.countDocuments({ isDeleted: false });
+            }
+            // Regular users with no communities get zero stats (already initialized to 0)
+        }
 
         const stats = {
             totalUsers: usersCount,
@@ -289,13 +306,36 @@ const getAllUsers = async (req, res) => {
         const communityIds = communities.map(community => community._id);
 
         // Build user filter
-        const userFilter = {
-            $or: [
+        let userFilter = { isDeleted: false };
+
+        // If admin has communities, get users from those communities
+        if (communityIds.length > 0) {
+            userFilter.$or = [
                 { communityId: { $in: communityIds } },
                 { _id: { $in: communities.map(c => c.managerId) } }
-            ],
-            isDeleted: false
-        };
+            ];
+        } else {
+            // If admin has no communities, check if they are an admin user (Admin or SuperAdmin)
+            // Show all users for any admin user, not just SuperAdmin
+            if (req.user.role === 'Admin' || req.user.role === 'SuperAdmin') {
+                // Admin users (both Admin and SuperAdmin) get all users
+                userFilter = { isDeleted: false };
+            } else {
+                // Regular user with no communities gets empty result
+                return res.status(200).send(response.toJson(
+                    messages['en'].common.detail_success,
+                    {
+                        users: [],
+                        pagination: {
+                            total: 0,
+                            page,
+                            limit,
+                            totalPages: 0
+                        }
+                    }
+                ));
+            }
+        }
 
         // Handle status filter
         if (statusParam) {
@@ -352,28 +392,53 @@ const getRecentActivities = async (req, res) => {
 
         const communityIds = communities.map(community => community._id);
 
-        // Get recent user registrations
-        const recentUsers = await UsersModel.find({
-            $or: [
-                { communityId: { $in: communityIds } },
-                { _id: { $in: communities.map(c => c.managerId) } }
-            ],
-            isDeleted: false
-        })
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .lean();
+        let recentUsers = [];
+        let recentEvents = [];
 
-        // Get recent community events
-        const recentEvents = await EventsModel.find({
-            communityId: { $in: communityIds },
-            isDeleted: false
-        })
-        .populate('communityId', 'name')
-        .populate('createdBy', 'name')
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .lean();
+        // If admin has communities, get activities for those communities
+        if (communityIds.length > 0) {
+            // Get recent user registrations
+            recentUsers = await UsersModel.find({
+                $or: [
+                    { communityId: { $in: communityIds } },
+                    { _id: { $in: communities.map(c => c.managerId) } }
+                ],
+                isDeleted: false
+            })
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .lean();
+
+            // Get recent community events
+            recentEvents = await EventsModel.find({
+                communityId: { $in: communityIds },
+                isDeleted: false
+            })
+            .populate('communityId', 'name')
+            .populate('createdBy', 'name')
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .lean();
+        } else {
+            // If admin has no communities, check if they are an admin user
+            if (req.user.role === 'Admin' || req.user.role === 'SuperAdmin') {
+                // Admin users get all activities
+                // Get recent user registrations (all users)
+                recentUsers = await UsersModel.find({ isDeleted: false })
+                    .sort({ createdAt: -1 })
+                    .limit(limit)
+                    .lean();
+
+                // Get recent events (all events)
+                recentEvents = await EventsModel.find({ isDeleted: false })
+                    .populate('communityId', 'name')
+                    .populate('createdBy', 'name')
+                    .sort({ createdAt: -1 })
+                    .limit(limit)
+                    .lean();
+            }
+            // Regular users with no communities get empty activities (already initialized to empty arrays)
+        }
 
         // Format activities
         const userActivities = recentUsers.map(user => ({
@@ -1011,6 +1076,430 @@ const createCommunityEvent = async (req, res) => {
     }
 };
 
+/**
+ * Get all community join requests for communities managed by current admin
+ */
+const getCommunityJoinRequests = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const search = req.query.search || '';
+        const statusParam = req.query.status;
+
+        // Get communities managed by current admin
+        const communities = await CommunitiesModel.find({
+            createdBy: req.user._id,
+            isDeleted: false
+        }).select('_id');
+
+        const communityIds = communities.map(community => community._id);
+
+        // If admin has no communities, return empty result
+        if (communityIds.length === 0) {
+            return res.status(200).send(response.toJson(
+                messages['en'].common.detail_success,
+                {
+                    requests: [],
+                    pagination: {
+                        total: 0,
+                        page,
+                        limit,
+                        totalPages: 0
+                    }
+                }
+            ));
+        }
+
+        // Build filter for join requests
+        let filter = {
+            communityId: { $in: communityIds },
+            isDeleted: false
+        };
+
+        // Handle status filter
+        if (statusParam) {
+            filter.status = statusParam;
+        }
+
+        // Handle search
+        if (search) {
+            // Search in user name, email or community name
+            const users = await UsersModel.find({
+                $or: [
+                    { name: { $regex: search, $options: 'i' } },
+                    { email: { $regex: search, $options: 'i' } }
+                ],
+                isDeleted: false
+            }).select('_id');
+
+            const userIds = users.map(user => user._id);
+
+            filter.$or = [
+                { userId: { $in: userIds } },
+                { message: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const requests = await CommunityJoinRequestsModel.find(filter)
+            .populate('userId', 'name email')
+            .populate('communityId', 'name')
+            .populate('reviewedBy', 'name')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        const total = await CommunityJoinRequestsModel.countDocuments(filter);
+
+        return res.status(200).send(response.toJson(
+            messages['en'].common.detail_success,
+            {
+                requests,
+                pagination: {
+                    total,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(total / limit)
+                }
+            }
+        ));
+
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+/**
+ * Approve a community join request
+ */
+const approveCommunityJoinRequest = async (req, res) => {
+    try {
+        const { requestId } = req.params;
+
+        // Validate request ID
+        if (!mongoose.Types.ObjectId.isValid(requestId)) {
+            return res.status(400).send(response.toJson('Invalid request ID'));
+        }
+
+        // Find the join request
+        const joinRequest = await CommunityJoinRequestsModel.findOne({
+            _id: requestId,
+            isDeleted: false
+        }).populate('communityId');
+
+        if (!joinRequest) {
+            return res.status(404).send(response.toJson(messages['en'].common.not_exists));
+        }
+
+        // Check if the admin manages this community
+        const community = await CommunitiesModel.findOne({
+            _id: joinRequest.communityId._id,
+            createdBy: req.user._id,
+            isDeleted: false
+        });
+
+        if (!community) {
+            return res.status(403).send(response.toJson(messages['en'].auth.not_access));
+        }
+
+        // Check if request is already approved
+        if (joinRequest.status === 'Approved') {
+            return res.status(400).send(response.toJson('Request is already approved'));
+        }
+
+        // Update the join request
+        joinRequest.status = 'Approved';
+        joinRequest.reviewedBy = req.user._id;
+        joinRequest.reviewedAt = new Date();
+        joinRequest.updatedAt = new Date();
+
+        await joinRequest.save();
+
+        // Add user to community members (this would typically be done in a more complex way)
+        // For now, we'll just log that the user should be added to the community
+        console.log(`User ${joinRequest.userId} should be added to community ${joinRequest.communityId._id}`);
+
+        return res.status(200).send(response.toJson(
+            'Join request approved successfully',
+            joinRequest
+        ));
+
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+/**
+ * Reject a community join request
+ */
+const rejectCommunityJoinRequest = async (req, res) => {
+    try {
+        const { requestId } = req.params;
+        const { rejectionReason } = req.body;
+
+        // Validate request ID
+        if (!mongoose.Types.ObjectId.isValid(requestId)) {
+            return res.status(400).send(response.toJson('Invalid request ID'));
+        }
+
+        // Find the join request
+        const joinRequest = await CommunityJoinRequestsModel.findOne({
+            _id: requestId,
+            isDeleted: false
+        }).populate('communityId');
+
+        if (!joinRequest) {
+            return res.status(404).send(response.toJson(messages['en'].common.not_exists));
+        }
+
+        // Check if the admin manages this community
+        const community = await CommunitiesModel.findOne({
+            _id: joinRequest.communityId._id,
+            createdBy: req.user._id,
+            isDeleted: false
+        });
+
+        if (!community) {
+            return res.status(403).send(response.toJson(messages['en'].auth.not_access));
+        }
+
+        // Check if request is already rejected
+        if (joinRequest.status === 'Rejected') {
+            return res.status(400).send(response.toJson('Request is already rejected'));
+        }
+
+        // Update the join request
+        joinRequest.status = 'Rejected';
+        joinRequest.reviewedBy = req.user._id;
+        joinRequest.reviewedAt = new Date();
+        joinRequest.reviewNotes = rejectionReason || '';
+        joinRequest.updatedAt = new Date();
+
+        await joinRequest.save();
+
+        return res.status(200).send(response.toJson(
+            'Join request rejected successfully',
+            joinRequest
+        ));
+
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+/**
+ * Assign a manager to a community
+ */
+const assignCommunityManager = async (req, res) => {
+    try {
+        const { communityId, userId, role } = req.body;
+
+        // Validate inputs
+        if (!communityId || !userId) {
+            return res.status(400).send(response.toJson('Community ID and User ID are required'));
+        }
+
+        // Validate role
+        const validRoles = ['Manager'];
+        const managerRole = validRoles.includes(role) ? role : 'Manager';
+
+        // Check if community exists
+        const community = await CommunitiesModel.findOne({
+            _id: communityId,
+            isDeleted: false
+        });
+
+        if (!community) {
+            return res.status(404).send(response.toJson(messages['en'].common.not_exists));
+        }
+
+        // Check if user exists
+        const user = await UsersModel.findOne({
+            _id: userId,
+            isDeleted: false
+        });
+
+        if (!user) {
+            return res.status(404).send(response.toJson(messages['en'].common.not_exists));
+        }
+
+        // Check if user is already assigned as manager for this community
+        const existingManager = await CommunityManagersModel.findOne({
+            userId: userId,
+            communityId: communityId,
+            isDeleted: false
+        });
+
+        if (existingManager) {
+            return res.status(400).send(response.toJson('User is already assigned as manager for this community'));
+        }
+
+        // Create manager record
+        const newManager = new CommunityManagersModel({
+            userId: userId,
+            communityId: communityId,
+            role: managerRole,
+            assignedBy: req.user._id,
+            permissions: {
+                canApproveJoinRequests: true,
+                canManagePosts: true,
+                canManageUsers: true,
+                canCreateEvents: true,
+                canManageReports: true
+            }
+        });
+
+        await newManager.save();
+
+        // Update user role if needed
+        if (user.role !== 'Admin' && user.role !== 'SuperAdmin') {
+            await UsersModel.updateOne(
+                { _id: userId },
+                { 
+                    $set: { 
+                        role: managerRole,
+                        updatedAt: new Date()
+                    }
+                }
+            );
+        }
+
+        // Populate and return the manager record
+        await newManager.populate([
+            { path: 'userId', select: 'name email' },
+            { path: 'communityId', select: 'name' },
+            { path: 'assignedBy', select: 'name' }
+        ]);
+
+        return res.status(201).send(response.toJson(
+            'Manager assigned successfully',
+            newManager
+        ));
+
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+/**
+ * Remove a manager from a community
+ */
+const removeCommunityManager = async (req, res) => {
+    try {
+        const { managerId } = req.params;
+
+        // Validate manager ID
+        if (!mongoose.Types.ObjectId.isValid(managerId)) {
+            return res.status(400).send(response.toJson('Invalid manager ID'));
+        }
+
+        // Find the manager record
+        const managerRecord = await CommunityManagersModel.findOne({
+            _id: managerId,
+            isDeleted: false
+        });
+
+        if (!managerRecord) {
+            return res.status(404).send(response.toJson(messages['en'].common.not_exists));
+        }
+
+        // Mark as deleted
+        managerRecord.isDeleted = true;
+        managerRecord.deletedAt = new Date();
+        managerRecord.updatedAt = new Date();
+
+        await managerRecord.save();
+
+        // Check if user has other manager roles
+        const otherManagerRoles = await CommunityManagersModel.countDocuments({
+            userId: managerRecord.userId,
+            isDeleted: false
+        });
+
+        // If no other manager roles, revert user role to 'User'
+        if (otherManagerRoles === 0) {
+            const user = await UsersModel.findOne({ _id: managerRecord.userId });
+            if (user && user.role !== 'Admin' && user.role !== 'SuperAdmin') {
+                await UsersModel.updateOne(
+                    { _id: managerRecord.userId },
+                    { 
+                        $set: { 
+                            role: 'User',
+                            updatedAt: new Date()
+                        }
+                    }
+                );
+            }
+        }
+
+        return res.status(200).send(response.toJson(
+            'Manager removed successfully'
+        ));
+
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
+/**
+ * Get all managers for a community
+ */
+const getCommunityManagers = async (req, res) => {
+    try {
+        const { communityId } = req.params;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        // Build filter for managers
+        let filter = {
+            communityId: communityId,
+            isDeleted: false
+        };
+
+        const managers = await CommunityManagersModel.find(filter)
+            .populate([
+                { path: 'userId', select: 'name email role' },
+                { path: 'assignedBy', select: 'name' }
+            ])
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const total = await CommunityManagersModel.countDocuments(filter);
+
+        return res.status(200).send(response.toJson(
+            messages['en'].common.detail_success,
+            {
+                managers,
+                pagination: {
+                    total,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(total / limit)
+                }
+            }
+        ));
+
+    } catch (err) {
+        const statusCode = err.statusCode || 500;
+        const errMess = err.message || err;
+        return res.status(statusCode).send(response.toJson(errMess));
+    }
+};
+
 module.exports = {
     getDashboardStats,
     getAdminCommunities,
@@ -1026,5 +1515,31 @@ module.exports = {
     approveRoleChangeRequest,
     rejectRoleChangeRequest,
     createCommunityEvent,
-    getRecentActivities
+    getRecentActivities,
+    getCommunityJoinRequests,
+    approveCommunityJoinRequest,
+    rejectCommunityJoinRequest,
+    assignCommunityManager,
+    removeCommunityManager,
+    getCommunityManagers
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

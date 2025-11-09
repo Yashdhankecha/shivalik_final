@@ -10,7 +10,9 @@ import { useToast } from '../../hooks/use-toast';
 
 const UsersManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [users, setUsers] = useState([]);
+  const [selectedCommunity, setSelectedCommunity] = useState('');
+  const [communities, setCommunities] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -19,26 +21,127 @@ const UsersManagement = () => {
     totalPages: 0
   });
   const [showRoleChangeModal, setShowRoleChangeModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [requestedRole, setRequestedRole] = useState('Manager');
   const [reason, setReason] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
     fetchUsers();
-  }, [pagination.page, searchTerm]);
+    fetchCommunities();
+  }, [pagination.page, searchTerm, selectedCommunity]);
+
+  const fetchCommunities = async () => {
+    try {
+      const response = await adminApi.getAdminCommunities({
+        limit: 100 // Fetch all communities
+      });
+      
+      // Handle different response structures
+      let communitiesData = [];
+      if (response?.data?.communities) {
+        communitiesData = response.data.communities;
+      } else if (response?.result?.communities) {
+        communitiesData = response.result.communities;
+      } else if (response?.communities) {
+        communitiesData = response.communities;
+      } else if (Array.isArray(response?.data)) {
+        communitiesData = response.data;
+      } else if (Array.isArray(response)) {
+        communitiesData = response;
+      }
+      
+      setCommunities(communitiesData);
+    } catch (error) {
+      console.error('Error fetching communities:', error);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await adminApi.getAllUsers({
-        page: pagination.page,
-        limit: pagination.limit,
-        search: searchTerm
-      });
       
-      setUsers(response.data.users || []);
-      setPagination(response.data.pagination || pagination);
+      // If a community is selected, fetch users from that specific community
+      if (selectedCommunity) {
+        const response = await adminApi.getCommunityUsers(selectedCommunity, {
+          page: pagination.page,
+          limit: pagination.limit,
+          search: searchTerm
+        });
+        
+        // Handle different response structures for community users
+        let usersData = [];
+        let paginationData = pagination;
+        
+        if (response?.data?.users) {
+          usersData = response.data.users;
+          paginationData = response.data.pagination || pagination;
+        } else if (response?.result?.users) {
+          usersData = response.result.users;
+          paginationData = response.result.pagination || pagination;
+        } else if (response?.users) {
+          usersData = response.users;
+          paginationData = response.pagination || pagination;
+        } else if (Array.isArray(response?.data)) {
+          usersData = response.data;
+          paginationData = {
+            ...pagination,
+            total: usersData.length,
+            totalPages: Math.ceil(usersData.length / pagination.limit)
+          };
+        } else if (Array.isArray(response)) {
+          usersData = response;
+          paginationData = {
+            ...pagination,
+            total: usersData.length,
+            totalPages: Math.ceil(usersData.length / pagination.limit)
+          };
+        }
+        
+        setUsers(usersData);
+        setPagination(paginationData);
+      } else {
+        // Otherwise, fetch all users
+        const response = await adminApi.getAllUsers({
+          page: pagination.page,
+          limit: pagination.limit,
+          search: searchTerm
+        });
+        
+        console.log('Users API response:', response);
+        
+        // Handle different response structures
+        let usersData = [];
+        let paginationData = pagination;
+        
+        if (response?.data?.users) {
+          usersData = response.data.users;
+          paginationData = response.data.pagination || pagination;
+        } else if (response?.result?.users) {
+          usersData = response.result.users;
+          paginationData = response.result.pagination || pagination;
+        } else if (response?.users) {
+          usersData = response.users;
+          paginationData = response.pagination || pagination;
+        } else if (Array.isArray(response?.data)) {
+          usersData = response.data;
+          paginationData = {
+            ...pagination,
+            total: usersData.length,
+            totalPages: Math.ceil(usersData.length / pagination.limit)
+          };
+        } else if (Array.isArray(response)) {
+          usersData = response;
+          paginationData = {
+            ...pagination,
+            total: usersData.length,
+            totalPages: Math.ceil(usersData.length / pagination.limit)
+          };
+        }
+        
+        setUsers(usersData);
+        setPagination(paginationData);
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
@@ -77,7 +180,7 @@ const UsersManagement = () => {
     }
   };
 
-  const handlePageChange = (newPage) => {
+  const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
       setPagination({ ...pagination, page: newPage });
     }
@@ -130,6 +233,18 @@ const UsersManagement = () => {
     }
   };
 
+  const handleCommunityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCommunity(e.target.value);
+    // Reset to first page when changing community
+    setPagination({ ...pagination, page: 1 });
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSelectedCommunity('');
+    setPagination({ ...pagination, page: 1 });
+  };
+
   if (loading && users.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -159,15 +274,35 @@ const UsersManagement = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 w-4 h-4" />
             <Input
               type="text"
-              placeholder="Search users by name, email, or community..."
+              placeholder="Search users by name, email..."
               className="pl-10 border border-gray-400 text-black"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          
+          {/* Community Filter */}
           <div className="flex gap-2">
-            <Button variant="outline" className="border border-gray-400 text-black hover:bg-gray-100">All Roles</Button>
-            <Button variant="outline" className="border border-gray-400 text-black hover:bg-gray-100">All Status</Button>
+            <select
+              value={selectedCommunity}
+              onChange={handleCommunityChange}
+              className="border border-gray-400 rounded-md px-3 py-2 text-black"
+            >
+              <option value="">All Communities</option>
+              {communities.map((community) => (
+                <option key={community._id} value={community._id}>
+                  {community.name}
+                </option>
+              ))}
+            </select>
+            
+            <Button 
+              variant="outline" 
+              className="border border-gray-400 text-black hover:bg-gray-100"
+              onClick={clearFilters}
+            >
+              Clear Filters
+            </Button>
           </div>
         </div>
       </div>
@@ -178,7 +313,9 @@ const UsersManagement = () => {
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-lg flex items-center gap-2 text-black">
               <Users className="w-5 h-5" />
-              All Users
+              {selectedCommunity 
+                ? `${communities.find(c => c._id === selectedCommunity)?.name || 'Selected Community'} Users` 
+                : 'All Users'}
             </h3>
             <p className="text-sm text-gray-600">Showing {users.length} users</p>
           </div>
@@ -197,56 +334,68 @@ const UsersManagement = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {users.map((user: any) => (
-                  <tr key={user._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-10 h-10">
-                          <AvatarFallback className="bg-gray-800 text-white font-semibold">
-                            {user.name.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-semibold text-sm text-black">{user.name}</p>
-                          <p className="text-xs text-gray-600">{user.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {getRoleBadge(user.role)}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {user.communityId ? `Community ID: ${user.communityId}` : 'Not assigned'}
-                    </td>
-                    <td className="px-6 py-4">
-                      {getStatusBadge(user.status)}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-blue-600 hover:bg-blue-50"
-                          onClick={() => openRoleChangeModal(user)}
-                        >
-                          <UserPlus className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+                {users.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                      No users found. {pagination.total === 0 ? 'There are no users in your communities.' : 'Try adjusting your search criteria.'}
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  users.map((user: any) => (
+                    <tr key={user._id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-10 h-10">
+                            <AvatarFallback className="bg-gray-800 text-white font-semibold">
+                              {user.name ? user.name.split(' ').map(n => n[0]).join('') : 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-semibold text-sm text-black">{user.name || 'Unknown User'}</p>
+                            <p className="text-xs text-gray-600">{user.email || 'No email'}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {getRoleBadge(user.role || 'User')}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {user.communityId ? (
+                          communities.find(c => c._id === user.communityId)?.name || `Community ID: ${user.communityId}`
+                        ) : (
+                          'Not assigned'
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {getStatusBadge(user.status || 'Pending')}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-blue-600 hover:bg-blue-50"
+                            onClick={() => openRoleChangeModal(user)}
+                          >
+                            <UserPlus className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="text-black hover:bg-gray-100">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -292,10 +441,10 @@ const UsersManagement = () => {
               
               <div className="mb-4">
                 <p className="text-sm text-gray-600 mb-2">
-                  User: <span className="font-semibold">{selectedUser.name}</span>
+                  User: <span className="font-semibold">{selectedUser.name || 'Unknown User'}</span>
                 </p>
                 <p className="text-sm text-gray-600 mb-4">
-                  Current Role: <span className="font-semibold">{selectedUser.role}</span>
+                  Current Role: <span className="font-semibold">{selectedUser.role || 'User'}</span>
                 </p>
                 
                 <div className="mb-4">
@@ -363,7 +512,7 @@ const UsersManagement = () => {
               <div>
                 <p className="text-sm text-gray-600">Active Users</p>
                 <p className="text-2xl font-bold text-black">
-                  {users.filter(u => u.status === 'Active').length}
+                  {users.filter(u => (u.status || '').toLowerCase() === 'active').length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center">
@@ -379,7 +528,7 @@ const UsersManagement = () => {
               <div>
                 <p className="text-sm text-gray-600">Pending Users</p>
                 <p className="text-2xl font-bold text-black">
-                  {users.filter(u => u.status === 'Pending').length}
+                  {users.filter(u => (u.status || '').toLowerCase() === 'pending').length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-gray-500 rounded-lg flex items-center justify-center">
@@ -395,7 +544,7 @@ const UsersManagement = () => {
               <div>
                 <p className="text-sm text-gray-600">Inactive Users</p>
                 <p className="text-2xl font-bold text-black">
-                  {users.filter(u => u.status === 'Inactive').length}
+                  {users.filter(u => (u.status || '').toLowerCase() === 'inactive').length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-gray-300 rounded-lg flex items-center justify-center">

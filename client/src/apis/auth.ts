@@ -5,7 +5,7 @@ import { apiRequest } from './apiRequest';
 export const authenticateUserApi = async (data: LoginPayload): Promise<LoginPayload> => {
     return await apiRequest<LoginPayload>({
         method: 'POST',
-        url: '/api/v1/users/admin/send-phone-otp',
+        url: '/api/v1/auth/login',
         data: data,
     });
 };
@@ -14,7 +14,7 @@ export const authenticateUserApi = async (data: LoginPayload): Promise<LoginPayl
 export const verifyOTPApi = async (data: any): Promise<LoginPayload> => {
     return await apiRequest<LoginPayload>({
         method: 'POST',
-        url: '/api/v1/users/admin/verify-phone-otp',
+        url: '/api/v1/auth/verify-otp',
         data: data,
     });
 };
