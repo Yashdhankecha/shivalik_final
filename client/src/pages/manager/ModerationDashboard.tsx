@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -13,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { 
   Users, FileText, ShoppingBag, CheckCircle, XCircle, Clock, 
   AlertCircle, RefreshCw, Eye, MessageSquare, Calendar, DollarSign
@@ -25,7 +24,8 @@ import { formatDateToDDMMYYYY } from '../../utils/dateUtils';
 const ModerationDashboard = () => {
   const { communityId: urlCommunityId } = useParams<{ communityId?: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [loading, setLoading] = useState(true);
   const [communityId, setCommunityId] = useState<string>('');
   const [communities, setCommunities] = useState<any[]>([]);
@@ -67,7 +67,7 @@ const ModerationDashboard = () => {
             });
           }
         } else if (communitiesList.length > 0) {
-          navigate(`/manager/${communitiesList[0]._id}/moderation`, { replace: true });
+          navigate(`/manager/${communitiesList[0]._id}/moderation?tab=overview`, { replace: true });
         } else {
           toast({
             title: "No Communities",
@@ -93,6 +93,15 @@ const ModerationDashboard = () => {
       fetchDashboardData();
     }
   }, [communityId]);
+
+  // Sync active tab with URL query params
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab') || 'overview';
+    if (tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
+
 
   const fetchDashboardData = async () => {
     try {
@@ -326,17 +335,9 @@ const ModerationDashboard = () => {
         </Card>
       </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="pulses">Pulses</TabsTrigger>
-          <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
-        </TabsList>
-
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-4">
+      {/* Content based on active tab from navbar */}
+      {activeTab === 'overview' && (
+        <div className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>All Pending Items</CardTitle>
@@ -466,10 +467,11 @@ const ModerationDashboard = () => {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* Users Tab */}
-        <TabsContent value="users" className="space-y-4">
+      {activeTab === 'users' && (
+        <div className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Pending User Approvals</CardTitle>
@@ -519,10 +521,11 @@ const ModerationDashboard = () => {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* Pulses Tab */}
-        <TabsContent value="pulses" className="space-y-4">
+      {activeTab === 'pulses' && (
+        <div className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Pending Pulses</CardTitle>
@@ -574,10 +577,11 @@ const ModerationDashboard = () => {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* Marketplace Tab */}
-        <TabsContent value="marketplace" className="space-y-4">
+      {activeTab === 'marketplace' && (
+        <div className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Pending Marketplace Listings</CardTitle>
@@ -633,8 +637,8 @@ const ModerationDashboard = () => {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
 
       {/* Action Dialog */}
       <Dialog open={actionDialog.open} onOpenChange={(open) => setActionDialog({ ...actionDialog, open })}>
