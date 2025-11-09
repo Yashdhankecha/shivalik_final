@@ -117,4 +117,36 @@ router.get('/reports/:communityId',
     managerController.getCommunityReports
 );
 
+// Marketplace listings
+router.get('/marketplace/listings/:communityId', 
+    auth.verifyToken, 
+    managerMiddleware.verifyCommunityManager, 
+    managerController.getMarketplaceListings
+);
+
+router.put('/marketplace/listings/:communityId/:listingId/approve', 
+    auth.verifyToken, 
+    managerMiddleware.verifyCommunityManager, 
+    managerController.approveMarketplaceListing
+);
+
+router.put('/marketplace/listings/:communityId/:listingId/reject', 
+    auth.verifyToken, 
+    managerMiddleware.verifyCommunityManager, 
+    managerController.rejectMarketplaceListing
+);
+
+router.get('/marketplace/listings/:communityId/stats', 
+    auth.verifyToken, 
+    managerMiddleware.verifyCommunityManager, 
+    managerController.getMarketplaceListingStats
+);
+
+// Comprehensive moderation dashboard
+router.get('/moderation-dashboard/:communityId', 
+    auth.verifyToken, 
+    managerMiddleware.verifyCommunityManager, 
+    managerController.getModerationDashboard
+);
+
 module.exports = router;

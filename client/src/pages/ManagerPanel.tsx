@@ -15,6 +15,7 @@ import { cn } from '../lib/utils';
 // Navigation items
 const getNavigationItems = (basePath: string) => [
   { name: 'Dashboard', href: `${basePath}/dashboard`, icon: LayoutDashboard },
+  { name: 'Moderation', href: `${basePath}/moderation`, icon: ShieldCheck },
   { name: 'Join Requests', href: `${basePath}/join-requests`, icon: UserPlus },
   { name: 'Members', href: `${basePath}/members`, icon: Users },
   { name: 'Events', href: `${basePath}/events`, icon: Calendar },
