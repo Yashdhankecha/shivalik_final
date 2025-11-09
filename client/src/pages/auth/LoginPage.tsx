@@ -131,6 +131,7 @@ export const LoginPage = () => {
                     if (userData && (userData.user || userData.accessToken)) {
                         const user = userData.user || userData;
                         const token = userData.accessToken || userData.token;
+                        const redirectTo = userData.redirectTo || '/dashboard';
                         
                         // Use the login function from useAuth to ensure state is updated
                         login(user, token);
@@ -142,7 +143,7 @@ export const LoginPage = () => {
                         showMessage('Login successful!');
                         // Use setTimeout to ensure state updates are processed before navigation
                         setTimeout(() => {
-                            navigate('/dashboard');
+                            navigate(redirectTo);
                         }, 100);
                         return;
                     }
