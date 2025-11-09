@@ -1,6 +1,8 @@
 import { Community } from '../../types/CommunityTypes';
-import { Dumbbell, Waves, Car, Shield, Users, TreePine } from 'lucide-react';
+import { Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 
 interface FeaturedCommunitiesProps {
     communities: Community[];
@@ -16,6 +18,8 @@ const FeaturedCommunities = ({
     onViewAll 
 }: FeaturedCommunitiesProps) => {
     const navigate = useNavigate();
+    const { user } = useAuth();
+    const [sharedCommunityId, setSharedCommunityId] = useState<string | null>(null);
     
     if (loading) {
         return (
@@ -60,7 +64,7 @@ const FeaturedCommunities = ({
                     {communities.map((community) => (
                         <div 
                             key={community._id} 
-                            className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-300 cursor-pointer"
+                            className="bg-white rounded-2xl overflow-hidden transition-all duration-300 transform hover:-translate-y-2 border border-gray-300 cursor-pointer"
                             onClick={() => navigate(`/community/${community._id}`)}
                         >
                             <div className="h-56 bg-gray-800 relative overflow-hidden">
@@ -100,12 +104,41 @@ const FeaturedCommunities = ({
                                     </span>
                                 </div>
 
+                                <div className="flex items-center gap-2 mb-4">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            const communityUrl = `${window.location.origin}/community/${community._id}`;
+                                            if (navigator.share) {
+                                                navigator.share({
+                                                    title: community.name,
+                                                    text: community.shortDescription || community.description || '',
+                                                    url: communityUrl,
+                                                }).catch(() => {
+                                                    // Fallback to copy
+                                                    navigator.clipboard.writeText(communityUrl);
+                                                    setSharedCommunityId(community._id);
+                                                    setTimeout(() => setSharedCommunityId(null), 2000);
+                                                });
+                                            } else {
+                                                navigator.clipboard.writeText(communityUrl);
+                                                setSharedCommunityId(community._id);
+                                                setTimeout(() => setSharedCommunityId(null), 2000);
+                                            }
+                                        }}
+                                        className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <Share2 className="w-4 h-4" />
+                                        {sharedCommunityId === community._id ? 'Copied!' : 'Share'}
+                                    </button>
+                                </div>
+
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         onJoinCommunity(community._id);
                                     }}
-                                    className="w-full px-4 py-3 bg-black text-white font-semibold rounded-xl hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                                    className="w-full px-4 py-3 bg-black text-white font-semibold rounded-xl hover:bg-gray-800 transition-all duration-300"
                                 >
                                     Join Community
                                 </button>

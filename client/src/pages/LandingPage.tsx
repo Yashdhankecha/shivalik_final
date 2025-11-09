@@ -5,7 +5,7 @@ import { Community } from '../types/CommunityTypes';
 import { useAuth } from '../hooks/useAuth';
 import { showMessage } from '../utils/Constant';
 import { Avatar, AvatarFallback } from '../components/ui/avatar';
-import { Settings, LogOut, User, ChevronDown } from 'lucide-react';
+import { Settings, LogOut, User, ChevronDown, Heart, Share2, Check } from 'lucide-react';
 import AuthModal from '../components/ui/AuthModal';
 import HeroSection from '../components/landing/HeroSection';
 import FeaturedCommunities from '../components/landing/FeaturedCommunities';
@@ -15,16 +15,16 @@ interface Pulse {
     _id: string;
     title: string;
     description: string;
-    author: {
+    userId: {
+        _id: string;
         name: string;
-        avatar?: string;
     };
-    community: {
+    communityId: {
+        _id: string;
         name: string;
     };
     attachment?: string;
-    likes: number;
-    comments: number;
+    likes: string[];
     createdAt: string;
 }
 
@@ -38,9 +38,12 @@ const LandingPage = () => {
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+    const [sharedPulseId, setSharedPulseId] = useState<string | null>(null);
+    const [likedPulses, setLikedPulses] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         fetchLandingPageData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const fetchLandingPageData = async () => {
@@ -57,42 +60,56 @@ const LandingPage = () => {
 
             setFeaturedCommunities(communities);
             
-            // Mock recent pulses - in production, fetch from API
-            setRecentPulses([
-                {
-                    _id: '1',
-                    title: 'Welcome to Sunrise Valley Community',
-                    description: 'Excited to share our new community amenities! Check out the newly renovated clubhouse and swimming pool.',
-                    author: { name: 'John Doe', avatar: 'JD' },
-                    community: { name: 'Sunrise Valley' },
-                    attachment: 'https://images.unsplash.com/photo-1571055107559-3e67626fa8be?w=800',
-                    likes: 24,
-                    comments: 8,
-                    createdAt: new Date().toISOString()
-                },
-                {
-                    _id: '2',
-                    title: 'Community Garden Initiative',
-                    description: 'Join us this weekend for our community garden planting session. Bring your family and lets make our community greener!',
-                    author: { name: 'Sarah Smith', avatar: 'SS' },
-                    community: { name: 'Green Meadows' },
-                    attachment: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800',
-                    likes: 42,
-                    comments: 15,
-                    createdAt: new Date().toISOString()
-                },
-                {
-                    _id: '3',
-                    title: 'New Security System Installed',
-                    description: 'Great news! Our community now has a state-of-the-art security system with 24/7 monitoring for your safety.',
-                    author: { name: 'Mike Johnson', avatar: 'MJ' },
-                    community: { name: 'Palm Springs' },
-                    attachment: 'https://images.unsplash.com/photo-1516156008625-3a9d6067fab5?w=800',
-                    likes: 56,
-                    comments: 12,
-                    createdAt: new Date().toISOString()
+            // Fetch recent approved pulses from all communities
+            try {
+                // Get all featured communities and fetch pulses from each
+                const allPulses: Pulse[] = [];
+                for (const community of communities.slice(0, 3)) {
+                    try {
+                        const response = await communityApi.getPulsesByCommunity(community._id, {
+                            page: 1,
+                            limit: 2
+                        });
+                        const pulsesData = response.result?.pulses || response.data?.pulses || [];
+                        const formattedPulses = pulsesData.map((pulse: any) => ({
+                            _id: pulse._id,
+                            title: pulse.title,
+                            description: pulse.description,
+                            userId: pulse.userId || { _id: '', name: 'Unknown' },
+                            communityId: { _id: community._id, name: community.name },
+                            attachment: pulse.attachment,
+                            likes: pulse.likes || [],
+                            createdAt: pulse.createdAt
+                        }));
+                        allPulses.push(...formattedPulses);
+                    } catch (error) {
+                        console.error(`Error fetching pulses for community ${community._id}:`, error);
+                    }
                 }
-            ]);
+                // Sort by date and take most recent 6
+                allPulses.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                setRecentPulses(allPulses.slice(0, 6));
+                
+                // Initialize liked pulses if user is logged in
+                if (user && allPulses.length > 0) {
+                    const liked = new Set<string>();
+                    allPulses.forEach(pulse => {
+                        if (pulse.likes && Array.isArray(pulse.likes)) {
+                            const userLiked = pulse.likes.some((like: any) => {
+                                const idStr = typeof like === 'string' ? like : (like._id || like.toString());
+                                return idStr === user.id;
+                            });
+                            if (userLiked) {
+                                liked.add(pulse._id);
+                            }
+                        }
+                    });
+                    setLikedPulses(liked);
+                }
+            } catch (error) {
+                console.error('Error fetching pulses:', error);
+                setRecentPulses([]);
+            }
         } catch (error: any) {
             console.error('Error fetching landing page data:', error);
             showMessage(error.message || 'Failed to load data', 'error');
@@ -126,6 +143,99 @@ const LandingPage = () => {
 
     const handleViewAllCommunities = () => {
         navigate('/dashboard');
+    };
+
+    const handleLikePulse = async (pulseId: string) => {
+        if (!isAuthenticated) {
+            setPendingAction(() => () => handleLikePulse(pulseId));
+            setShowAuthModal(true);
+            return;
+        }
+
+        try {
+            // Save like to database
+            await communityApi.toggleLikePulse(pulseId);
+            
+            // Find which community this pulse belongs to and refetch from database
+            const pulse = recentPulses.find(p => p._id === pulseId);
+            if (pulse) {
+                try {
+                    // Refetch pulses from the community to get updated data from database
+                    const pulseResponse = await communityApi.getPulsesByCommunity(pulse.communityId._id, {
+                        page: 1,
+                        limit: 10
+                    });
+                    const pulsesData = pulseResponse.result?.pulses || pulseResponse.data?.pulses || [];
+                    const updatedPulse = pulsesData.find((p: any) => p._id === pulseId);
+                    
+                    if (updatedPulse) {
+                        // Update the pulse with fresh data from database
+                        setRecentPulses(prevPulses => 
+                            prevPulses.map(p => {
+                                if (p._id === pulseId) {
+                                    return {
+                                        ...p,
+                                        likes: updatedPulse.likes || []
+                                    };
+                                }
+                                return p;
+                            })
+                        );
+                        
+                        // Update liked status based on actual database data
+                        if (user && updatedPulse.likes && Array.isArray(updatedPulse.likes)) {
+                            const userLiked = updatedPulse.likes.some((id: any) => {
+                                const idStr = typeof id === 'string' ? id : (id._id || id.toString());
+                                return idStr === user.id;
+                            });
+                            setLikedPulses(prev => {
+                                const newSet = new Set(prev);
+                                if (userLiked) {
+                                    newSet.add(pulseId);
+                                } else {
+                                    newSet.delete(pulseId);
+                                }
+                                return newSet;
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error refetching pulse:', error);
+                    showMessage('Like saved but failed to refresh data', 'info');
+                }
+            }
+        } catch (error: any) {
+            showMessage(error.message || 'Failed to like pulse', 'error');
+        }
+    };
+
+    const handleSharePulse = async (pulse: Pulse) => {
+        const pulseUrl = `${window.location.origin}/community/${pulse.communityId._id}?pulse=${pulse._id}`;
+        
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: pulse.title,
+                    text: pulse.description,
+                    url: pulseUrl,
+                });
+                return;
+            } catch (error: any) {
+                if (error.name !== 'AbortError') {
+                    console.error('Error sharing:', error);
+                }
+            }
+        }
+        
+        // Fallback to copy
+        try {
+            await navigator.clipboard.writeText(pulseUrl);
+            setSharedPulseId(pulse._id);
+            showMessage('Link copied to clipboard!', 'success');
+            setTimeout(() => setSharedPulseId(null), 2000);
+        } catch (error) {
+            showMessage('Failed to copy link', 'error');
+        }
     };
 
     const handleLogout = () => {
@@ -247,7 +357,7 @@ const LandingPage = () => {
                             {recentPulses.map((pulse, index) => (
                                 <div 
                                     key={pulse._id} 
-                                    className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-300 overflow-hidden group"
+                                    className="bg-white rounded-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-300 overflow-hidden group"
                                 >
                                     {/* Gradient Header */}
                                     <div className={`h-2 bg-gray-800`}></div>
@@ -257,12 +367,12 @@ const LandingPage = () => {
                                         <div className="flex items-center gap-3 mb-4">
                                             <Avatar className="w-10 h-10">
                                                 <AvatarFallback className="bg-gray-800 text-white text-sm font-bold">
-                                                    {pulse.author.avatar || pulse.author.name.substring(0, 2).toUpperCase()}
+                                                    {pulse.userId.name.substring(0, 2).toUpperCase()}
                                                 </AvatarFallback>
                                             </Avatar>
                                             <div className="flex-1">
-                                                <p className="font-semibold text-black">{pulse.author.name}</p>
-                                                <p className="text-xs text-gray-600">{pulse.community.name}</p>
+                                                <p className="font-semibold text-black">{pulse.userId.name}</p>
+                                                <p className="text-xs text-gray-600">{pulse.communityId.name}</p>
                                             </div>
                                         </div>
 
@@ -286,19 +396,50 @@ const LandingPage = () => {
                                         )}
 
                                         {/* Stats */}
-                                        <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
-                                            <div className="flex items-center gap-1 text-gray-600">
-                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
-                                                </svg>
-                                                <span className="text-sm font-medium">{pulse.likes}</span>
-                                            </div>
-                                            <div className="flex items-center gap-1 text-gray-600">
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9 8s9 3.582 9 8z" />
-                                                </svg>
-                                                <span className="text-sm font-medium">{pulse.comments}</span>
-                                            </div>
+                                        <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleLikePulse(pulse._id);
+                                                }}
+                                                className={`flex items-center gap-1.5 text-sm transition-colors ${
+                                                    likedPulses.has(pulse._id)
+                                                        ? 'text-red-500'
+                                                        : 'text-gray-600 hover:text-red-500'
+                                                }`}
+                                            >
+                                                <Heart 
+                                                    className={`w-5 h-5 ${likedPulses.has(pulse._id) ? 'fill-current' : ''}`} 
+                                                />
+                                                <span className="font-medium">
+                                                    {Array.isArray(pulse.likes) 
+                                                        ? pulse.likes.filter((like: any) => like !== null && like !== undefined).length 
+                                                        : 0}
+                                                </span>
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleSharePulse(pulse);
+                                                }}
+                                                className={`flex items-center gap-1.5 text-sm transition-colors ${
+                                                    sharedPulseId === pulse._id
+                                                        ? 'text-green-600'
+                                                        : 'text-gray-600 hover:text-gray-900'
+                                                }`}
+                                            >
+                                                {sharedPulseId === pulse._id ? (
+                                                    <>
+                                                        <Check className="w-5 h-5" />
+                                                        <span className="font-medium">Copied!</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Share2 className="w-5 h-5" />
+                                                        <span className="font-medium">Share</span>
+                                                    </>
+                                                )}
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
